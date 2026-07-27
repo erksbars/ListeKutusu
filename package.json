@@ -1,0 +1,61 @@
+{
+  "name": "playlist-app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "ui:check": "node scripts/ui-static-audit.mjs",
+    "a11y:check": "node scripts/a11y-static-audit.mjs",
+    "contrast:check": "node scripts/theme-contrast-audit.mjs",
+    "test": "npm run test:unit && npm run test:smoke && npm run test:e2e",
+    "test:unit": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test tests/*.test.mjs",
+    "test:smoke": "node scripts/smoke-test.mjs",
+    "test:e2e": "node --env-file=.env scripts/e2e-test.mjs",
+    "test:browser": "playwright test",
+    "test:browser:install": "playwright install chromium",
+    "test:browser:update": "playwright test --update-snapshots",
+    "package:source": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/create-source-package.ps1",
+    "check:env": "node --env-file=.env scripts/check-env.mjs",
+    "check:env:production": "node --env-file=.env scripts/check-env.mjs --production",
+    "db:backup": "node --env-file=.env scripts/backup-database.mjs",
+    "db:verify-backup": "node --env-file=.env scripts/verify-backup.mjs",
+    "db:check": "node --env-file=.env scripts/check-data-integrity.mjs",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "maintenance:cleanup": "node --env-file=.env scripts/cleanup-expired-data.mjs",
+    "content:seed": "node --env-file=.env scripts/seed-editorial-content.mjs",
+    "user:role": "node --env-file=.env scripts/set-user-role.mjs",
+    "deploy:check": "npm run check:env:production && npm run db:check && npm run typecheck && npm run lint && npm run ui:check && npm run a11y:check && npm run contrast:check && npm run test:unit && npm run build && npm run test:browser",
+    "start:production": "npm run db:migrate:deploy && next start",
+    "postinstall": "prisma generate"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.20.0",
+    "lucide-react": "^0.468.0",
+    "next": "^15.5.20",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
+    "@playwright/test": "^1.61.1",
+    "@types/node": "^20.14.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "autoprefixer": "^10.4.19",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^15.5.20",
+    "postcss": "^8.4.38",
+    "prisma": "^5.20.0",
+    "tailwindcss": "^3.4.4",
+    "typescript": "^5.5.0"
+  },
+  "overrides": {
+    "next": {
+      "postcss": "8.5.10"
+    }
+  }
+}

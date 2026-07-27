@@ -1,0 +1,304 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Tek satırlık ayar tablosu: owner'ın Spotify bağlantısı + hedef playlist
+model Settings {
+  id                  Int       @id @default(1)
+  spotifyUserId       String?
+  spotifyAccessToken  String?
+  spotifyRefreshToken String?
+  spotifyExpiresAt    DateTime?
+  playlistId          String?
+  playlistName        String?
+}
+
+// Site icinde kullaniciya ait kalici liste kaydi.
+// Spotify playlisti sadece disari aktarma/kopyalama icin kullanilir.
+model UserList {
+  id                   String           @id @default(cuid())
+  ownerName            String
+  playlistName         String?
+  bio                  String?
+  favoriteGenres       String?
+  profileTheme         String           @default("aurora")
+  role                 String           @default("member") // member | moderator | admin
+  notifyFollows        Boolean          @default(true)
+  notifyLikes          Boolean          @default(true)
+  notifyAdds           Boolean          @default(true)
+  email                String?          @unique
+  passwordHash         String?
+  slug                 String           @unique
+  submitCode           String?          @unique
+  spotifyPlaylistId    String?
+  spotifyExternalUrl   String?
+  spotifySnapshotId    String?
+  status               String           @default("active") // active | deleted | recycled
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  lastExportedAt       DateTime?
+  recycledAt           DateTime?
+  suggestions          Suggestion[]     @relation("ListSuggestions")
+  submittedSuggestions Suggestion[]     @relation("SubmittedSuggestions")
+  sessions             AccountSession[]
+  feedPosts            FeedPost[]       @relation("FeedPostAuthor")
+  feedLikes            FeedLike[]       @relation("FeedLikeUser")
+  feedAdds             FeedListAdd[]    @relation("FeedAddUser")
+  feedSaves            FeedSave[]       @relation("FeedSaveUser")
+  feedHides            FeedHide[]       @relation("FeedHideUser")
+  following            Follow[]         @relation("FollowFollower")
+  followers            Follow[]         @relation("FollowFollowing")
+  notifications        Notification[]   @relation("NotificationRecipient")
+  notificationActions  Notification[]   @relation("NotificationActor")
+  reportsMade          PostReport[]     @relation("ReportReporter")
+  blocksInitiated      UserBlock[]      @relation("Blocker")
+  blocksReceived       UserBlock[]      @relation("Blocked")
+  forumThreads         ForumThread[]
+  forumReplies         ForumReply[]
+
+  @@index([status, updatedAt])
+  @@index([spotifyPlaylistId, status, lastExportedAt])
+}
+
+model AccountSession {
+  id         String    @id @default(cuid())
+  userId     String
+  tokenHash  String    @unique
+  persistent Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  lastSeenAt DateTime  @default(now())
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  user       UserList  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt, expiresAt])
+  @@index([expiresAt])
+}
+
+// Onay bekleyen / onaylanmış / reddedilmiş şarkı önerileri
+model Suggestion {
+  id            String        @id @default(cuid())
+  listId        String?
+  trackId       String
+  trackUri      String
+  trackName     String
+  artistName    String
+  durationMs    Int
+  suggestedBy   String?
+  suggestedById String?
+  status        String        @default("pending") // pending | approved | rejected | removed
+  createdAt     DateTime      @default(now())
+  decidedAt     DateTime?
+  list          UserList?     @relation("ListSuggestions", fields: [listId], references: [id])
+  submitter     UserList?     @relation("SubmittedSuggestions", fields: [suggestedById], references: [id], onDelete: SetNull)
+  feedAdds      FeedListAdd[]
+
+  @@index([listId, status, createdAt])
+  @@index([listId, trackId])
+  @@index([suggestedById, createdAt])
+}
+
+// Herkese acik sosyal muzik akisi.
+// Spotify sadece kaynak/link olarak tutulur; asil etkilesim verisi uygulamanindir.
+model FeedPost {
+  id            String         @id @default(cuid())
+  authorId      String
+  trackId       String
+  trackUri      String?
+  trackName     String
+  artistName    String
+  albumName     String?
+  durationMs    Int?
+  externalUrl   String?
+  source        String         @default("spotify")
+  note          String?
+  tags          String?
+  status        String         @default("published")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  author        UserList       @relation("FeedPostAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  likes         FeedLike[]
+  adds          FeedListAdd[]
+  saves         FeedSave[]
+  hides         FeedHide[]
+  notifications Notification[]
+  reports       PostReport[]
+
+  @@index([authorId, createdAt])
+  @@index([status, createdAt])
+  @@index([createdAt])
+}
+
+model FeedLike {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+  createdAt DateTime @default(now())
+  post      FeedPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      UserList @relation("FeedLikeUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@index([userId, createdAt])
+}
+
+model FeedListAdd {
+  id           String      @id @default(cuid())
+  postId       String
+  userId       String
+  suggestionId String?
+  createdAt    DateTime    @default(now())
+  post         FeedPost    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user         UserList    @relation("FeedAddUser", fields: [userId], references: [id], onDelete: Cascade)
+  suggestion   Suggestion? @relation(fields: [suggestionId], references: [id], onDelete: SetNull)
+
+  @@unique([postId, userId])
+  @@index([userId, createdAt])
+  @@index([suggestionId])
+}
+
+model FeedSave {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+  createdAt DateTime @default(now())
+  post      FeedPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      UserList @relation("FeedSaveUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@index([userId, createdAt])
+}
+
+model FeedHide {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+  createdAt DateTime @default(now())
+  post      FeedPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      UserList @relation("FeedHideUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@index([userId, createdAt])
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+  follower    UserList @relation("FollowFollower", fields: [followerId], references: [id], onDelete: Cascade)
+  following   UserList @relation("FollowFollowing", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followingId, createdAt])
+}
+
+model Notification {
+  id            String       @id @default(cuid())
+  userId        String
+  actorId       String?
+  postId        String?
+  forumThreadId String?
+  type          String
+  readAt        DateTime?
+  createdAt     DateTime     @default(now())
+  user          UserList     @relation("NotificationRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  actor         UserList?    @relation("NotificationActor", fields: [actorId], references: [id], onDelete: SetNull)
+  post          FeedPost?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  forumThread   ForumThread? @relation(fields: [forumThreadId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt])
+  @@index([actorId, createdAt])
+  @@index([postId])
+  @@index([forumThreadId])
+}
+
+model ForumThread {
+  id              String         @id @default(cuid())
+  slug            String         @unique
+  authorId        String
+  category        String
+  title           String
+  body            String
+  status          String         @default("pending") // pending | published | rejected | removed
+  views           Int            @default(0)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  approvedAt      DateTime?
+  lastActivityAt  DateTime       @default(now())
+  lockedAt        DateTime?
+  acceptedReplyId String?        @unique
+  acceptedAt      DateTime?
+  author          UserList       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  replies         ForumReply[]   @relation("ForumThreadReplies")
+  acceptedReply   ForumReply?    @relation("ForumAcceptedReply", fields: [acceptedReplyId], references: [id], onDelete: SetNull)
+  notifications   Notification[]
+
+  @@index([status, lastActivityAt])
+  @@index([category, status, lastActivityAt])
+  @@index([authorId, createdAt])
+}
+
+model ForumReply {
+  id          String       @id @default(cuid())
+  threadId    String
+  authorId    String
+  body        String
+  status      String       @default("published") // published | removed
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  thread      ForumThread  @relation("ForumThreadReplies", fields: [threadId], references: [id], onDelete: Cascade)
+  acceptedFor ForumThread? @relation("ForumAcceptedReply")
+  author      UserList     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([threadId, status, createdAt])
+  @@index([authorId, createdAt])
+}
+
+model PostReport {
+  id         String    @id @default(cuid())
+  reporterId String
+  postId     String
+  reason     String
+  details    String?
+  status     String    @default("pending")
+  createdAt  DateTime  @default(now())
+  reviewedAt DateTime?
+  reporter   UserList  @relation("ReportReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  post       FeedPost  @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([reporterId, postId])
+  @@index([status, createdAt])
+  @@index([postId])
+}
+
+model UserBlock {
+  id        String   @id @default(cuid())
+  blockerId String
+  blockedId String
+  createdAt DateTime @default(now())
+  blocker   UserList @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked   UserList @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerId, blockedId])
+  @@index([blockedId, createdAt])
+}
+
+// Yönetim panelinde gerçekleştirilen kritik işlemlerin değiştirilemez geçmişi.
+model AdminAuditLog {
+  id          String   @id @default(cuid())
+  action      String
+  targetType  String
+  targetId    String?
+  targetLabel String?
+  metadata    String?
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([action, createdAt])
+  @@index([targetType, createdAt])
+}
