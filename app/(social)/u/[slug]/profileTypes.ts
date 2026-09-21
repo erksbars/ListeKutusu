@@ -32,6 +32,7 @@ export type ProfileForumThread = {
   replyCount: number;
   solved: boolean;
   lastActivityAt: string;
+  createdAt: string;
 };
 
 export type ProfileGameSession = {
@@ -75,6 +76,8 @@ export type Profile = {
   postCount: number;
   totalLikes: number;
   totalAdds: number;
+  forumThreadCount: number;
+  completedGameCount: number;
   achievements: AchievementItem[];
   featuredAchievement: AchievementItem | null;
   forumThreads: ProfileForumThread[];

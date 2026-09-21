@@ -16,12 +16,6 @@ import { useInfiniteScroll } from "@/app/hooks/useInfiniteScroll";
 import { useSessionNavigation } from "@/app/hooks/useSessionNavigation";
 import type { ConnectionUser, Profile, ProfileTab, ViewerAccount } from "@/app/(social)/u/[slug]/profileTypes";
 
-const themeClasses: Record<string, string> = {
-  aurora: "from-cyan-300 via-blue-500 to-violet-500",
-  violet: "from-fuchsia-400 via-violet-500 to-indigo-500",
-  emerald: "from-emerald-300 via-teal-500 to-cyan-500",
-  sunset: "from-rose-400 via-orange-400 to-violet-500",
-};
 
 const profileTabs = [
   ["posts", "Vitrin", Music2],
@@ -202,13 +196,13 @@ export default function ProfileClient({ slug, initialProfile, initialViewer }: P
   async function toggleFollow() {
     if (!profile || profile.isMe || busy) return;
     setBusy(true);
+    try {
     const res = await fetch("/api/profiles/follow", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ profileId: profile.id }),
     });
     const data = await res.json().catch(() => ({}));
-    setBusy(false);
     if (res.status === 401) {
       goToLogin(`/u/${slug}`);
       return;
@@ -223,6 +217,11 @@ export default function ProfileClient({ slug, initialProfile, initialViewer }: P
         : current
     );
     setMessage(data.following ? "Profil takip edildi." : "Takip bırakıldı.");
+    } catch {
+      setMessage("Takip işlemi doğrulanamadı. Bağlantını kontrol edip tekrar dene.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function loadConnections(
@@ -267,15 +266,15 @@ export default function ProfileClient({ slug, initialProfile, initialViewer }: P
   }
 
   async function toggleBlock() {
-    if (!profile || profile.isMe) return;
+    if (!profile || profile.isMe || busy) return;
     setBusy(true);
+    try {
     const res = await fetch("/api/profiles/block", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ profileId: profile.id }),
     });
     const data = await res.json().catch(() => ({}));
-    setBusy(false);
     setConfirmBlock(false);
     if (res.status === 401) {
       goToLogin(`/u/${slug}`);
@@ -287,6 +286,11 @@ export default function ProfileClient({ slug, initialProfile, initialViewer }: P
     }
     setMessage(data.blocked ? "Kullanıcı engellendi." : "Kullanıcı engeli kaldırıldı.");
     await loadProfile();
+    } catch {
+      setMessage("Engelleme işlemi doğrulanamadı. Bağlantını kontrol edip tekrar dene.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function logoutViewer() {
@@ -340,7 +344,6 @@ export default function ProfileClient({ slug, initialProfile, initialViewer }: P
       ?.focus();
   }
 
-  const theme = themeClasses[profile?.profileTheme || "aurora"] || themeClasses.aurora;
 
   return (
     <main id="main-content" tabIndex={-1} className="stage-shell min-h-screen bg-app px-4 pb-28 text-white sm:px-6 xl:pb-12">
@@ -487,7 +490,6 @@ export default function ProfileClient({ slug, initialProfile, initialViewer }: P
           <>
             <ProfileHeroV3
               profile={profile}
-              themeClass={theme}
               onOpenConnections={openConnections}
               actions={(
                 <>
@@ -507,7 +509,7 @@ export default function ProfileClient({ slug, initialProfile, initialViewer }: P
                             : `/account?mode=login&next=${encodeURIComponent(`/games/elimination/new?opponent=${profile.slug}`)}`}
                           className="secondary-action h-11 rounded-xl px-5 text-sm font-black"
                         >
-                          <Gamepad2 size={16} /> <span>Oyuna davet et</span>
+                          <Gamepad2 size={16} /> <span>Özel oyun oluştur</span>
                         </Link>
                       </>
                     )}

@@ -3,7 +3,19 @@
 Bu dosya yalnız açık işleri tutar. Tamamlanan işlerin özeti `PROJECT_STATUS.md`
 dosyasındadır.
 
-## Aktif masaüstü deneyim aşaması
+## Profil V4 — yeni ürün önceliği
+
+Kapsam ve kabul ölçütleri: [Profil V4 raporu](docs/PROFIL_V4_RAPOR_VE_YOL_HARITASI.md).
+Yalnız masaüstü koyu tema; küçük paketlerde dar test politikası korunur.
+
+1. P1 kalan: uzun ad/boş profil ve sahip görünümünü yeni üst alanda kontrol et.
+2. P2: kişisel vitrin ve ziyaretçiye özel boş durumlar.
+3. P3: gerçek görünümle eşleşen taslaklı editör, kaydet/iptal; seçilebilir çerçeveler.
+4. P4: profil kartlarından etkileşim, rozet ayrıntısı ve sekme tutarlılığı.
+5. İlk teslim sonrasında P5 rozet/oyun vitrinleri; davet, XP ve ziyaretçi defteri
+   ayrı sonraki aşamalardır.
+
+## Genel masaüstü deneyim aşaması
 
 1. Ana akış ve Keşfet'in ilk görünür içeriğini server-first veri sınırına taşı;
    etkileşimli filtre ve aksiyonları küçük client bileşenlerinde bırak.

@@ -1,4 +1,5 @@
 import type { Prisma } from "@prisma/client";
+import { completedProfileGames } from "@/lib/profileGames";
 import { calculateAchievements } from "@/lib/achievements";
 import { prisma } from "@/lib/db";
 import { normalizeProfileShowcase } from "@/lib/profileShowcase";
@@ -68,7 +69,7 @@ export async function getPublicProfile(slug: string, viewerId: string | null) {
       slug: true,
       createdAt: true,
       _count: {
-        select: { followers: true, following: true, feedPosts: true },
+        select: { followers: true, following: true, feedPosts: { where: { status: "published" } }, forumThreads: { where: { status: "published" } } },
       },
       followers: viewerId
         ? { where: { followerId: viewerId }, select: { id: true }, take: 1 }
@@ -91,7 +92,7 @@ export async function getPublicProfile(slug: string, viewerId: string | null) {
   if (!profile) return null;
 
   const profileGenres = parseTags(profile.favoriteGenres);
-  const [totalLikes, totalAdds, externalAdds, forumThreads, completedGameCount, recentGames, viewerProfile, discoveryCandidates] = await Promise.all([
+  const [totalLikes, totalAdds, externalAdds, forumThreads, completedGameCount, recentGames, viewerProfile, discoveryCandidates, completedDuels] = await Promise.all([
     prisma.feedLike.count({
       where: { post: { authorId: profile.id, status: "published" } },
     }),
@@ -115,18 +116,17 @@ export async function getPublicProfile(slug: string, viewerId: string | null) {
         category: true,
         views: true,
         acceptedReplyId: true,
+        createdAt: true,
         lastActivityAt: true,
         _count: { select: { replies: { where: { status: "published" } } } },
       },
     }),
     prisma.gameSession.count({
-      where: { ownerId: profile.id, status: "completed" },
+      where: completedProfileGames(profile.id, viewerId !== profile.id),
     }),
     prisma.gameSession.findMany({
       where: {
-        ownerId: profile.id,
-        status: "completed",
-        ...(viewerId === profile.id ? {} : { visibility: "public" }),
+        ...completedProfileGames(profile.id, viewerId !== profile.id),
       },
       orderBy: [{ completedAt: "desc" }, { id: "desc" }],
       take: 6,
@@ -173,10 +173,11 @@ export async function getPublicProfile(slug: string, viewerId: string | null) {
             bio: true,
             profileTheme: true,
             favoriteGenres: true,
-            _count: { select: { followers: true, feedPosts: true } },
+            _count: { select: { followers: true, feedPosts: { where: { status: "published" } } } },
           },
         })
       : [],
+    prisma.gameSession.count({ where: { ...completedProfileGames(profile.id), gameCode: "song-elimination" } }),
   ]);
 
   const blockedByMe = Boolean(profile.blocksReceived?.length);
@@ -198,7 +199,7 @@ export async function getPublicProfile(slug: string, viewerId: string | null) {
     likes: totalLikes,
     adds: externalAdds,
     followers: profile._count.followers,
-    games: completedGameCount,
+    games: completedDuels,
   });
   const viewerGenres = parseTags(viewerProfile?.favoriteGenres ?? null);
   const sharedGenres = interactionBlocked ? [] : sharedTags(profileGenres, viewerGenres);
@@ -249,6 +250,8 @@ export async function getPublicProfile(slug: string, viewerId: string | null) {
     followerCount: profile._count.followers,
     followingCount: profile._count.following,
     postCount: interactionBlocked ? 0 : profile._count.feedPosts,
+    forumThreadCount: interactionBlocked ? 0 : profile._count.forumThreads,
+    completedGameCount: interactionBlocked ? 0 : completedGameCount,
     totalLikes: interactionBlocked ? 0 : totalLikes,
     totalAdds: interactionBlocked ? 0 : totalAdds,
     achievements: interactionBlocked ? [] : achievements.unlocked,
@@ -267,6 +270,7 @@ export async function getPublicProfile(slug: string, viewerId: string | null) {
           replyCount: thread._count.replies,
           solved: Boolean(thread.acceptedReplyId),
           lastActivityAt: thread.lastActivityAt.toISOString(),
+          createdAt: thread.createdAt.toISOString(),
         })),
     games: interactionBlocked
       ? []

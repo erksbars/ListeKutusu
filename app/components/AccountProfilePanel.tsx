@@ -24,20 +24,9 @@ import {
   type ProfileShowcaseModule,
 } from "@/lib/profileShowcase";
 import type { ProfileBanner, ProfileDensity } from "@/lib/profileAppearance";
+import { PROFILE_PRESETS, getProfilePreset } from "@/lib/profileAppearance";
 
-const PROFILE_THEMES = [
-  ["aurora", "Aurora", "from-cyan-400 via-blue-500 to-violet-500"],
-  ["violet", "Mor", "from-fuchsia-400 via-violet-500 to-indigo-500"],
-  ["emerald", "Zümrüt", "from-emerald-300 via-teal-500 to-cyan-500"],
-  ["sunset", "Gün batımı", "from-rose-400 via-orange-400 to-violet-500"],
-] as const;
-
-const PROFILE_PREVIEW_GRADIENTS: Record<string, string> = {
-  aurora: "linear-gradient(110deg, var(--ui-primary), var(--ui-info) 52%, var(--ui-secondary))",
-  violet: "linear-gradient(110deg, var(--ui-danger), var(--ui-secondary) 52%, var(--ui-info))",
-  emerald: "linear-gradient(110deg, var(--ui-success), var(--ui-accent) 52%, var(--ui-primary))",
-  sunset: "linear-gradient(110deg, var(--ui-danger), var(--ui-warning) 52%, var(--ui-secondary))",
-};
+const PROFILE_THEMES = Object.entries(PROFILE_PRESETS);
 
 const SHOWCASE_LABELS: Record<ProfileShowcaseModule, { title: string; description: string }> = {
   featured: { title: "Öne çıkan keşif", description: "Sabitlediğin veya en çok etkileşim alan paylaşım." },
@@ -379,7 +368,7 @@ export function AccountProfilePanel({
               </div>
               <p className="form-label">Profil rengi</p>
               <div className="profile-theme-options" aria-label="Profil rengi">
-                {PROFILE_THEMES.map(([value, label, gradient]) => (
+                {PROFILE_THEMES.map(([value, { label, gradient }]) => (
                   <button
                     key={value}
                     type="button"
@@ -389,7 +378,7 @@ export function AccountProfilePanel({
                     onClick={() => onThemeChange(value)}
                     className={theme === value ? "profile-theme-option is-active" : "profile-theme-option"}
                   >
-                    <span className={`bg-gradient-to-br ${gradient}`} />
+                    <span style={{ background: gradient }} />
                     <strong>{label}</strong>
                     <small>{theme === value ? "Seçili" : "Uygula"}</small>
                   </button>
@@ -470,14 +459,14 @@ export function AccountProfilePanel({
 
       <aside className="account-profile-preview-column">
         <section className={`profile-live-preview profile-density-${density} profile-banner-${banner}`} aria-label="Profil vitrini önizlemesi">
-          <div className="profile-live-preview-accent" style={{ background: PROFILE_PREVIEW_GRADIENTS[theme] ?? PROFILE_PREVIEW_GRADIENTS.aurora }}>
+          <div className="profile-live-preview-accent" style={{ background: getProfilePreset(theme).gradient }}>
             <span aria-hidden="true" />
             <Music2 size={24} aria-hidden="true" />
           </div>
           <div className="profile-live-preview-header">
             <span
               className="profile-live-preview-avatar"
-              style={{ background: PROFILE_PREVIEW_GRADIENTS[theme] ?? PROFILE_PREVIEW_GRADIENTS.aurora }}
+              style={{ background: getProfilePreset(theme).gradient }}
             >
               {ownerName.slice(0, 1).toLocaleUpperCase("tr-TR")}
             </span>

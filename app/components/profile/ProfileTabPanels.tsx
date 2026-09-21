@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { profileGamePresentation } from "@/lib/profileGames";
 import type { RefObject } from "react";
 import {
   Award,
@@ -82,18 +83,18 @@ export function ProfileTabPanels({
       action: "Forum konusu açtı",
       title: thread.title,
       detail: thread.categoryLabel,
-      date: thread.lastActivityAt,
+      date: thread.createdAt,
       meta: `${thread.replyCount} yanıt · ${thread.views} görüntülenme`,
     })),
     ...profile.games.map((game) => ({
       id: `game-${game.id}`,
       type: "game" as const,
-      href: `/games/elimination/${game.id}`,
+      href: profileGamePresentation(game.gameCode, game.id).href,
       action: "Oyunu tamamladı",
-      title: "Şarkı Düellosu",
+      title: profileGamePresentation(game.gameCode, game.id).title,
       detail: game.winner
         ? `${game.winner.trackName} · ${game.winner.artistName}`
-        : "Turnuva sonucu kaydedildi",
+        : "Karşılaşma tamamlandı",
       date: game.completedAt,
       meta: game.winner ? "Şampiyon parça" : "Tamamlandı",
     })),
@@ -127,7 +128,7 @@ export function ProfileTabPanels({
               style={{ order: profile.showcaseModules.indexOf("featured") }}
             >
               <div className="profile-showcase-module-heading">
-                <p className="section-kicker">{pinnedPost ? "Sabitlenen keşif" : "Öne çıkan keşif"}</p>
+                <p className="section-kicker">{pinnedPost ? "İmza keşfi" : "Son keşiflerden öne çıkan"}</p>
                 <span>Başrol</span>
               </div>
               {featuredPost ? (
@@ -320,11 +321,11 @@ export function ProfileTabPanels({
             {profile.games.length > 0 ? (
               <div className="profile-game-history-list">
                 {profile.games.slice(0, 4).map((game) => (
-                  <Link key={game.id} href={`/games/elimination/${game.id}`} className="profile-game-history-row">
+                  <Link key={game.id} href={profileGamePresentation(game.gameCode, game.id).href} className="profile-game-history-row">
                     <span className="profile-game-history-mark"><Trophy size={15} /></span>
                     <span className="min-w-0">
-                      <strong>{game.winner?.trackName || "Tamamlanan karşılaşma"}</strong>
-                      <small>{game.winner?.artistName || "Sonuç kaydedildi"}</small>
+                      <strong>{profileGamePresentation(game.gameCode, game.id).title}</strong>
+                      <small>{game.winner ? `${game.winner.trackName} · ${game.winner.artistName}` : "Karşılaşma tamamlandı"}</small>
                     </span>
                     <time dateTime={game.completedAt}>{dateFormatter.format(new Date(game.completedAt))}</time>
                   </Link>
@@ -351,8 +352,8 @@ export function ProfileTabPanels({
           </div>
           <div className="profile-activity-summary" aria-label="Aktivite özeti">
             <span><Music2 size={16} /><strong>{profile.postCount}</strong><small>paylaşım</small></span>
-            <span><MessageSquareText size={16} /><strong>{profile.forumThreads.length}</strong><small>forum konusu</small></span>
-            <span><Gamepad2 size={16} /><strong>{profile.games.length}</strong><small>oyun</small></span>
+            <span><MessageSquareText size={16} /><strong>{profile.forumThreadCount}</strong><small>forum konusu</small></span>
+            <span><Gamepad2 size={16} /><strong>{profile.completedGameCount}</strong><small>{profile.isMe ? "oyun" : "açık oyun"}</small></span>
           </div>
           {activityItems.length > 0 ? (
             <div className="profile-activity-groups">

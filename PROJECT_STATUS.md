@@ -13,6 +13,23 @@ Son doğrulama: 11 Ağustos 2026
 
 ## Aktif ürün kapsamı
 
+### Profil V4 ilk paketi — 21 Eylül 2026
+
+- Takip ve engellemede ağ hatası mesajı ve işlem kilidini açan `finally` eklendi.
+- Oyun geçmişi sahip veya oyuncu katılımını kapsar; ziyaretçi toplamları yalnız
+  açık oyunları içerir. Tavla ve Düello doğru ad ve rotayla gösterilir.
+- Forum/oyun toplamları kısa liste uzunluğundan ayrıldı; paylaşım sayıları
+  yayınlanmış kayıtlarla sınırlandı. Düello rozetleri katılım esaslı ve oyun türüne
+  göre hesaplanır; profil, hesap ve rozet API'leri aynı kuralı kullanır.
+- Masaüstü üst alana plak motifi, çerçeveli avatar ve rozet sayısı eklendi;
+  bilgi sütunu sağa alındı. Tema gradyanları editör ve profilde ortak preset'ten gelir.
+- Typecheck, 9 ilgili birim testi ve gerçek yerel profilde 1 masaüstü koyu
+  senaryo geçti: takip ağ hatası sonrası toparlanma, sekmeler ve yatay taşma.
+- Sahip/boş/uzun ad varyantları, seçilebilir çerçeveler ve yeni vitrin etkileşimleri
+  sonraki pakette; geniş build/test matrisi bu pakette çalıştırılmadı.
+
+## Aktif ürün kapsamı (genel)
+
 - Masaüstü öncelikli, koyu temalı sosyal müzik keşif deneyimi.
 - Tek kullanıcı hesabı, sosyal akış, profiller, takip, bildirimler ve başarımlar.
 - Kişisel liste, Spotify arama/bağlantı/senkronu ve toplu bağlantı içe aktarma.

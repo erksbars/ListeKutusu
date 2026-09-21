@@ -1,3 +1,70 @@
+.profile-v4-record,
+.profile-v4-cover-caption,
+.profile-v3-summary .profile-v4-badge-count {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .profile-v4-cover-caption {
+    display: grid;
+    gap: var(--ui-space-2);
+    position: absolute;
+    top: 30px;
+    left: 32px;
+    z-index: 2;
+    max-width: 55%;
+    color: var(--ui-text-strong);
+  }
+
+  .profile-v4-cover-caption span { font-size: var(--ui-text-xs); }
+  .profile-v4-cover-caption strong { font-size: var(--ui-text-xl); overflow-wrap: anywhere; }
+
+  .profile-v4-record {
+    display: grid;
+    place-items: center;
+    position: absolute;
+    right: 9%;
+    top: -36px;
+    width: 280px;
+    height: 280px;
+    border-radius: 50%;
+    background: repeating-radial-gradient(circle, var(--ui-bg) 0 3px, var(--ui-border) 4px, var(--ui-bg) 5px 9px);
+    box-shadow: 0 16px 40px var(--ui-mask-solid);
+    transform: rotate(-18deg);
+    opacity: 0.8;
+  }
+
+  .profile-v4-record span {
+    width: 86px;
+    height: 86px;
+    border: 24px solid var(--ui-primary);
+    border-radius: 50%;
+    background: var(--ui-surface);
+  }
+
+  .profile-v3-hero .profile-v3-cover > svg { display: none; }
+  .profile-v3-hero .profile-v3-avatar {
+    border-radius: var(--ui-radius-lg);
+    box-shadow: 0 0 0 2px var(--ui-border-strong), 0 0 0 7px var(--ui-surface), 0 16px 32px var(--ui-mask-solid);
+  }
+  .profile-v3-hero .profile-v3-hero-body {
+    grid-template-columns: 122px minmax(0, 1fr);
+    gap: 16px 24px;
+    align-items: start;
+  }
+  .profile-v3-hero .profile-v3-actions {
+    grid-column: 2;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    padding-top: 0;
+  }
+  .profile-v3-hero .profile-v3-status { white-space: normal; overflow-wrap: anywhere; }
+  .profile-v3-hero .profile-v3-summary .profile-v4-badge-count { display: inline-flex; }
+  .profile-v3-workspace .profile-v3-rail { order: 2; }
+  .profile-v3-workspace .profile-v3-main { order: 1; min-width: 0; }
+  .stage-shell .profile-v3-workspace { grid-template-columns: minmax(0, 1fr) 280px; }
+}
+
 .profile-v3-hero {
   position: relative;
   overflow: visible;

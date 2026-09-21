@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { calculateAchievements } from "@/lib/achievements";
+import { completedProfileGames } from "@/lib/profileGames";
 import { prisma } from "@/lib/db";
 import { getAuthenticatedAccountListId } from "@/lib/session";
 
@@ -21,7 +22,7 @@ export async function GET() {
       },
     }),
     prisma.follow.count({ where: { followingId: userId } }),
-    prisma.gameSession.count({ where: { ownerId: userId, status: "completed" } }),
+    prisma.gameSession.count({ where: { ...completedProfileGames(userId), gameCode: "song-elimination" } }),
   ]);
 
   return NextResponse.json({

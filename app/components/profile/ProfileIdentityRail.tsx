@@ -85,8 +85,8 @@ export function ProfileIdentityRail({ profile }: { profile: Profile }) {
         <div className="profile-v3-community-list">
           <span><ListPlus size={16} /><b>{profile.totalAdds}</b> listeye eklenme</span>
           <span><Heart size={16} /><b>{profile.totalLikes}</b> alınan beğeni</span>
-          <span><MessageSquareText size={16} /><b>{profile.forumThreads.length}</b> son forum katkısı</span>
-          <span><Gamepad2 size={16} /><b>{profile.games.length}</b> tamamlanan oyun</span>
+          <span><MessageSquareText size={16} /><b>{profile.forumThreadCount}</b> yayınlanmış konu</span>
+          <span><Gamepad2 size={16} /><b>{profile.completedGameCount}</b> {profile.isMe ? "tamamlanan oyun" : "açık oyun tamamlandı"}</span>
           <span><Sparkles size={16} /><b>{profile.achievements.length}</b> açılan rozet</span>
         </div>
       </section>

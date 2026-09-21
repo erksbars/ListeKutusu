@@ -11,6 +11,7 @@ import { checkRateLimit } from "@/lib/rateLimit";
 import { normalizeProfileShowcase } from "@/lib/profileShowcase";
 import { normalizeProfileBanner, normalizeProfileDensity } from "@/lib/profileAppearance";
 import { calculateAchievements } from "@/lib/achievements";
+import { completedProfileGames } from "@/lib/profileGames";
 
 function accountPayload(list: {
   id: string;
@@ -194,7 +195,7 @@ export async function PATCH(req: NextRequest) {
           where: { post: { authorId: listId, status: "published" }, NOT: { userId: listId } },
         }),
         prisma.follow.count({ where: { followingId: listId } }),
-        prisma.gameSession.count({ where: { ownerId: listId, status: "completed" } }),
+        prisma.gameSession.count({ where: { ...completedProfileGames(listId), gameCode: "song-elimination" } }),
       ]);
       const unlockedIds = new Set(calculateAchievements({ posts, likes, adds, followers, games }).unlocked.map((item) => item.id));
       if (!unlockedIds.has(requestedAchievementId)) {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthenticatedAccountListId } from "@/lib/session";
 import { calculateAchievements } from "@/lib/achievements";
+import { completedProfileGames } from "@/lib/profileGames";
 
 function hasFavoriteGenres(value: string | null) {
   if (!value) return false;
@@ -43,7 +44,7 @@ export async function GET(req: NextRequest) {
           spotifyPlaylistId: true,
           spotifyExternalUrl: true,
           lastExportedAt: true,
-          _count: { select: { feedPosts: true, feedLikes: true, feedAdds: true, followers: true } },
+          _count: { select: { feedPosts: { where: { status: "published" } }, feedLikes: true, feedAdds: true, followers: true } },
         },
       })
     : null;
@@ -83,7 +84,7 @@ export async function GET(req: NextRequest) {
       },
       _count: {
         select: {
-          feedPosts: true,
+          feedPosts: { where: { status: "published" } },
           feedLikes: true,
           feedAdds: true,
           followers: true,
@@ -112,7 +113,7 @@ export async function GET(req: NextRequest) {
     prisma.feedListAdd.count({
       where: { post: { authorId: list.id, status: "published" }, NOT: { userId: list.id } },
     }),
-    prisma.gameSession.count({ where: { ownerId: list.id, status: "completed" } }),
+    prisma.gameSession.count({ where: { ...completedProfileGames(list.id), gameCode: "song-elimination" } }),
   ]);
   const profileAchievements = calculateAchievements({
     posts: list._count.feedPosts,
