@@ -8,6 +8,9 @@ import {
 } from "@/lib/session";
 import { updateOwnerPlaylistDetails } from "@/lib/spotify";
 import { checkRateLimit } from "@/lib/rateLimit";
+import { normalizeProfileShowcase } from "@/lib/profileShowcase";
+import { normalizeProfileBanner, normalizeProfileDensity } from "@/lib/profileAppearance";
+import { calculateAchievements } from "@/lib/achievements";
 
 function accountPayload(list: {
   id: string;
@@ -17,8 +20,14 @@ function accountPayload(list: {
   submitCode: string | null;
   spotifyExternalUrl: string | null;
   bio: string | null;
+  profileStatus: string | null;
+  pinnedFeedPostId: string | null;
+  profileShowcase: string | null;
   favoriteGenres: string | null;
   profileTheme: string;
+  profileDensity: string;
+  profileBanner: string;
+  featuredAchievementId: string | null;
 }) {
   return {
     id: list.id,
@@ -28,8 +37,14 @@ function accountPayload(list: {
     submitCode: list.submitCode,
     spotifyExternalUrl: list.spotifyExternalUrl,
     bio: list.bio,
+    profileStatus: list.profileStatus,
+    pinnedFeedPostId: list.pinnedFeedPostId,
+    profileShowcase: list.profileShowcase,
     favoriteGenres: list.favoriteGenres,
     profileTheme: list.profileTheme,
+    profileDensity: list.profileDensity,
+    profileBanner: list.profileBanner,
+    featuredAchievementId: list.featuredAchievementId,
   };
 }
 
@@ -126,6 +141,9 @@ export async function PATCH(req: NextRequest) {
 
   if (action === "update-profile") {
     const bio = typeof body?.bio === "string" ? body.bio.trim() : "";
+    const profileStatus = typeof body?.profileStatus === "string" ? body.profileStatus.trim() : "";
+    const requestedPinnedPostId = typeof body?.pinnedFeedPostId === "string" ? body.pinnedFeedPostId.trim() : "";
+    const profileShowcase = normalizeProfileShowcase(body?.profileShowcase);
     const genreCandidates = Array.isArray(body?.favoriteGenres)
       ? body.favoriteGenres
           .filter((item: unknown) => typeof item === "string")
@@ -144,6 +162,11 @@ export async function PATCH(req: NextRequest) {
     const profileTheme = allowedThemes.has(body?.profileTheme)
       ? body.profileTheme
       : "aurora";
+    const profileDensity = normalizeProfileDensity(body?.profileDensity);
+    const profileBanner = normalizeProfileBanner(body?.profileBanner);
+    const requestedAchievementId = typeof body?.featuredAchievementId === "string"
+      ? body.featuredAchievementId.trim()
+      : "";
 
     if (bio.length > 240) {
       return NextResponse.json(
@@ -151,13 +174,46 @@ export async function PATCH(req: NextRequest) {
         { status: 400 }
       );
     }
+    if (profileStatus.length > 80) {
+      return NextResponse.json({ error: "Kısa durum en fazla 80 karakter olabilir." }, { status: 400 });
+    }
+    const pinnedPost = requestedPinnedPostId
+      ? await prisma.feedPost.findFirst({
+          where: { id: requestedPinnedPostId, authorId: listId, status: "published" },
+          select: { id: true },
+        })
+      : null;
+    if (requestedPinnedPostId && !pinnedPost) {
+      return NextResponse.json({ error: "Sabitlenecek paylaşım bulunamadı." }, { status: 400 });
+    }
+    if (requestedAchievementId) {
+      const [posts, likes, adds, followers, games] = await Promise.all([
+        prisma.feedPost.count({ where: { authorId: listId, status: "published" } }),
+        prisma.feedLike.count({ where: { post: { authorId: listId, status: "published" } } }),
+        prisma.feedListAdd.count({
+          where: { post: { authorId: listId, status: "published" }, NOT: { userId: listId } },
+        }),
+        prisma.follow.count({ where: { followingId: listId } }),
+        prisma.gameSession.count({ where: { ownerId: listId, status: "completed" } }),
+      ]);
+      const unlockedIds = new Set(calculateAchievements({ posts, likes, adds, followers, games }).unlocked.map((item) => item.id));
+      if (!unlockedIds.has(requestedAchievementId)) {
+        return NextResponse.json({ error: "Yalnızca kazandığın bir rozeti öne çıkarabilirsin." }, { status: 400 });
+      }
+    }
 
     const list = await prisma.userList.update({
       where: { id: listId },
       data: {
         bio: bio || null,
+        profileStatus: profileStatus || null,
+        pinnedFeedPostId: pinnedPost?.id || null,
+        profileShowcase: JSON.stringify(profileShowcase),
         favoriteGenres: genres.length ? JSON.stringify(genres) : null,
         profileTheme,
+        profileDensity,
+        profileBanner,
+        featuredAchievementId: requestedAchievementId || null,
       },
     });
 

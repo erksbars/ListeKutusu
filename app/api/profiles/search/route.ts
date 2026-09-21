@@ -4,6 +4,18 @@ import { getAuthenticatedAccountListId } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
+function parseGenres(value: string | null) {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed)
+      ? parsed.filter((item): item is string => typeof item === "string").slice(0, 4)
+      : [];
+  } catch {
+    return [];
+  }
+}
+
 export async function GET(req: NextRequest) {
   const query = req.nextUrl.searchParams.get("q")?.trim() || "";
   if (query.length < 2) return NextResponse.json({ users: [] });
@@ -12,7 +24,11 @@ export async function GET(req: NextRequest) {
   const users = await prisma.userList.findMany({
     where: {
       status: "active",
-      OR: [{ ownerName: { contains: query } }, { slug: { contains: query } }],
+      OR: [
+        { ownerName: { contains: query } },
+        { slug: { contains: query } },
+        { favoriteGenres: { contains: query.replace(/^#/, "") } },
+      ],
       ...(viewerId
         ? {
             AND: [
@@ -30,6 +46,7 @@ export async function GET(req: NextRequest) {
       slug: true,
       bio: true,
       profileTheme: true,
+      favoriteGenres: true,
       _count: { select: { followers: true, feedPosts: true } },
     },
   });
@@ -41,6 +58,7 @@ export async function GET(req: NextRequest) {
       slug: user.slug,
       bio: user.bio,
       profileTheme: user.profileTheme,
+      favoriteGenres: parseGenres(user.favoriteGenres),
       followerCount: user._count.followers,
       postCount: user._count.feedPosts,
     })),

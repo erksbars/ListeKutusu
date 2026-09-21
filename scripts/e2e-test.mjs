@@ -456,6 +456,66 @@ try {
       reopenedForumThread.body.thread?.acceptedReplyId === null
   );
 
+  const backgammonCreate = await request(authorJar, "/api/games/backgammon", {
+    method: "POST",
+    body: JSON.stringify({ visibility: "unlisted" }),
+  });
+  const backgammonId = backgammonCreate.body.sessionId;
+  assert(
+    "Tavla masasını birinci kullanıcıyla açma",
+    backgammonCreate.response.status === 201 && typeof backgammonId === "string",
+    JSON.stringify(backgammonCreate.body)
+  );
+
+  const backgammonJoin = await request(readerJar, `/api/games/backgammon/${backgammonId}/join`, { method: "POST" });
+  assert(
+    "İkinci kullanıcıyla Tavla masasına katılma",
+    backgammonJoin.response.status === 200 &&
+      backgammonJoin.body.session?.status === "active" &&
+      backgammonJoin.body.session?.players?.length === 2 &&
+      backgammonJoin.body.session?.events?.some((event) => event.eventType === "player_joined"),
+    JSON.stringify(backgammonJoin.body)
+  );
+
+  const authorBackgammon = await request(authorJar, `/api/games/backgammon/${backgammonId}`);
+  const readerBackgammon = await request(readerJar, `/api/games/backgammon/${backgammonId}`);
+  const activeUserId = authorBackgammon.body.session?.game?.activeUserId;
+  const activeJar = activeUserId === author.id ? authorJar : readerJar;
+  const activeView = activeUserId === author.id ? authorBackgammon.body.session : readerBackgammon.body.session;
+  const currentRevision = authorBackgammon.body.session?.revision;
+  assert(
+    "İki kullanıcıda aynı Tavla başlangıç durumunu görme",
+    authorBackgammon.response.status === 200 &&
+      readerBackgammon.response.status === 200 &&
+      currentRevision === readerBackgammon.body.session?.revision &&
+      typeof activeUserId === "string"
+  );
+  const unchangedBackgammon = await request(authorJar, `/api/games/backgammon/${backgammonId}`, {
+    headers: { "If-None-Match": `"game-${backgammonId}-${currentRevision}-active"` },
+  });
+  assert("Değişmeyen Tavla odasında hafif 304 yanıtı", unchangedBackgammon.response.status === 304);
+
+  const firstLegalMove = activeView?.game?.legalMoves?.[0];
+  const firstAction = activeView?.game?.canRoll
+    ? { type: "roll", revision: currentRevision }
+    : { type: "move", from: firstLegalMove?.from, to: firstLegalMove?.to, revision: currentRevision };
+  const backgammonMove = await request(activeJar, `/api/games/backgammon/${backgammonId}/action`, {
+    method: "POST",
+    body: JSON.stringify(firstAction),
+  });
+  const authorAfterRoll = await request(authorJar, `/api/games/backgammon/${backgammonId}`);
+  const readerAfterRoll = await request(readerJar, `/api/games/backgammon/${backgammonId}`);
+  assert(
+    "Tavla hamlesini iki kullanıcıya revision ve olay günlüğüyle eşitleme",
+    backgammonMove.response.status === 200 &&
+      authorAfterRoll.body.session?.revision === currentRevision + 1 &&
+      readerAfterRoll.body.session?.revision === currentRevision + 1 &&
+      authorAfterRoll.body.session?.game?.dice?.join(",") === readerAfterRoll.body.session?.game?.dice?.join(",") &&
+      ["dice_rolled", "checker_moved"].includes(authorAfterRoll.body.session?.events?.[0]?.eventType) &&
+      authorAfterRoll.body.session?.events?.[0]?.eventType === readerAfterRoll.body.session?.events?.[0]?.eventType,
+    JSON.stringify(backgammonMove.body)
+  );
+
   const exportResponse = await request(authorJar, "/api/accounts/export");
   assert(
     "Kullanıcı verisi dışa aktarma",

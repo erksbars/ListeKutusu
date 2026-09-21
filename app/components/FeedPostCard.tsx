@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef } from "react";
-import { Bookmark, EyeOff, ExternalLink, Flag, Heart, ListPlus, MoreHorizontal, Music2, Pencil, Trash2, UserPlus } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Bookmark, EyeOff, ExternalLink, Flag, Heart, ListPlus, MessageCircle, MoreHorizontal, Music2, Pencil, Trash2, UserPlus } from "lucide-react";
 
 export type FeedCardPost = {
   id: string;
@@ -15,6 +15,7 @@ export type FeedCardPost = {
   createdAt: string;
   likeCount: number;
   addCount: number;
+  commentCount: number;
   likedByMe: boolean;
   addedByMe: boolean;
   savedByMe: boolean;
@@ -30,6 +31,7 @@ export type FeedCardPost = {
 
 type FeedPostCardProps = {
   post: FeedCardPost;
+  tone?: "primary" | "accent" | "secondary";
   liking: boolean;
   adding: boolean;
   following: boolean;
@@ -55,6 +57,7 @@ const dateFormatter = new Intl.DateTimeFormat("tr-TR", {
 
 export function FeedPostCard({
   post,
+  tone = "primary",
   liking,
   adding,
   following,
@@ -71,6 +74,8 @@ export function FeedPostCard({
   onReport,
 }: FeedPostCardProps) {
   const menuRef = useRef<HTMLDivElement>(null);
+  const [noteExpanded, setNoteExpanded] = useState(false);
+  const noteCanExpand = Boolean(post.note && (post.note.length > 180 || post.note.split("\n").length > 3));
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -92,7 +97,10 @@ export function FeedPostCard({
   }, [menuOpen, onToggleMenu]);
 
   return (
-    <article id={`post-${post.id}`} className="feed-post-card scroll-mt-24">
+    <article
+      id={`post-${post.id}`}
+      className={`feed-post-card feed-post-tone-${tone} scroll-mt-24`}
+    >
       <header className="feed-post-header">
         <div className="flex min-w-0 items-start gap-3">
           <Link
@@ -111,9 +119,11 @@ export function FeedPostCard({
                 {post.author.ownerName}
               </Link>
               <span aria-hidden="true">·</span>
-              <time dateTime={post.createdAt}>
-                {dateFormatter.format(new Date(post.createdAt))}
-              </time>
+              <Link href={`/p/${post.id}`} className="feed-post-permalink" aria-label={`${post.trackName} paylaşımını aç`}>
+                <time dateTime={post.createdAt}>
+                  {dateFormatter.format(new Date(post.createdAt))}
+                </time>
+              </Link>
             </div>
             {post.recommendationReason && (
               <p className="feed-recommendation-reason">
@@ -213,7 +223,7 @@ export function FeedPostCard({
       <div className="feed-track-block">
         <span className="feed-track-icon" aria-hidden="true"><Music2 size={18} /></span>
         <div className="min-w-0">
-          <h2>{post.trackName}</h2>
+          <h2><Link href={`/p/${post.id}`}>{post.trackName}</Link></h2>
           <p>
             {post.artistName}{post.albumName ? ` · ${post.albumName}` : ""}
           </p>
@@ -226,7 +236,16 @@ export function FeedPostCard({
       </div>
       {(post.note || post.tags.length > 0) && (
         <div className="feed-post-context">
-          {post.note && <p className="feed-post-note">{post.note}</p>}
+          {post.note && (
+            <div className="feed-post-note-wrap">
+              <p className={`feed-post-note ${noteExpanded ? "feed-post-note-expanded" : ""}`}>{post.note}</p>
+              {noteCanExpand && (
+                <button type="button" className="feed-post-note-toggle" onClick={() => setNoteExpanded((current) => !current)}>
+                  {noteExpanded ? "Daha az göster" : "Devamını gör"}
+                </button>
+              )}
+            </div>
+          )}
           {post.tags.length > 0 && (
             <div className="feed-post-tags" aria-label="Paylaşım etiketleri">
               {post.tags.slice(0, 3).map((tag) => (
@@ -256,6 +275,14 @@ export function FeedPostCard({
           <Bookmark size={17} fill={post.savedByMe ? "currentColor" : "none"} />
           <span>{saving ? "Kaydediliyor" : post.savedByMe ? "Kaydedildi" : "Kaydet"}</span>
         </button>
+        <Link
+          href={`/p/${post.id}#comments`}
+          className="feed-action"
+          aria-label={`${post.commentCount} yorumu görüntüle`}
+        >
+          <MessageCircle size={17} />
+          <span>Yorumlar</span><strong>{post.commentCount}</strong>
+        </Link>
       </div>
     </article>
   );

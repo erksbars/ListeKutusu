@@ -4,7 +4,14 @@ import { Music2, PencilLine, Plus, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { TrackResult as FeedTrack } from "../hooks/feedTypes";
 import { useSessionNavigation } from "../hooks/useSessionNavigation";
-import { Button, TextField } from "./ui";
+import { Button, TextAreaField, TextField } from "./ui";
+
+const NOTE_STARTERS = [
+  "Bu kısmı özellikle dinle",
+  "Gece yürüyüşü için",
+  "Benzer bir şarkı önerir misin?",
+  "Bu albüm hakkında ne düşünüyorsun?",
+] as const;
 
 type FeedAccount = {
   ownerName: string;
@@ -16,12 +23,14 @@ type FeedComposerProps = {
   query: string;
   results: FeedTrack[];
   selectedTrack: FeedTrack | null;
+  note: string;
   tags: string;
   searching: boolean;
   posting: boolean;
   onQueryChange: (value: string) => void;
   onSelectTrack: (track: FeedTrack) => void;
   onClearTrack: () => void;
+  onNoteChange: (value: string) => void;
   onTagsChange: (value: string) => void;
   onSubmit: () => void;
 };
@@ -31,12 +40,14 @@ export function FeedComposer({
   query,
   results,
   selectedTrack,
+  note,
   tags,
   searching,
   posting,
   onQueryChange,
   onSelectTrack,
   onClearTrack,
+  onNoteChange,
   onTagsChange,
   onSubmit,
 }: FeedComposerProps) {
@@ -84,7 +95,7 @@ export function FeedComposer({
           </span>
           <span className="min-w-0 flex-1 text-left">
             <strong>{account ? "Bir şarkı paylaş" : "Paylaşmak için giriş yap"}</strong>
-            <small>{account ? "Şarkıyı seç, istersen etiket ekle ve akışta paylaş." : "Hesabına dön ve topluluğun keşif akışına katıl."}</small>
+            <small>{account ? "Şarkıyı seç, düşünceni ekle ve akışta paylaş." : "Hesabına dön ve topluluğun keşif akışına katıl."}</small>
           </span>
           <span className="feed-composer-trigger-icon"><Plus size={18} /></span>
         </button>
@@ -103,7 +114,7 @@ export function FeedComposer({
             {account ? `${account.ownerName} olarak paylaş` : "Akışa katıl"}
           </h2>
           <p className="feed-composer-copy">
-            Şarkını seç ve keşif akışına ekle.
+            Şarkını seç, sende bıraktığı şeyi anlat ve keşif akışına ekle.
           </p>
         </div>
         <Button
@@ -182,6 +193,26 @@ export function FeedComposer({
               ))}
           </div>
         )}
+
+        <TextAreaField
+          id="feed-note"
+          label="Bu şarkıyı neden paylaşıyorsun?"
+          labelMeta={`${note.length}/400`}
+          value={note}
+          maxLength={400}
+          rows={3}
+          onChange={(event) => onNoteChange(event.target.value.slice(0, 400))}
+          placeholder="Kısa bir düşünce, dinleme anı veya soru ekle..."
+          hint="İsteğe bağlı. İyi bir açıklama sohbeti başlatır."
+          className="feed-composer-note"
+        />
+        <div className="feed-note-starters" aria-label="Açıklama başlangıçları">
+          {NOTE_STARTERS.map((starter) => (
+            <button key={starter} type="button" onClick={() => onNoteChange(starter)}>
+              {starter}
+            </button>
+          ))}
+        </div>
 
         <TextField
           id="feed-tags"

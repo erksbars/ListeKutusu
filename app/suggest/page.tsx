@@ -16,6 +16,7 @@ import { MobileDock } from "@/app/components/MobileDock";
 import { AccountMenu } from "@/app/components/AccountMenu";
 import { PageTopbar } from "@/app/components/PageTopbar";
 import { useSessionNavigation } from "@/app/hooks/useSessionNavigation";
+import { loadAccountSession } from "@/lib/clientAccountSession";
 
 type Account = {
   id: string;
@@ -122,15 +123,14 @@ export default function SuggestPage() {
   useEffect(() => {
     const initialCode = new URLSearchParams(window.location.search).get("code")?.trim().toUpperCase() || "";
     setCode(initialCode);
-    fetch("/api/accounts/me")
-      .then(async (response) => {
-        if (response.status === 401) {
+    loadAccountSession()
+      .then(async (nextAccount) => {
+        if (!nextAccount) {
           const next = initialCode ? `/suggest?code=${encodeURIComponent(initialCode)}` : "/suggest";
           goToLogin(next);
           return;
         }
-        const data = await response.json();
-        setAccount(data.list);
+        setAccount(nextAccount as Account);
         setChecking(false);
         if (initialCode) await resolveCode(initialCode);
       })
@@ -233,7 +233,13 @@ export default function SuggestPage() {
         />
 
         {checking ? (
-          <div className="mt-8 text-sm text-cyan-50/75">Hesap kontrol ediliyor...</div>
+          <section className="control-loading-state suggest-session-loading" role="status" aria-live="polite">
+            <span className="control-loading-pulse" aria-hidden="true" />
+            <div>
+              <strong>Hesabın hazırlanıyor</strong>
+              <p>Oturumun ve liste erişimin kontrol ediliyor.</p>
+            </div>
+          </section>
         ) : (
           <>
           <ol className="suggest-progress mt-5" aria-label="Öneri gönderme adımları">
@@ -305,8 +311,8 @@ export default function SuggestPage() {
                   className="app-input mt-4 h-12 w-full rounded-xl px-4 text-sm"
                 />
                 <div className="mt-3 grid gap-2">
-                  {searching && <p className="py-4 text-sm text-slate-500">Aranıyor...</p>}
-                  {!searching && query.trim().length >= 2 && results.length === 0 && <p className="py-4 text-sm text-slate-500">Sonuç bulunamadı.</p>}
+                  {searching && <p className="suggest-search-state" role="status">Aranıyor...</p>}
+                  {!searching && query.trim().length >= 2 && results.length === 0 && <p className="suggest-search-state">Sonuç bulunamadı.</p>}
                   {results.slice(0, 10).map((track) => (
                     <button key={track.id} type="button" onClick={() => toggleTrack(track)} className={`suggest-result ${selectedIds.has(track.id) ? "suggest-result-selected" : ""}`}>
                       <span className="suggest-result-check">{selectedIds.has(track.id) && <Check size={15} />}</span>

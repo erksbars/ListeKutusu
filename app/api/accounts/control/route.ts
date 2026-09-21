@@ -109,6 +109,9 @@ export async function GET() {
     select: {
       id: true,
       ownerName: true,
+      email: true,
+      slug: true,
+      role: true,
       playlistName: true,
       spotifyExternalUrl: true,
       lastExportedAt: true,
@@ -135,6 +138,9 @@ export async function GET() {
     list: {
       id: list.id,
       ownerName: list.ownerName,
+      email: list.email,
+      slug: list.slug,
+      role: list.role,
       playlistName: list.playlistName,
       spotifyExternalUrl: list.spotifyExternalUrl,
       lastExportedAt: list.lastExportedAt,

@@ -90,7 +90,7 @@ export function LeaderboardSidebar({ leaderboard, onRefresh, authenticated }: Le
                 href={track.externalUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="flex min-w-0 items-center gap-3 px-1 py-3.5 transition hover:bg-white/60"
+                className="leaderboard-track-link"
               >
                 {content}
               </a>
@@ -114,7 +114,7 @@ export function LeaderboardSidebar({ leaderboard, onRefresh, authenticated }: Le
           <p className="text-xs font-bold uppercase tracking-[0.12em] text-cyan-100/75">Kişisel akış</p>
           <h2 className="mt-2 text-lg font-bold text-white">Keşiflerini kaybetme</h2>
           <p className="mt-2 text-sm leading-6 text-cyan-50/75">Beğenmek, listene eklemek ve kişisel öneriler almak için hesabına gir.</p>
-          <Link href="/account?mode=login" className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-cyan-200 hover:text-white">
+          <Link href="/account?mode=login" className="leaderboard-login-link mt-4">
             Giriş yap <ArrowRight size={15} />
           </Link>
         </div>

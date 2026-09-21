@@ -3,6 +3,8 @@
 import type { Dispatch, SetStateAction } from "react";
 import { useRouter } from "next/navigation";
 import type { AccountList, Suggestion } from "./accountTypes";
+import type { ProfileShowcaseModule } from "@/lib/profileShowcase";
+import type { ProfileBanner, ProfileDensity } from "@/lib/profileAppearance";
 
 type AccountListActionsOptions = {
   list: AccountList | null;
@@ -11,8 +13,14 @@ type AccountListActionsOptions = {
   editingPlaylistName: string;
   friendCode: string;
   profileBio: string;
+  profileStatus: string;
+  pinnedFeedPostId: string;
+  profileShowcaseModules: ProfileShowcaseModule[];
   profileGenres: string;
   profileTheme: string;
+  profileDensity: ProfileDensity;
+  profileBanner: ProfileBanner;
+  featuredAchievementId: string;
   setList: Dispatch<SetStateAction<AccountList | null>>;
   setLoading: Dispatch<SetStateAction<boolean>>;
   setMessage: Dispatch<SetStateAction<string | null>>;
@@ -27,8 +35,14 @@ export function useAccountListActions({
   editingPlaylistName,
   friendCode,
   profileBio,
+  profileStatus,
+  pinnedFeedPostId,
+  profileShowcaseModules,
   profileGenres,
   profileTheme,
+  profileDensity,
+  profileBanner,
+  featuredAchievementId,
   setList,
   setLoading,
   setMessage,
@@ -234,8 +248,14 @@ export function useAccountListActions({
         body: JSON.stringify({
           action: "update-profile",
           bio: profileBio,
+          profileStatus,
+          pinnedFeedPostId,
+          profileShowcase: profileShowcaseModules,
           favoriteGenres,
           profileTheme,
+          profileDensity,
+          profileBanner,
+          featuredAchievementId,
         }),
       });
       const data = await res.json().catch(() => ({}));

@@ -9,6 +9,8 @@ import {
   type NotificationPresentationItem,
 } from "@/lib/notificationPresentation";
 import { Checkbox } from "./ui";
+import { FeedLoadSentinel } from "./FeedLoadSentinel";
+import { useInfiniteScroll } from "@/app/hooks/useInfiniteScroll";
 
 type NotificationPreferences = { follows: boolean; likes: boolean; adds: boolean };
 
@@ -30,10 +32,21 @@ export function NotificationCenter() {
   const [filter, setFilter] = useState<"all" | "unread">("all");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [savingPreferences, setSavingPreferences] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
   const [preferences, setPreferences] = useState<NotificationPreferences>({ follows: true, likes: true, adds: true });
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLElement>(null);
+
+  const notificationSentinelRef = useInfiniteScroll({
+    enabled: open && Boolean(nextCursor) && !historyError,
+    loading: loadingMore,
+    onLoadMore: () => {
+      if (nextCursor) void loadNotifications(false, nextCursor, true);
+    },
+  });
 
   useEffect(() => {
     loadNotifications();
@@ -74,23 +87,44 @@ export function NotificationCenter() {
     };
   }, [open]);
 
-  async function loadNotifications(silent = false) {
-    if (!silent) setLoading(true);
-    setLoadError(false);
+  async function loadNotifications(silent = false, cursor: string | null = null, append = false) {
+    if (append) setLoadingMore(true);
+    else if (!silent) setLoading(true);
+    if (append) setHistoryError(null);
+    else setLoadError(false);
     try {
-      const res = await fetch("/api/notifications");
+      const params = new URLSearchParams();
+      if (cursor) params.set("cursor", cursor);
+      const res = await fetch(`/api/notifications${params.size ? `?${params.toString()}` : ""}`);
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setLoadError(true);
+        if (append) setHistoryError("Eski bildirimler yüklenemedi.");
+        else setLoadError(true);
         return;
       }
-      setItems(data.notifications || []);
+      const incoming = Array.isArray(data.notifications) ? data.notifications : [];
+      setItems((current) => {
+        if (append) {
+          return [...current, ...incoming.filter(
+            (item: NotificationPresentationItem) => !current.some((saved) => saved.id === item.id)
+          )];
+        }
+        if (silent) {
+          return [...incoming, ...current.filter(
+            (saved) => !incoming.some((item: NotificationPresentationItem) => item.id === saved.id)
+          )];
+        }
+        return incoming;
+      });
+      if (!silent || append) setNextCursor(data.nextCursor ?? null);
       setUnreadCount(data.unreadCount || 0);
       if (data.preferences) setPreferences(data.preferences);
     } catch {
-      setLoadError(true);
+      if (append) setHistoryError("Eski bildirimler yüklenirken bağlantı kesildi.");
+      else setLoadError(true);
     } finally {
-      if (!silent) setLoading(false);
+      if (append) setLoadingMore(false);
+      else if (!silent) setLoading(false);
     }
   }
 
@@ -156,7 +190,7 @@ export function NotificationCenter() {
 
   function targetFor(item: NotificationPresentationItem) {
     if (item.forumThread) return `/forum/${item.forumThread.slug}`;
-    if (item.post) return `/#post-${item.post.id}`;
+    if (item.post) return `/p/${item.post.id}`;
     return item.actor ? `/u/${item.actor.slug}` : "/";
   }
 
@@ -193,26 +227,26 @@ export function NotificationCenter() {
           aria-label="Bildirimler"
           className="sticky-panel absolute right-0 top-full z-40 mt-3 w-[min(420px,calc(100vw-32px))] overflow-hidden rounded-2xl text-left"
         >
-          <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-4">
+          <div className="notification-panel-header">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.16em] text-cyan-100/68">
                 Hareketler
               </p>
               <h2 className="mt-1 text-lg font-black text-white">Bildirimler</h2>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="notification-panel-actions">
             {unreadCount > 0 && (
               <button
                 type="button"
                 onClick={() => markRead()}
                 disabled={markingRead}
-                className="rounded-lg border border-white/14 bg-white/[0.08] px-3 py-2 text-xs font-bold text-cyan-50/76 hover:bg-white/14 hover:text-white disabled:cursor-wait disabled:opacity-60"
+                className="notification-mark-all"
               >
                 <CheckCheck size={14} /> <span>{markingRead ? "İşleniyor..." : "Tümünü okundu yap"}</span>
               </button>
             )}
-            <button type="button" onClick={() => setSettingsOpen((current) => !current)} className={settingsOpen ? "toast-close h-10 w-10 bg-white/10 text-white" : "toast-close h-10 w-10"} aria-label="Bildirim tercihleri" aria-expanded={settingsOpen}><Settings2 size={16} /></button>
-            <button type="button" onClick={() => { setOpen(false); triggerRef.current?.focus(); }} className="toast-close h-10 w-10" aria-label="Bildirimleri kapat"><X size={16} /></button>
+            <button type="button" onClick={() => setSettingsOpen((current) => !current)} className={settingsOpen ? "notification-icon-action is-active" : "notification-icon-action"} aria-label="Bildirim tercihleri" aria-expanded={settingsOpen}><Settings2 size={16} /></button>
+            <button type="button" onClick={() => { setOpen(false); triggerRef.current?.focus(); }} className="notification-icon-action" aria-label="Bildirimleri kapat"><X size={16} /></button>
             </div>
           </div>
 
@@ -240,15 +274,15 @@ export function NotificationCenter() {
             </div>
           )}
 
-          <div className="max-h-[430px] overflow-y-auto p-2">
+          <div className="notification-list">
             {actionError && (
               <p className="mb-2 rounded-lg border border-rose-300/20 bg-rose-300/10 px-3 py-2 text-xs font-semibold text-rose-100">
                 Bildirim güncellenemedi. Lütfen tekrar dene.
               </p>
             )}
-            {loading && <p className="px-3 py-5 text-sm text-cyan-50/76">Yükleniyor...</p>}
+            {loading && <p className="notification-state" role="status">Yükleniyor...</p>}
             {!loading && loadError && (
-              <div className="rounded-xl border border-rose-300/20 bg-rose-300/10 p-4">
+              <div className="notification-state notification-state-error">
                 <p className="text-sm font-black text-white">Bildirimler yüklenemedi</p>
                 <p className="mt-1 text-xs leading-5 text-rose-100/72">
                   Bağlantını kontrol edip yeniden deneyebilirsin.
@@ -256,14 +290,14 @@ export function NotificationCenter() {
                 <button
                   type="button"
                   onClick={() => loadNotifications()}
-                  className="mt-3 rounded-lg border border-white/16 bg-white/10 px-3 py-2 text-xs font-bold text-white hover:bg-white/16"
+                  className="secondary-action ui-button-sm mt-3"
                 >
                   <RefreshCw size={14} /> <span>Tekrar dene</span>
                 </button>
               </div>
             )}
             {!loading && !loadError && visibleGroups.length === 0 && (
-              <div className="rounded-xl border border-white/10 bg-white/[0.06] p-5 text-center">
+              <div className="notification-state notification-state-empty">
                 <BellOff size={22} className="mx-auto text-cyan-100/72" />
                 <p className="text-sm font-black text-white">{filter === "unread" ? "Okunmamış bildirimin yok" : "Şimdilik sessiz"}</p>
                 <p className="mt-1 text-xs leading-5 text-cyan-50/74">
@@ -305,6 +339,17 @@ export function NotificationCenter() {
                 </Link>
                 );
               })}
+            {(nextCursor || loadingMore || historyError) && (
+              <FeedLoadSentinel
+                sentinelRef={notificationSentinelRef}
+                loading={loadingMore}
+                error={historyError}
+                loadingLabel="Eski bildirimler yükleniyor..."
+                onRetry={() => {
+                  if (nextCursor) void loadNotifications(false, nextCursor, true);
+                }}
+              />
+            )}
           </div>
         </section>
       )}

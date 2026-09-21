@@ -449,8 +449,8 @@
 .discover-signal-added { border-color: color-mix(in srgb, var(--ui-success) 24%, transparent); color: var(--ui-success); }
 .discover-open {
   display: inline-flex;
-  width: 34px;
-  height: 34px;
+  width: 44px;
+  height: 44px;
   align-items: center;
   justify-content: center;
   border: 1px solid var(--ui-surface-tint-xl);
@@ -579,6 +579,68 @@
 }
 .discover-person-card strong { display: block; overflow: hidden; color: white; font-size: 14px; font-weight: 900; text-overflow: ellipsis; white-space: nowrap; }
 .discover-person-card small { display: block; margin-top: 4px; overflow: hidden; color: var(--ui-text-subtle); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.discover-person-card em {
+  display: block;
+  overflow: hidden;
+  margin-top: 5px;
+  color: var(--ui-primary);
+  font-size: var(--ui-text-xs);
+  font-style: normal;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.discover-people-aside {
+  margin-top: 16px;
+  border-top: 1px solid var(--ui-divider);
+  padding-top: 16px;
+}
+
+.discover-people-aside-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.discover-people-aside-heading h3 {
+  margin-top: 3px;
+  color: var(--ui-text-strong);
+  font-size: var(--ui-text-sm);
+  font-weight: 850;
+}
+
+.discover-people-aside-heading > svg,
+.discover-person-arrow {
+  color: var(--ui-primary);
+}
+
+.discover-people-aside-list {
+  display: grid;
+  gap: 3px;
+}
+
+.discover-people-aside .discover-curator-row strong,
+.discover-people-aside .discover-curator-row small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.discover-people-aside .discover-curator-row strong {
+  color: var(--ui-text-strong);
+  font-size: var(--ui-text-xs);
+  font-weight: 850;
+}
+
+.discover-people-aside .discover-curator-row small {
+  margin-top: 2px;
+  color: var(--ui-text-muted);
+  font-size: 0.68rem;
+}
 
 .discover-list-results {
   margin-top: 16px;
@@ -710,7 +772,11 @@
 
 .feed-follow-button:hover,
 .feed-menu-button:hover,
-.feed-external-button:hover { background: white; color: var(--ui-text-strong); }
+.feed-external-button:hover {
+  border-color: var(--ui-border-strong);
+  background: var(--ui-surface-hover);
+  color: var(--ui-text-strong);
+}
 
 .feed-track-block {
   display: grid;

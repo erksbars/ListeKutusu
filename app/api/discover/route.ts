@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 import { buildDiscoverData } from "@/lib/discover";
 import { prisma } from "@/lib/db";
 import { getAuthenticatedAccountListId } from "@/lib/session";
+import {
+  compareProfileSuggestions,
+  describeProfileSuggestion,
+  findSharedProfileGenres,
+} from "@/lib/profileDiscovery";
 
 export const dynamic = "force-dynamic";
 
@@ -76,6 +81,7 @@ export async function GET() {
         playlistName: true,
         slug: true,
         profileTheme: true,
+        favoriteGenres: true,
         _count: {
           select: { followers: true, feedPosts: true, suggestions: true },
         },
@@ -115,16 +121,28 @@ export async function GET() {
     }))
     .sort((left, right) => right.score - left.score || left.name.localeCompare(right.name, "tr"))
     .slice(0, 40);
+  const viewerGenres = parseTags(accountLists.find((list) => list.id === viewerId)?.favoriteGenres ?? null);
   const people = accountLists
-    .map((list) => ({
-      id: list.id,
-      ownerName: list.ownerName,
-      slug: list.slug,
-      profileTheme: list.profileTheme,
-      posts: list._count.feedPosts,
-      followers: list._count.followers,
-    }))
-    .sort((left, right) => right.followers - left.followers || right.posts - left.posts || left.ownerName.localeCompare(right.ownerName, "tr"))
+    .filter((list) => list.id !== viewerId)
+    .map((list) => {
+      const sharedGenres = findSharedProfileGenres(viewerGenres, parseTags(list.favoriteGenres));
+      const reason = describeProfileSuggestion({
+        sharedGenres,
+        posts: list._count.feedPosts,
+        followers: list._count.followers,
+      });
+      return {
+        id: list.id,
+        ownerName: list.ownerName,
+        slug: list.slug,
+        profileTheme: list.profileTheme,
+        posts: list._count.feedPosts,
+        followers: list._count.followers,
+        sharedGenres,
+        reason,
+      };
+    })
+    .sort((left, right) => compareProfileSuggestions(left, right) || left.ownerName.localeCompare(right.ownerName, "tr"))
     .slice(0, 100);
 
   return NextResponse.json({

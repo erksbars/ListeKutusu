@@ -11,10 +11,11 @@ import { PageTopbar } from "@/app/components/PageTopbar";
 import { ConfirmDialog } from "@/app/components/ConfirmDialog";
 import { Button, SelectField, TextAreaField, TextField } from "@/app/components/ui";
 import { useSessionNavigation } from "@/app/hooks/useSessionNavigation";
+import { loadAccountSession } from "@/lib/clientAccountSession";
 
 type Account = {
   ownerName: string;
-  email: string | null;
+  email?: string | null;
   slug: string;
   role?: string | null;
 };
@@ -52,14 +53,12 @@ export default function NewForumThreadPage() {
     setChecking(true);
     setAuthError(null);
     try {
-      const response = await fetch("/api/accounts/me");
-      if (response.status === 401) {
+      const nextAccount = await loadAccountSession();
+      if (!nextAccount) {
         goToLogin("/forum/new");
         return;
       }
-      const data = await response.json().catch(() => null);
-      if (!response.ok) throw new Error(data?.error || "Hesap bilgileri alınamadı.");
-      setAccount(data?.list || null);
+      setAccount(nextAccount);
     } catch {
       setAuthError("Hesabın doğrulanamadı. Bağlantını kontrol edip tekrar dene.");
     } finally {
@@ -174,6 +173,7 @@ export default function NewForumThreadPage() {
           icon={<MessageSquarePlus size={19} />}
           backHref="/forum"
           backLabel="Foruma dön"
+          showPrimaryNavigation
           actions={account && (
             <AccountMenu
               ownerName={account.ownerName}

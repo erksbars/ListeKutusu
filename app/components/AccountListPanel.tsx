@@ -79,7 +79,7 @@ export function AccountListPanel({
             type="button"
             onClick={onExportList}
             disabled={loading}
-            className="primary-action h-11 rounded-xl px-3 text-sm font-black disabled:cursor-wait disabled:bg-slate-300 sm:col-span-2"
+            className="primary-action h-11 rounded-xl px-3 text-sm font-black disabled:cursor-wait sm:col-span-2"
           >
             <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
             <span>{loading
@@ -94,7 +94,7 @@ export function AccountListPanel({
                 href={spotifyExternalUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="flex h-11 items-center justify-center rounded-xl border border-white/24 bg-white/10 px-3 text-center text-sm font-bold text-white hover:border-cyan-200/60 hover:bg-white/16"
+                className="secondary-action account-list-external-action"
               >
                 <ExternalLink size={15} /> <span>Spotify'da aç</span>
               </a>
@@ -102,7 +102,7 @@ export function AccountListPanel({
                 href={copyServiceUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="flex h-11 items-center justify-center rounded-xl border border-white/24 bg-white/10 px-3 text-center text-sm font-bold text-white hover:border-cyan-200/60 hover:bg-white/16"
+                className="secondary-action account-list-external-action"
               >
                 <ListMusic size={15} /> <span>Kopyalama servisi</span>
               </a>
@@ -139,7 +139,7 @@ export function AccountListPanel({
         <button
           type="submit"
           disabled={loading || !playlistDirty || playlistName.trim().length === 0}
-          className="primary-action mt-3 h-11 w-full rounded-xl px-4 text-sm font-black disabled:cursor-not-allowed disabled:bg-slate-300"
+          className="primary-action mt-3 h-11 w-full rounded-xl px-4 text-sm font-black disabled:cursor-not-allowed"
         >
           <Save size={16} /> <span>Liste adını kaydet</span>
         </button>

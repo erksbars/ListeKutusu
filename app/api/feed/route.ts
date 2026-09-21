@@ -9,6 +9,8 @@ import {
   rankPersonalizedFeed,
   type PersonalizationSignals,
 } from "@/lib/feedRanking";
+import { parseOffsetCursor } from "@/lib/pagination";
+import { normalizeFeedNote } from "@/lib/feedContent";
 
 export const dynamic = "force-dynamic";
 
@@ -56,7 +58,7 @@ type FeedPostWithRelations = Prisma.FeedPostGetPayload<{
         followers: { select: { id: true } };
       };
     };
-    _count: { select: { likes: true; adds: true } };
+    _count: { select: { likes: true; adds: true; comments: true } };
     likes: { select: { id: true } };
     adds: { select: { id: true } };
     saves: { select: { id: true } };
@@ -83,6 +85,7 @@ function serializePost(
     createdAt: post.createdAt,
     likeCount: post._count?.likes ?? 0,
     addCount: post._count?.adds ?? 0,
+    commentCount: post._count?.comments ?? 0,
     likedByMe: Boolean(post.likes?.length),
     addedByMe: Boolean(post.adds?.length),
     savedByMe: Boolean(post.saves?.length),
@@ -111,6 +114,7 @@ export async function GET(req: NextRequest) {
   const personalized = scope === "personalized" && Boolean(viewerId);
   const savedOnly = scope === "saved" && Boolean(viewerId);
   const specialScope = trending || genresOnly || personalized || savedOnly;
+  const rankedOffset = specialScope ? parseOffsetCursor(cursor) : 0;
 
   if (
     (scope === "following" ||
@@ -217,7 +221,7 @@ export async function GET(req: NextRequest) {
           },
         },
       },
-      _count: { select: { likes: true, adds: true } },
+      _count: { select: { likes: true, adds: true, comments: { where: { status: "published" } } } },
       likes: {
         where: { userId: safeViewerId },
         select: { id: true },
@@ -275,8 +279,12 @@ export async function GET(req: NextRequest) {
         };
       })).map((item) => item.post)
       : filtered;
-  const hasMore = !specialScope && ranked.length > take;
-  const page = ranked.slice(0, take);
+  const hasMore = specialScope
+    ? ranked.length > rankedOffset + take
+    : ranked.length > take;
+  const page = specialScope
+    ? ranked.slice(rankedOffset, rankedOffset + take)
+    : ranked.slice(0, take);
 
   return NextResponse.json({
     posts: page.map((post) =>
@@ -286,7 +294,11 @@ export async function GET(req: NextRequest) {
         recommendationReason: recommendationReasons.get(post.id) ?? null,
       })
     ),
-    nextCursor: hasMore ? page.at(-1)?.id ?? null : null,
+    nextCursor: hasMore
+      ? specialScope
+        ? `offset:${rankedOffset + take}`
+        : page.at(-1)?.id ?? null
+      : null,
     emptyReason:
       genresOnly && preferredGenres.length === 0
         ? "Türlerine özel akış için profilinden favori türlerini seç."
@@ -322,9 +334,13 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
   const trackId = typeof body?.trackId === "string" ? body.trackId.trim() : "";
   const tags = normalizeTags(body?.tags);
+  const noteResult = normalizeFeedNote(body?.note);
 
   if (!trackId) {
     return NextResponse.json({ error: "Şarkı bilgisi eksik." }, { status: 400 });
+  }
+  if (!noteResult.ok) {
+    return NextResponse.json({ error: noteResult.error }, { status: 400 });
   }
 
   const account = await prisma.userList.findUnique({
@@ -392,7 +408,7 @@ export async function POST(req: NextRequest) {
       durationMs: track.durationMs || null,
       externalUrl: track.externalUrl,
       source: "spotify",
-      note: null,
+      note: noteResult.note,
       tags: enrichedTags.length ? JSON.stringify(enrichedTags) : null,
     },
     include: {
@@ -409,7 +425,7 @@ export async function POST(req: NextRequest) {
           },
         },
       },
-      _count: { select: { likes: true, adds: true } },
+      _count: { select: { likes: true, adds: true, comments: { where: { status: "published" } } } },
       likes: {
         where: { userId: authorId },
         select: { id: true },
@@ -450,7 +466,11 @@ export async function PATCH(req: NextRequest) {
   const body = await req.json().catch(() => null);
   const postId = typeof body?.postId === "string" ? body.postId.trim() : "";
   const tags = normalizeTags(body?.tags);
+  const noteResult = normalizeFeedNote(body?.note);
   if (!postId) return NextResponse.json({ error: "Paylaşım bilgisi eksik." }, { status: 400 });
+  if (!noteResult.ok) {
+    return NextResponse.json({ error: noteResult.error }, { status: 400 });
+  }
 
   const post = await prisma.feedPost.findUnique({
     where: { id: postId },
@@ -466,7 +486,7 @@ export async function PATCH(req: NextRequest) {
   const updated = await prisma.feedPost.update({
     where: { id: postId },
     data: {
-      note: null,
+      note: noteResult.note,
       tags: tags.length ? JSON.stringify(tags) : null,
     },
     select: { id: true, note: true, tags: true, updatedAt: true },

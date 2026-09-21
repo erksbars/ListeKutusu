@@ -25,7 +25,8 @@ import type { AccountList, ScoreSummary } from "./accountTypes";
 import { useAccountAuthActions } from "./useAccountAuthActions";
 import { useAccountListActions } from "./useAccountListActions";
 import { useAccountSecurityActions } from "./useAccountSecurityActions";
-
+import { DEFAULT_PROFILE_SHOWCASE, normalizeProfileShowcase, type ProfileShowcaseModule } from "@/lib/profileShowcase";
+import { normalizeProfileBanner, normalizeProfileDensity, type ProfileBanner, type ProfileDensity } from "@/lib/profileAppearance";
 type ConfirmState = {
   title: string;
   body: string;
@@ -42,7 +43,6 @@ function normalizeGenres(value: string) {
     .slice(0, 6)
     .join("|");
 }
-
 export default function AccountPage() {
   const router = useRouter();
   const [mode, setMode] = useState<"login" | "create" | "panel">("login");
@@ -52,8 +52,16 @@ export default function AccountPage() {
   const [checkingSession, setCheckingSession] = useState(true);
   const [editingPlaylistName, setEditingPlaylistName] = useState("");
   const [profileBio, setProfileBio] = useState("");
+  const [profileStatus, setProfileStatus] = useState("");
+  const [pinnedFeedPostId, setPinnedFeedPostId] = useState("");
+  const [profileShowcaseModules, setProfileShowcaseModules] = useState<ProfileShowcaseModule[]>(
+    [...DEFAULT_PROFILE_SHOWCASE]
+  );
   const [profileGenres, setProfileGenres] = useState("");
   const [profileTheme, setProfileTheme] = useState("aurora");
+  const [profileDensity, setProfileDensity] = useState<ProfileDensity>("comfortable");
+  const [profileBanner, setProfileBanner] = useState<ProfileBanner>("line");
+  const [featuredAchievementId, setFeaturedAchievementId] = useState("");
   const [panelTab, setPanelTab] = useState<PanelTab>("requests");
   const [decisionFilter, setDecisionFilter] = useState<
     "all" | "approved" | "rejected" | "removed"
@@ -157,8 +165,14 @@ export default function AccountPage() {
   const hasProfileChanges = Boolean(
     list &&
       (profileBio !== (list.bio || "") ||
+        profileStatus !== (list.profileStatus || "") ||
+        pinnedFeedPostId !== (list.pinnedFeedPostId || "") ||
+        profileShowcaseModules.join("|") !== normalizeProfileShowcase(list.profileShowcase).join("|") ||
         normalizeGenres(profileGenres) !== normalizeGenres(savedGenres) ||
-        profileTheme !== (list.profileTheme || "aurora"))
+        profileTheme !== (list.profileTheme || "aurora") ||
+        profileDensity !== normalizeProfileDensity(list.profileDensity) ||
+        profileBanner !== normalizeProfileBanner(list.profileBanner) ||
+        featuredAchievementId !== (list.featuredAchievementId || ""))
   );
   const hasUnsavedChanges = hasListChanges || hasProfileChanges;
   const activePanel = panelTabs.find((tab) => tab.value === panelTab) ?? panelTabs[0];
@@ -193,6 +207,9 @@ export default function AccountPage() {
       setList(data.list);
       setEditingPlaylistName(data.list?.playlistName || data.list?.ownerName || "");
       setProfileBio(data.list?.bio || "");
+      setProfileStatus(data.list?.profileStatus || "");
+      setPinnedFeedPostId(data.list?.pinnedFeedPostId || "");
+      setProfileShowcaseModules(normalizeProfileShowcase(data.list?.profileShowcase));
       try {
         const genres = JSON.parse(data.list?.favoriteGenres || "[]");
         setProfileGenres(Array.isArray(genres) ? genres.join(", ") : "");
@@ -200,6 +217,9 @@ export default function AccountPage() {
         setProfileGenres("");
       }
       setProfileTheme(data.list?.profileTheme || "aurora");
+      setProfileDensity(normalizeProfileDensity(data.list?.profileDensity));
+      setProfileBanner(normalizeProfileBanner(data.list?.profileBanner));
+      setFeaturedAchievementId(data.list?.featuredAchievementId || "");
       setMode("panel");
       void loadScore(data.list?.id);
     } catch {
@@ -227,8 +247,14 @@ export default function AccountPage() {
     editingPlaylistName,
     friendCode,
     profileBio,
+    profileStatus,
+    pinnedFeedPostId,
+    profileShowcaseModules,
     profileGenres,
     profileTheme,
+    profileDensity,
+    profileBanner,
+    featuredAchievementId,
     setList,
     setLoading,
     setMessage,
@@ -270,8 +296,14 @@ export default function AccountPage() {
     if (!list) return;
     setEditingPlaylistName(list.playlistName || list.ownerName || "");
     setProfileBio(list.bio || "");
+    setProfileStatus(list.profileStatus || "");
+    setPinnedFeedPostId(list.pinnedFeedPostId || "");
+    setProfileShowcaseModules(normalizeProfileShowcase(list.profileShowcase));
     setProfileGenres(savedGenres);
     setProfileTheme(list.profileTheme || "aurora");
+    setProfileDensity(normalizeProfileDensity(list.profileDensity));
+    setProfileBanner(normalizeProfileBanner(list.profileBanner));
+    setFeaturedAchievementId(list.featuredAchievementId || "");
   }
 
   function selectPanelTab(value: PanelTab) {
@@ -383,7 +415,7 @@ export default function AccountPage() {
         onCancel={() => setConfirmDialog(null)}
         onConfirm={() => confirmDialog?.onConfirm()}
       />
-      <section className="ui-page-frame relative mx-auto min-h-screen px-4 pb-12 sm:px-6">
+      <section className={`ui-page-frame relative mx-auto min-h-screen px-4 pb-12 sm:px-6 ${mode === "panel" ? "desktop-density-comfortable" : ""}`}>
         <PageTopbar
           title="Hesap merkezi"
           subtitle={mode === "panel" && list ? list.playlistName || list.ownerName : "Giriş yap veya yeni hesap oluştur"}
@@ -528,15 +560,30 @@ export default function AccountPage() {
 
               {panelTab === "profile" && (
                 <AccountProfilePanel
+                  ownerName={list.ownerName}
                   slug={list.slug}
                   bio={profileBio}
+                  status={profileStatus}
+                  pinnedPostId={pinnedFeedPostId}
+                  showcaseModules={profileShowcaseModules}
+                  posts={list.profilePosts || []}
                   genres={profileGenres}
                   theme={profileTheme}
+                  density={profileDensity}
+                  banner={profileBanner}
+                  featuredAchievementId={featuredAchievementId}
+                  achievements={list.profileAchievements || []}
                   dirty={hasProfileChanges}
                   loading={loading}
                   onBioChange={setProfileBio}
+                  onStatusChange={setProfileStatus}
+                  onPinnedPostChange={setPinnedFeedPostId}
+                  onShowcaseModulesChange={setProfileShowcaseModules}
                   onGenresChange={setProfileGenres}
                   onThemeChange={setProfileTheme}
+                  onDensityChange={setProfileDensity}
+                  onBannerChange={setProfileBanner}
+                  onFeaturedAchievementChange={setFeaturedAchievementId}
                   onSave={saveProfile}
                 />
               )}

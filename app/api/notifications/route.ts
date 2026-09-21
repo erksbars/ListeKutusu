@@ -1,20 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthenticatedAccountListId } from "@/lib/session";
+import { parseOffsetCursor } from "@/lib/pagination";
 
 export const dynamic = "force-dynamic";
+const NOTIFICATION_PAGE_SIZE = 20;
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const userId = await getAuthenticatedAccountListId();
   if (!userId) {
     return NextResponse.json({ error: "Yetkisiz." }, { status: 401 });
   }
+  const offset = parseOffsetCursor(req.nextUrl.searchParams.get("cursor"), 10_000);
 
   const [notifications, unreadCount, account] = await Promise.all([
     prisma.notification.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
-      take: 30,
+      skip: offset,
+      take: NOTIFICATION_PAGE_SIZE + 1,
       include: {
         actor: { select: { id: true, ownerName: true, slug: true, profileTheme: true } },
         post: { select: { id: true, trackName: true, artistName: true } },
@@ -29,7 +33,10 @@ export async function GET() {
   ]);
 
   return NextResponse.json({
-    notifications,
+    notifications: notifications.slice(0, NOTIFICATION_PAGE_SIZE),
+    nextCursor: notifications.length > NOTIFICATION_PAGE_SIZE
+      ? `offset:${offset + NOTIFICATION_PAGE_SIZE}`
+      : null,
     unreadCount,
     preferences: {
       follows: account?.notifyFollows ?? true,

@@ -102,6 +102,7 @@ export function AdminReportsPanel({
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
+                    <span className="status-pill">{report.targetType === "comment" ? "Yorum" : "Paylaşım"}</span>
                     {report.reasons.map((reason) => <span key={reason} className="status-pill status-pill-danger">{reportReasonLabels[reason] || reason}</span>)}
                     {report.reportCount > 1 && <span className="status-pill border border-amber-200 bg-amber-50 text-amber-800">{report.reportCount} bildirim</span>}
                     <span className="text-xs font-semibold text-slate-500">
@@ -109,13 +110,14 @@ export function AdminReportsPanel({
                     </span>
                   </div>
                   <h3 className="mt-3 text-lg font-black text-navy">{report.post.trackName} - {report.post.artistName}</h3>
-                  <p className="mt-1 text-sm text-slate-500">Paylaşan: {report.post.author.ownerName}</p>
+                  <p className="mt-1 text-sm text-slate-500">{report.targetType === "comment" ? "Yorum sahibi" : "Paylaşan"}: {report.comment?.author.ownerName || report.post.author.ownerName}</p>
                   <p className="mt-1 text-xs font-semibold text-slate-400">
                     {report.status === "pending" ? "İlk bildirim" : "Karar"}: {adminDateFormatter.format(new Date(report.status === "pending" ? report.createdAt : report.reviewedAt || report.createdAt))}
                   </p>
-                  {(report.details || report.post.note) && (
+                  {(report.details || report.post.note || report.comment) && (
                     <div className="mt-3 rounded-xl bg-sky-50/70 p-3 text-sm leading-6 text-slate-600">
                       {report.details && <p><strong>Şikâyet notu:</strong> {report.details}</p>}
+                      {report.comment && <p><strong>Yorum:</strong> {report.comment.body}</p>}
                       {report.post.note && <p><strong>Paylaşım notu:</strong> {report.post.note}</p>}
                     </div>
                   )}
@@ -124,7 +126,7 @@ export function AdminReportsPanel({
                   <div className="flex shrink-0 flex-wrap gap-2" aria-busy={busyAction === `report:${report.id}`}>
                     <Button size="sm" disabled={Boolean(busyAction)} onClick={() => onModerate(report.id, "dismiss")}>Raporu reddet</Button>
                     <Button size="sm" disabled={Boolean(busyAction)} onClick={() => onModerate(report.id, "resolve")}>Çözüldü</Button>
-                    <Button size="sm" variant="danger" disabled={Boolean(busyAction)} onClick={() => onRequestRemove(report.id)}>Paylaşımı kaldır</Button>
+                    <Button size="sm" variant="danger" disabled={Boolean(busyAction)} onClick={() => onRequestRemove(report.id)}>{report.targetType === "comment" ? "Yorumu kaldır" : "Paylaşımı kaldır"}</Button>
                   </div>
                 ) : (
                   <span className={report.status === "resolved" ? "status-pill status-pill-success" : "status-pill border border-slate-200 bg-slate-100 text-slate-600"}>

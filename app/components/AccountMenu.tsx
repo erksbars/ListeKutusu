@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, ListMusic, LogOut, Settings2, ShieldCheck, UserRound } from "lucide-react";
+import { NotificationCenter } from "./NotificationCenter";
 
 type AccountMenuProps = {
   ownerName: string;
@@ -56,12 +57,14 @@ export function AccountMenu({ ownerName, email, profileSlug, role, onLogout }: A
   }, [open]);
 
   return (
-    <details
-      ref={detailsRef}
-      open={open}
-      onToggle={(event) => setOpen(event.currentTarget.open)}
-      className="account-menu"
-    >
+    <>
+      <NotificationCenter />
+      <details
+        ref={detailsRef}
+        open={open}
+        onToggle={(event) => setOpen(event.currentTarget.open)}
+        className="account-menu"
+      >
       <summary
         ref={summaryRef}
         id="account-menu-trigger"
@@ -140,6 +143,7 @@ export function AccountMenu({ ownerName, email, profileSlug, role, onLogout }: A
           <LogOut size={16} /> Çıkış yap
         </button>
       </div>
-    </details>
+      </details>
+    </>
   );
 }

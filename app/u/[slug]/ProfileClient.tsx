@@ -2,13 +2,17 @@
 
 import Link from "next/link";
 import { KeyboardEvent as ReactKeyboardEvent, useCallback, useEffect, useRef, useState } from "react";
-import { Award, CalendarDays, LogIn, MoreHorizontal, Music2, Settings2, ShieldBan, UserPlus, UserRound } from "lucide-react";
+import { Activity, Award, Gamepad2, LogIn, MoreHorizontal, Music2, Settings2, Share2, ShieldBan, UserPlus, UserRound } from "lucide-react";
 import { Toast } from "../../components/Toast";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { AccountMenu } from "../../components/AccountMenu";
 import { MobileDock } from "../../components/MobileDock";
 import { PageTopbar } from "../../components/PageTopbar";
+import { FeedLoadSentinel } from "../../components/FeedLoadSentinel";
 import { ProfileTabPanels } from "../../components/profile/ProfileTabPanels";
+import { ProfileHeroV3 } from "../../components/profile/ProfileHeroV3";
+import { ProfileIdentityRail } from "../../components/profile/ProfileIdentityRail";
+import { useInfiniteScroll } from "../../hooks/useInfiniteScroll";
 import { useSessionNavigation } from "../../hooks/useSessionNavigation";
 import type { ConnectionUser, Profile, ProfileTab, ViewerAccount } from "./profileTypes";
 
@@ -20,28 +24,88 @@ const themeClasses: Record<string, string> = {
 };
 
 const profileTabs = [
-  ["posts", "Paylaşımlar", Music2],
+  ["posts", "Vitrin", Music2],
+  ["activity", "Aktivite", Activity],
   ["about", "Hakkında", UserRound],
   ["achievements", "Rozetler", Award],
 ] as const;
 
-export default function ProfileClient({ slug }: { slug: string }) {
+type ProfileClientProps = {
+  slug: string;
+  initialProfile: Profile;
+  initialViewer: ViewerAccount | null;
+};
+
+export default function ProfileClient({ slug, initialProfile, initialViewer }: ProfileClientProps) {
   const { goToLogin, logoutToHome } = useSessionNavigation();
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(initialProfile);
   const [message, setMessage] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [connectionType, setConnectionType] = useState<"followers" | "following" | null>(null);
   const [connectionUsers, setConnectionUsers] = useState<ConnectionUser[]>([]);
   const [connectionsLoading, setConnectionsLoading] = useState(false);
+  const [connectionsError, setConnectionsError] = useState<string | null>(null);
+  const [connectionsCursor, setConnectionsCursor] = useState<string | null>(null);
   const [confirmBlock, setConfirmBlock] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [profileTab, setProfileTab] = useState<ProfileTab>("posts");
-  const [viewer, setViewer] = useState<ViewerAccount | null>(null);
+  const [postsLoading, setPostsLoading] = useState(false);
+  const [postsError, setPostsError] = useState<string | null>(null);
+  const viewer = initialViewer;
   const connectionsDialogRef = useRef<HTMLElement>(null);
   const connectionsCloseRef = useRef<HTMLButtonElement>(null);
   const profileMenuRef = useRef<HTMLDivElement>(null);
+
+  const loadMorePosts = useCallback(async () => {
+    if (!profile?.nextPostCursor || postsLoading) return;
+    setPostsLoading(true);
+    setPostsError(null);
+    try {
+      const params = new URLSearchParams({
+        slug,
+        cursor: profile.nextPostCursor,
+      });
+      const res = await fetch(`/api/profiles/posts?${params.toString()}`);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !Array.isArray(data.posts)) {
+        setPostsError(data.error || "Paylaşımlar yüklenemedi.");
+        return;
+      }
+      setProfile((current) => current ? {
+        ...current,
+        posts: [
+          ...current.posts,
+          ...data.posts.filter(
+            (post: Profile["posts"][number]) =>
+              !current.posts.some((currentPost) => currentPost.id === post.id)
+          ),
+        ],
+        nextPostCursor: data.nextCursor ?? null,
+      } : current);
+    } catch {
+      setPostsError("Paylaşımlar yüklenirken bağlantı kesildi.");
+    } finally {
+      setPostsLoading(false);
+    }
+  }, [postsLoading, profile?.nextPostCursor, slug]);
+
+  const postsSentinelRef = useInfiniteScroll({
+    enabled: profileTab === "posts" && Boolean(profile?.nextPostCursor) && !postsError,
+    loading: postsLoading,
+    onLoadMore: loadMorePosts,
+  });
+
+  const connectionsSentinelRef = useInfiniteScroll({
+    enabled: Boolean(connectionType && connectionsCursor) && !connectionsError,
+    loading: connectionsLoading,
+    onLoadMore: () => {
+      if (connectionType && connectionsCursor) {
+        void loadConnections(connectionType, connectionsCursor, true);
+      }
+    },
+  });
 
   const loadProfile = useCallback(async () => {
     setLoading(true);
@@ -64,24 +128,18 @@ export default function ProfileClient({ slug }: { slug: string }) {
   }, [slug]);
 
   useEffect(() => {
-    loadProfile();
-  }, [loadProfile]);
+    setProfile(initialProfile);
+    setLoadError(null);
+    setLoading(false);
+    setPostsError(null);
+    setPostsLoading(false);
+  }, [initialProfile]);
 
   useEffect(() => {
     const requestedTab = new URLSearchParams(window.location.search).get("tab");
-    if (requestedTab === "posts" || requestedTab === "about" || requestedTab === "achievements") {
+    if (requestedTab === "posts" || requestedTab === "activity" || requestedTab === "about" || requestedTab === "achievements") {
       setProfileTab(requestedTab);
     }
-  }, []);
-
-  useEffect(() => {
-    fetch("/api/accounts/me")
-      .then(async (response) => {
-        if (!response.ok) return;
-        const data = await response.json();
-        setViewer(data.list || null);
-      })
-      .catch(() => null);
   }, []);
 
   useEffect(() => {
@@ -167,21 +225,45 @@ export default function ProfileClient({ slug }: { slug: string }) {
     setMessage(data.following ? "Profil takip edildi." : "Takip bırakıldı.");
   }
 
-  async function openConnections(type: "followers" | "following") {
+  async function loadConnections(
+    type: "followers" | "following",
+    cursor: string | null = null,
+    append = false
+  ) {
+    if (connectionsLoading) return;
+    setConnectionsLoading(true);
+    setConnectionsError(null);
+    const params = new URLSearchParams({ slug, type });
+    if (cursor) params.set("cursor", cursor);
+    try {
+      const res = await fetch(
+        `/api/profiles/connections?${params.toString()}`
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setConnectionsError(data.error || "Kullanıcılar yüklenemedi.");
+        return;
+      }
+      const nextUsers = Array.isArray(data.users) ? data.users : [];
+      setConnectionUsers((current) => append
+        ? [...current, ...nextUsers.filter(
+            (user: ConnectionUser) => !current.some((item) => item.id === user.id)
+          )]
+        : nextUsers);
+      setConnectionsCursor(data.nextCursor ?? null);
+    } catch {
+      setConnectionsError("Kullanıcılar yüklenirken bağlantı kesildi.");
+    } finally {
+      setConnectionsLoading(false);
+    }
+  }
+
+  function openConnections(type: "followers" | "following") {
     setConnectionType(type);
     setConnectionUsers([]);
-    setConnectionsLoading(true);
-    const res = await fetch(
-      `/api/profiles/connections?slug=${encodeURIComponent(slug)}&type=${type}`
-    );
-    const data = await res.json().catch(() => ({}));
-    setConnectionsLoading(false);
-    if (!res.ok) {
-      setMessage(data.error || "Kullanıcılar yüklenemedi.");
-      setConnectionType(null);
-      return;
-    }
-    setConnectionUsers(data.users || []);
+    setConnectionsCursor(null);
+    setConnectionsError(null);
+    void loadConnections(type);
   }
 
   async function toggleBlock() {
@@ -215,6 +297,25 @@ export default function ProfileClient({ slug }: { slug: string }) {
     }
   }
 
+  async function copyProfileLink() {
+    if (!profile) return;
+    const profileUrl = `${window.location.origin}/u/${profile.slug}`;
+    try {
+      await navigator.clipboard.writeText(profileUrl);
+      setMessage("Profil bağlantısı kopyalandı.");
+    } catch {
+      const input = document.createElement("textarea");
+      input.value = profileUrl;
+      input.style.position = "fixed";
+      input.style.opacity = "0";
+      document.body.appendChild(input);
+      input.select();
+      const copied = document.execCommand("copy");
+      input.remove();
+      setMessage(copied ? "Profil bağlantısı kopyalandı." : "Profil bağlantısı kopyalanamadı.");
+    }
+  }
+
   function selectProfileTab(value: ProfileTab) {
     setProfileTab(value);
     const url = new URL(window.location.href);
@@ -239,20 +340,6 @@ export default function ProfileClient({ slug }: { slug: string }) {
       ?.focus();
   }
 
-  const initial = (profile?.ownerName || "M").slice(0, 1).toUpperCase();
-  const stats: Array<{
-    label: string;
-    value: number;
-    connection?: "followers" | "following";
-  }> = profile
-    ? [
-        { label: "Takipçi", value: profile.followerCount, connection: "followers" },
-        { label: "Takip", value: profile.followingCount, connection: "following" },
-        { label: "Paylaşım", value: profile.postCount },
-        { label: "Listeye ekleme", value: profile.totalAdds },
-        { label: "Beğeni", value: profile.totalLikes },
-      ]
-    : [];
   const theme = themeClasses[profile?.profileTheme || "aurora"] || themeClasses.aurora;
 
   return (
@@ -278,7 +365,7 @@ export default function ProfileClient({ slug }: { slug: string }) {
             className="sticky-panel w-[min(520px,100%)] overflow-hidden rounded-2xl"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex items-center justify-between gap-3 border-b border-white/10 px-5 py-4">
+            <div className="profile-connections-header">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.16em] text-cyan-100/68">
                   {profile?.ownerName}
@@ -297,14 +384,14 @@ export default function ProfileClient({ slug }: { slug: string }) {
                 ×
               </button>
             </div>
-            <div className="max-h-[520px] overflow-y-auto p-3">
+            <div className="profile-connections-list">
               {connectionsLoading && (
-                <p role="status" aria-live="polite" className="rounded-xl bg-white/[0.06] p-4 text-sm text-cyan-50/72">
+                <p role="status" aria-live="polite" className="profile-connections-state">
                   Yükleniyor...
                 </p>
               )}
-              {!connectionsLoading && connectionUsers.length === 0 && (
-                <p className="rounded-xl bg-white/[0.06] p-4 text-sm text-cyan-50/72">
+              {!connectionsLoading && !connectionsError && connectionUsers.length === 0 && (
+                <p className="profile-connections-state">
                   Bu liste henüz boş.
                 </p>
               )}
@@ -314,7 +401,7 @@ export default function ProfileClient({ slug }: { slug: string }) {
                     key={user.id}
                     href={`/u/${user.slug}`}
                     onClick={() => setConnectionType(null)}
-                    className="mb-1 grid grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-3 rounded-xl p-3 hover:bg-white/10"
+                    className="profile-connection-row"
                   >
                     <span className="nav-avatar h-11 w-11">
                       {user.ownerName.slice(0, 1).toUpperCase()}
@@ -328,23 +415,38 @@ export default function ProfileClient({ slug }: { slug: string }) {
                       </span>
                     </span>
                     {(user.isMe || user.following) && (
-                      <span className="rounded-full border border-cyan-200/16 bg-cyan-200/10 px-2.5 py-1 text-xs font-black text-cyan-50/76">
+                      <span className="profile-connection-badge">
                         {user.isMe ? "Sen" : "Takipte"}
                       </span>
                     )}
                   </Link>
                 ))}
+              {(connectionsError || (connectionUsers.length > 0 && (connectionsCursor || connectionsLoading))) && (
+                <FeedLoadSentinel
+                  sentinelRef={connectionsSentinelRef}
+                  loading={connectionsLoading}
+                  error={connectionsError}
+                  loadingLabel="Kullanıcılar yükleniyor..."
+                  onRetry={() => {
+                    if (connectionType) {
+                      void loadConnections(connectionType, connectionsCursor, connectionUsers.length > 0);
+                    }
+                  }}
+                />
+              )}
             </div>
           </section>
         </div>
       )}
       <section className="ui-page-frame relative mx-auto">
         <PageTopbar
-          title="Kullanıcı profili"
-          subtitle={loading ? "Yükleniyor..." : profile ? `@${profile.slug}` : "Profil bulunamadı"}
+          title="Profil"
+          subtitle={loading ? "Yükleniyor..." : profile ? "Müzik kimliği ve topluluk vitrini" : "Profil bulunamadı"}
           icon={<Music2 size={18} />}
           backLabel="Ana akışa dön"
           className="profile-topbar mb-6"
+          titleAs="div"
+          showPrimaryNavigation
           actions={viewer ? (
             <AccountMenu
               ownerName={viewer.ownerName}
@@ -383,34 +485,39 @@ export default function ProfileClient({ slug }: { slug: string }) {
 
         {profile && (
           <>
-            <section className="profile-overview profile-overview-v2 overflow-hidden">
-              <div className={`profile-accent bg-gradient-to-r ${theme}`} />
-              <div className="p-5 sm:p-6">
-                <div className="profile-hero-layout">
-                  <div className="flex min-w-0 items-center gap-4">
-                    <span className={`profile-avatar bg-gradient-to-br ${theme}`}>
-                      {initial}
-                    </span>
-                    <div className="min-w-0">
-                      <h1 className="truncate text-2xl font-black sm:text-3xl">{profile.ownerName}</h1>
-                      <p className="mt-1 text-sm text-cyan-50/68">@{profile.slug}</p>
-                      <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-cyan-50/72">
-                        <CalendarDays size={14} /> {new Date(profile.createdAt).toLocaleDateString("tr-TR")} tarihinde katıldı
-                      </p>
-                      {profile.bio && <p className="profile-hero-bio">{profile.bio}</p>}
-                    </div>
-                  </div>
-                  <div className="profile-hero-actions">
+            <ProfileHeroV3
+              profile={profile}
+              themeClass={theme}
+              onOpenConnections={openConnections}
+              actions={(
+                <>
                     {!profile.isMe && !profile.hasBlockedMe && !profile.blockedByMe && (
-                      <button
-                        type="button"
-                        onClick={toggleFollow}
-                        disabled={busy}
-                        className={profile.following ? "secondary-action h-11 rounded-xl px-5 text-sm font-black" : "primary-action h-11 rounded-xl px-5 text-sm font-black"}
-                      >
-                        <UserPlus size={16} /> <span>{busy ? "İşleniyor..." : profile.following ? "Takip ediliyor" : "Takip et"}</span>
-                      </button>
+                      <>
+                        <button
+                          type="button"
+                          onClick={toggleFollow}
+                          disabled={busy}
+                          className={profile.following ? "secondary-action h-11 rounded-xl px-5 text-sm font-black" : "primary-action h-11 rounded-xl px-5 text-sm font-black"}
+                        >
+                          <UserPlus size={16} /> <span>{busy ? "İşleniyor..." : profile.following ? "Takip ediliyor" : "Takip et"}</span>
+                        </button>
+                        <Link
+                          href={viewer
+                            ? `/games/elimination/new?opponent=${encodeURIComponent(profile.slug)}`
+                            : `/account?mode=login&next=${encodeURIComponent(`/games/elimination/new?opponent=${profile.slug}`)}`}
+                          className="secondary-action h-11 rounded-xl px-5 text-sm font-black"
+                        >
+                          <Gamepad2 size={16} /> <span>Oyuna davet et</span>
+                        </Link>
+                      </>
                     )}
+                    <button
+                      type="button"
+                      onClick={() => void copyProfileLink()}
+                      className="secondary-action h-11 rounded-xl px-5 text-sm font-black"
+                    >
+                      <Share2 size={16} /> <span>Profili paylaş</span>
+                    </button>
                     {!profile.isMe && !profile.hasBlockedMe && (
                       <div ref={profileMenuRef} className="relative">
                         <button
@@ -444,46 +551,34 @@ export default function ProfileClient({ slug }: { slug: string }) {
                       </div>
                     )}
                     {profile.isMe && (
-                      <Link href="/account" className="secondary-action flex h-11 items-center rounded-xl px-5 text-sm font-black">
-                        <Settings2 size={16} /> <span>Hesap paneli</span>
+                      <Link href="/account?tab=profile" className="secondary-action flex h-11 items-center rounded-xl px-5 text-sm font-black">
+                        <Settings2 size={16} /> <span>Profili düzenle</span>
                       </Link>
                     )}
-                  </div>
-                </div>
+                </>
+              )}
+            />
 
-                {(profile.blockedByMe || profile.hasBlockedMe) && (
-                  <div className="mt-6 rounded-xl border border-rose-300/20 bg-rose-300/[0.08] p-4 text-sm leading-6 text-rose-50/82">
-                    {profile.blockedByMe
-                      ? "Bu kullanıcıyı engelledin. Paylaşımlar karşılıklı olarak gizlendi."
-                      : "Bu profille etkileşim kullanılamıyor."}
-                  </div>
-                )}
-
-                <div className="profile-stats mt-6">
-                  {stats.map((stat) => (
-                    <button
-                      key={stat.label}
-                      type="button"
-                      disabled={!stat.connection}
-                      aria-label={stat.connection ? `${stat.label} listesini aç` : stat.label}
-                      onClick={() => stat.connection && openConnections(stat.connection)}
-                      className={`profile-stat ${
-                        stat.connection ? "hover:bg-white/8" : "cursor-default"
-                      }`}
-                    >
-                      <span className="block text-xs font-bold uppercase tracking-wide text-cyan-100/70">
-                        {stat.label}
-                      </span>
-                      <span className="mt-1 block text-2xl font-black text-white">{stat.value}</span>
-                    </button>
-                  ))}
-                </div>
+            {(profile.blockedByMe || profile.hasBlockedMe) && (
+              <div className="profile-v3-block-notice">
+                {profile.blockedByMe
+                  ? "Bu kullanıcıyı engelledin. Paylaşımlar karşılıklı olarak gizlendi."
+                  : "Bu profille etkileşim kullanılamıyor."}
               </div>
-            </section>
+            )}
 
-            <nav className="profile-tabs mt-5" role="tablist" aria-label="Profil bölümleri">
+            <div className="profile-v3-workspace">
+              <ProfileIdentityRail profile={profile} />
+              <div className="profile-v3-main">
+            <nav className="profile-tabs profile-v3-tabs" role="tablist" aria-label="Profil bölümleri">
               {profileTabs.map(([value, label, Icon]) => {
-                const count = value === "posts" ? profile.posts.length : value === "achievements" ? profile.achievements.length : null;
+                const count = value === "posts"
+                  ? profile.postCount
+                  : value === "activity"
+                    ? profile.posts.length + profile.forumThreads.length + profile.games.length
+                    : value === "achievements"
+                      ? profile.achievements.length
+                      : null;
                 return (
                 <button
                   key={value}
@@ -506,7 +601,16 @@ export default function ProfileClient({ slug }: { slug: string }) {
               })}
             </nav>
 
-            <ProfileTabPanels profile={profile} activeTab={profileTab} />
+            <ProfileTabPanels
+              profile={profile}
+              activeTab={profileTab}
+              postsLoading={postsLoading}
+              postsError={postsError}
+              postsSentinelRef={postsSentinelRef}
+              onRetryPosts={() => void loadMorePosts()}
+            />
+              </div>
+            </div>
           </>
         )}
       </section>

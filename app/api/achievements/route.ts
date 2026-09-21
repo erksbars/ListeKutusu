@@ -11,7 +11,7 @@ export async function GET() {
     return NextResponse.json({ error: "Yetkisiz." }, { status: 401 });
   }
 
-  const [posts, likes, adds, followers] = await Promise.all([
+  const [posts, likes, adds, followers, games] = await Promise.all([
     prisma.feedPost.count({ where: { authorId: userId, status: "published" } }),
     prisma.feedLike.count({ where: { post: { authorId: userId, status: "published" } } }),
     prisma.feedListAdd.count({
@@ -21,11 +21,12 @@ export async function GET() {
       },
     }),
     prisma.follow.count({ where: { followingId: userId } }),
+    prisma.gameSession.count({ where: { ownerId: userId, status: "completed" } }),
   ]);
 
   return NextResponse.json({
     userId,
-    metrics: { posts, likes, adds, followers },
-    ...calculateAchievements({ posts, likes, adds, followers }),
+    metrics: { posts, likes, adds, followers, games },
+    ...calculateAchievements({ posts, likes, adds, followers, games }),
   });
 }

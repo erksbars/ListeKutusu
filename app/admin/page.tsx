@@ -345,7 +345,7 @@ export default function AdminPage() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Moderasyon işlemi tamamlanamadı.");
-      setActionMessage(action === "remove" ? "Paylaşım akıştan kaldırıldı." : "Şikâyet kapatıldı.");
+      setActionMessage(action === "remove" ? "Bildirilen içerik kaldırıldı." : "Şikâyet kapatıldı.");
       await loadReports(reportFilter);
     } catch (error) {
       setActionMessage(error instanceof Error ? error.message : "Moderasyon işlemi tamamlanamadı.");
@@ -446,9 +446,9 @@ export default function AdminPage() {
       />
       <ConfirmDialog
         open={Boolean(removeReportId)}
-        title="Paylaşımı akıştan kaldır"
-        body="Bu paylaşım herkese açık akıştan kaldırılacak ve aynı paylaşıma ait bekleyen raporlar çözüldü olarak işaretlenecek. Bu kararı uygulamak istiyor musun?"
-        confirmLabel="Paylaşımı kaldır"
+        title="Bildirilen içeriği kaldır"
+        body="Bildirilen paylaşım veya yorum yayından kaldırılacak ve aynı içeriğe ait bekleyen raporlar çözüldü olarak işaretlenecek. Bu kararı uygulamak istiyor musun?"
+        confirmLabel="İçeriği kaldır"
         tone="danger"
         onCancel={() => setRemoveReportId(null)}
         onConfirm={() => {

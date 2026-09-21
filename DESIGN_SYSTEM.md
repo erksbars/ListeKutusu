@@ -25,6 +25,7 @@ Bu belge ListeKutusu'nun açık ve koyu temada aynı ürün gibi görünmesini s
 - `app/components/PageTopbar.tsx`: iç sayfaların ortak üst yapısı.
 - `app/components/HomeSidebar.tsx`: masaüstü sosyal navigasyon.
 - `app/components/MobileDock.tsx`: mobil ana navigasyon.
+- `GAMES_DESIGN_SYSTEM.md`: oyun merkezi, oda, canlı maç, sonuç, performans ve çok oyunculu etkileşim sözleşmesi.
 
 Stil import sırası `layout.tsx` içinde yukarıdaki dosya sırasını, ardından `tokens.css` ve `primitives.css` katmanlarını korur. Bu sıra değiştirilmez: son iki dosya eski renkleri semantik temaya bağlayan otorite katmanıdır. Yeni genel stil `globals.css` veya uyumluluk dosyalarına eklenmemeli; ortak kural `tokens.css` ya da `primitives.css` içinde tanımlanmalıdır. Yeni ve tamamen bağımsız özellik stilleri özellik dosyasında tutulur.
 

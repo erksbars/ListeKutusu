@@ -25,8 +25,14 @@ model UserList {
   ownerName            String
   playlistName         String?
   bio                  String?
+  profileStatus        String?
+  pinnedFeedPostId     String?
+  profileShowcase      String?
   favoriteGenres       String?
   profileTheme         String           @default("aurora")
+  profileDensity       String           @default("comfortable")
+  profileBanner        String           @default("line")
+  featuredAchievementId String?
   role                 String           @default("member") // member | moderator | admin
   notifyFollows        Boolean          @default(true)
   notifyLikes          Boolean          @default(true)
@@ -56,13 +62,119 @@ model UserList {
   notifications        Notification[]   @relation("NotificationRecipient")
   notificationActions  Notification[]   @relation("NotificationActor")
   reportsMade          PostReport[]     @relation("ReportReporter")
+  commentReportsMade   CommentReport[]  @relation("CommentReportReporter")
   blocksInitiated      UserBlock[]      @relation("Blocker")
   blocksReceived       UserBlock[]      @relation("Blocked")
   forumThreads         ForumThread[]
   forumReplies         ForumReply[]
+  feedComments         FeedComment[]
+  gameSessionsOwned    GameSession[] @relation("GameSessionOwner")
+  gamePlayers          GamePlayer[]
 
   @@index([status, updatedAt])
   @@index([spotifyPlaylistId, status, lastExportedAt])
+}
+
+model GameSession {
+  id            String       @id @default(cuid())
+  gameCode      String
+  gameVersion   Int          @default(1)
+  ownerId       String
+  status        String       @default("setup") // setup | active | completed | abandoned
+  visibility    String       @default("private") // private | unlisted | public
+  source        String       @default("personal")
+  targetSize    Int
+  maxPlayers    Int          @default(2)
+  currentRound  Int          @default(1)
+  revision      Int          @default(0)
+  state         String
+  winnerEntryId String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  startedAt     DateTime?
+  completedAt   DateTime?
+  owner         UserList     @relation("GameSessionOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  players       GamePlayer[]
+  entries       GameEntry[]
+  votes         GameVote[]
+  events        GameEvent[]
+
+  @@index([ownerId, status, updatedAt])
+  @@index([gameCode, status, createdAt])
+}
+
+model GamePlayer {
+  id            String      @id @default(cuid())
+  sessionId     String
+  userId        String
+  seat          Int         @default(0)
+  status        String      @default("ready")
+  score         Int         @default(0)
+  state         String      @default("{}")
+  winnerEntryId String?
+  joinedAt      DateTime    @default(now())
+  completedAt   DateTime?
+  session       GameSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user          UserList    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  votes         GameVote[]
+  entries       GameEntry[] @relation("GamePlayerEntries")
+  events        GameEvent[]
+
+  @@unique([sessionId, userId])
+  @@unique([sessionId, seat])
+  @@index([userId, joinedAt])
+}
+
+model GameEvent {
+  id        String      @id @default(cuid())
+  sessionId String
+  playerId  String?
+  eventType String
+  summary   String
+  metadata  String      @default("{}")
+  revision  Int
+  createdAt DateTime    @default(now())
+  session   GameSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  player    GamePlayer? @relation(fields: [playerId], references: [id], onDelete: SetNull)
+
+  @@index([sessionId, createdAt])
+  @@index([sessionId, revision])
+}
+
+model GameEntry {
+  id                  String      @id @default(cuid())
+  sessionId           String
+  submittedByPlayerId String?
+  trackId             String
+  trackName           String
+  artistName          String
+  externalUrl         String?
+  youtubeVideoId      String?
+  seed                Int
+  createdAt           DateTime    @default(now())
+  session             GameSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  submittedByPlayer   GamePlayer? @relation("GamePlayerEntries", fields: [submittedByPlayerId], references: [id], onDelete: SetNull)
+  votes               GameVote[]
+
+  @@unique([sessionId, trackId])
+  @@index([sessionId, seed])
+  @@index([sessionId, submittedByPlayerId])
+}
+
+model GameVote {
+  id            String      @id @default(cuid())
+  sessionId     String
+  playerId      String
+  selectedEntryId String
+  roundNumber   Int
+  matchupNumber Int
+  createdAt     DateTime    @default(now())
+  session       GameSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  player        GamePlayer  @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  selectedEntry GameEntry   @relation(fields: [selectedEntryId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, playerId, roundNumber, matchupNumber])
+  @@index([sessionId, roundNumber, matchupNumber])
 }
 
 model AccountSession {
@@ -128,10 +240,48 @@ model FeedPost {
   hides         FeedHide[]
   notifications Notification[]
   reports       PostReport[]
+  comments      FeedComment[]
 
   @@index([authorId, createdAt])
   @@index([status, createdAt])
   @@index([createdAt])
+}
+
+model FeedComment {
+  id        String        @id @default(cuid())
+  postId    String
+  authorId  String
+  parentId  String?
+  body      String
+  status    String        @default("published") // published | removed
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  post      FeedPost      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author    UserList      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  parent    FeedComment?  @relation("FeedCommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   FeedComment[] @relation("FeedCommentReplies")
+  reports   CommentReport[]
+
+  @@index([postId, status, createdAt])
+  @@index([authorId, createdAt])
+  @@index([parentId, status, createdAt])
+}
+
+model CommentReport {
+  id         String      @id @default(cuid())
+  reporterId String
+  commentId  String
+  reason     String
+  details    String?
+  status     String      @default("pending")
+  createdAt  DateTime    @default(now())
+  reviewedAt DateTime?
+  reporter   UserList    @relation("CommentReportReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  comment    FeedComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@unique([reporterId, commentId])
+  @@index([status, createdAt])
+  @@index([commentId])
 }
 
 model FeedLike {

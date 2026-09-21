@@ -9,6 +9,7 @@ export type ProfilePost = {
   createdAt: string;
   likeCount: number;
   addCount: number;
+  commentCount: number;
 };
 
 export type AchievementItem = {
@@ -21,13 +22,48 @@ export type AchievementItem = {
   unlocked: boolean;
 };
 
+export type ProfileForumThread = {
+  id: string;
+  slug: string;
+  title: string;
+  category: string;
+  categoryLabel: string;
+  views: number;
+  replyCount: number;
+  solved: boolean;
+  lastActivityAt: string;
+};
+
+export type ProfileGameSession = {
+  id: string;
+  gameCode: string;
+  completedAt: string;
+  winner: { id: string; trackName: string; artistName: string } | null;
+};
+
 export type Profile = {
   id: string;
   ownerName: string;
   playlistName: string | null;
   bio: string | null;
+  profileStatus: string | null;
+  pinnedFeedPostId: string | null;
+  showcaseModules: Array<"featured" | "identity" | "recent" | "forum">;
   favoriteGenres: string[];
+  sharedGenres: string[];
+  relatedProfiles: Array<{
+    id: string;
+    ownerName: string;
+    slug: string;
+    bio: string | null;
+    profileTheme: string;
+    sharedGenres: string[];
+    followerCount: number;
+    postCount: number;
+  }>;
   profileTheme: string;
+  profileDensity: "comfortable" | "compact";
+  profileBanner: "line" | "band" | "split";
   slug: string;
   createdAt: string;
   isMe: boolean;
@@ -40,8 +76,12 @@ export type Profile = {
   totalLikes: number;
   totalAdds: number;
   achievements: AchievementItem[];
+  featuredAchievement: AchievementItem | null;
+  forumThreads: ProfileForumThread[];
+  games: ProfileGameSession[];
   nextAchievement: AchievementItem | null;
   posts: ProfilePost[];
+  nextPostCursor: string | null;
 };
 
 export type ConnectionUser = {
@@ -54,7 +94,7 @@ export type ConnectionUser = {
   following: boolean;
 };
 
-export type ProfileTab = "posts" | "about" | "achievements";
+export type ProfileTab = "posts" | "activity" | "about" | "achievements";
 
 export type ViewerAccount = {
   ownerName: string;

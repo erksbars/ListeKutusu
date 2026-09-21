@@ -35,6 +35,7 @@ export type AdminUserList = {
 };
 
 export type AdminPostReport = {
+  targetType: "post" | "comment";
   id: string;
   reason: string;
   details: string | null;
@@ -52,6 +53,7 @@ export type AdminPostReport = {
     note: string | null;
     author: { ownerName: string; slug: string };
   };
+  comment: { id: string; body: string; author: { ownerName: string; slug: string } } | null;
 };
 
 export type AdminReportFilter = AdminPostReport["status"];
@@ -95,6 +97,7 @@ export const auditActionLabels: Record<string, string> = {
   "report.resolve": "Şikâyet çözüldü",
   "report.dismiss": "Şikâyet reddedildi",
   "report.remove_post": "Paylaşım kaldırıldı",
+  "report.remove_comment": "Yorum kaldırıldı",
   "forum.approve": "Forum konusu yayınlandı",
   "forum.reject": "Forum konusu reddedildi",
   "forum.remove": "Forum konusu kaldırıldı",

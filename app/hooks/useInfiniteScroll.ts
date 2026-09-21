@@ -11,6 +11,7 @@ type InfiniteScrollOptions = {
 export function useInfiniteScroll({ enabled, loading, onLoadMore }: InfiniteScrollOptions) {
   const sentinelRef = useRef<HTMLDivElement>(null);
   const callbackRef = useRef(onLoadMore);
+  const loadingRef = useRef(loading);
   const lockedRef = useRef(false);
 
   useEffect(() => {
@@ -18,6 +19,7 @@ export function useInfiniteScroll({ enabled, loading, onLoadMore }: InfiniteScro
   }, [onLoadMore]);
 
   useEffect(() => {
+    loadingRef.current = loading;
     if (!loading) lockedRef.current = false;
   }, [loading]);
 
@@ -26,7 +28,7 @@ export function useInfiniteScroll({ enabled, loading, onLoadMore }: InfiniteScro
     if (!enabled || !sentinel || typeof IntersectionObserver === "undefined") return;
 
     const observer = new IntersectionObserver(([entry]) => {
-      if (!entry.isIntersecting || lockedRef.current) return;
+      if (!entry.isIntersecting || loadingRef.current || lockedRef.current) return;
       lockedRef.current = true;
       callbackRef.current();
     }, { rootMargin: "600px 0px 300px" });

@@ -1,6 +1,6 @@
 export type NotificationPresentationItem = {
   id: string;
-  type: "follow" | "feed_like" | "feed_add" | "forum_reply" | "forum_solution";
+  type: "follow" | "feed_like" | "feed_add" | "feed_comment" | "feed_comment_reply" | "forum_reply" | "forum_solution";
   readAt: string | null;
   createdAt: string;
   actor: {
@@ -87,6 +87,11 @@ export function messageForNotificationGroup(group: NotificationGroup) {
   if (item.type === "forum_solution") {
     return `${actor}, ${item.forumThread?.title || "forum konusundaki"} yanıtını çözüm olarak işaretledi.`;
   }
+  if (item.type === "feed_comment") {
+    return `${actor}, ${item.post?.trackName || "paylaşımına"} yorum yaptı.`;
+  }
+  if (item.type === "feed_comment_reply") {
+    return `${actor}, ${item.post?.trackName || "paylaşımındaki"} yorumuna yanıt verdi.`;
+  }
   return `${actor}, ${item.post?.trackName || "paylaşımını"} beğendi.`;
 }
-

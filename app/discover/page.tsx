@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState, type KeyboardEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import {
-  ChevronDown,
   Compass,
   ExternalLink,
   Flame,
@@ -23,6 +22,7 @@ import { DiscoverySession } from "@/app/components/DiscoverySession";
 import { AccountMenu } from "@/app/components/AccountMenu";
 import { PageTopbar } from "@/app/components/PageTopbar";
 import { useSessionNavigation } from "@/app/hooks/useSessionNavigation";
+import { loadAccountSession } from "@/lib/clientAccountSession";
 
 type DiscoverTrack = {
   id: string;
@@ -65,6 +65,8 @@ type DiscoverData = {
     profileTheme: string;
     posts: number;
     followers: number;
+    sharedGenres: string[];
+    reason: string;
   }>;
   lists: Array<{
     id: string;
@@ -112,22 +114,20 @@ export default function DiscoverPage() {
   const [workingIds, setWorkingIds] = useState<string[]>([]);
   const [urlStateReady, setUrlStateReady] = useState(false);
   const [trackLimit, setTrackLimit] = useState(10);
+  const trackSentinelRef = useRef<HTMLDivElement>(null);
 
   const loadDiscover = useCallback(async () => {
     setLoading(true);
     setLoadError(false);
     try {
-      const [discoverResponse, accountResponse] = await Promise.all([
+      const [discoverResponse, nextAccount] = await Promise.all([
         fetch("/api/discover"),
-        fetch("/api/accounts/me"),
+        loadAccountSession(),
       ]);
       if (!discoverResponse.ok) throw new Error("discover_failed");
-      const [discover, me] = await Promise.all([
-        discoverResponse.json(),
-        accountResponse.ok ? accountResponse.json() : null,
-      ]);
+      const discover = await discoverResponse.json();
       setData(discover);
-      setAccount(me?.list ?? null);
+      setAccount(nextAccount);
     } catch {
       setLoadError(true);
     } finally {
@@ -186,12 +186,26 @@ export default function DiscoverPage() {
   useEffect(() => {
     setTrackLimit(10);
   }, [activeTag, discoveryOrder, query, searchScope]);
+
+  useEffect(() => {
+    const sentinel = trackSentinelRef.current;
+    if (!sentinel || displayedTracks.length >= visibleTracks.length) return;
+
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      setTrackLimit((current) => Math.min(current + 10, visibleTracks.length));
+    }, { rootMargin: "500px 0px 240px" });
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [displayedTracks.length, visibleTracks.length]);
   const visiblePeople = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase("tr-TR");
     if (!normalizedQuery) return data?.people ?? [];
     return (data?.people ?? []).filter((person) =>
       person.ownerName.toLocaleLowerCase("tr-TR").includes(normalizedQuery) ||
-      person.slug.toLocaleLowerCase("tr-TR").includes(normalizedQuery)
+      person.slug.toLocaleLowerCase("tr-TR").includes(normalizedQuery) ||
+      person.sharedGenres.some((genre) => genre.toLocaleLowerCase("tr-TR").includes(normalizedQuery))
     );
   }, [data, query]);
   const visibleLists = useMemo(() => {
@@ -357,6 +371,8 @@ export default function DiscoverPage() {
           title="Keşfet"
           subtitle="Topluluğun müzik haritası"
           icon={<Compass size={19} />}
+          backLabel="Ana akışa dön"
+          showPrimaryNavigation
           actions={account ? (
             <AccountMenu
               ownerName={account.ownerName}
@@ -545,15 +561,10 @@ export default function DiscoverPage() {
                   </article>
                 ))}
                 {!loading && displayedTracks.length < visibleTracks.length && (
-                  <button
-                    type="button"
-                    onClick={() => setTrackLimit((current) => current + 10)}
-                    className="discover-load-more"
-                  >
-                    <ChevronDown size={17} aria-hidden="true" />
-                    <span>Daha fazla keşif</span>
-                    <strong>{visibleTracks.length - displayedTracks.length}</strong>
-                  </button>
+                  <div ref={trackSentinelRef} className="discover-auto-load" role="status">
+                    <span aria-hidden="true" />
+                    Yeni keşifler hazırlanıyor
+                  </div>
                 )}
                 {!loading && !loadError && visibleTracks.length === 0 && (!searchActive || searchScope === "tracks") && (
                   <div className="discover-empty-state">
@@ -595,6 +606,7 @@ export default function DiscoverPage() {
                       <span className="min-w-0">
                         <strong>{person.ownerName}</strong>
                         <small>{person.posts} paylaşım · {person.followers} takipçi</small>
+                        <em>{person.reason}</em>
                       </span>
                     </Link>
                   ))}
@@ -663,6 +675,29 @@ export default function DiscoverPage() {
               ))}
               {!loading && (data?.curators ?? []).length === 0 && <p className="py-4 text-sm leading-6 text-cyan-50/72">Aktif küratörler paylaşımlarla burada görünür.</p>}
             </div>
+            {!searchActive && (data?.people ?? []).length > 0 && (
+              <section className="discover-people-aside" aria-labelledby="people-aside-title">
+                <div className="discover-people-aside-heading">
+                  <div>
+                    <p className="section-kicker">Müzikseverler</p>
+                    <h3 id="people-aside-title">Yeni profiller keşfet</h3>
+                  </div>
+                  <UsersRound size={17} />
+                </div>
+                <div className="discover-people-aside-list">
+                  {data!.people.slice(0, 4).map((person) => (
+                    <Link key={person.id} href={`/u/${person.slug}`} className="discover-curator-row">
+                      <span className={`discover-curator-avatar bg-gradient-to-br ${themeClasses[person.profileTheme] || themeClasses.aurora}`}>{person.ownerName.slice(0, 1).toLocaleUpperCase("tr-TR")}</span>
+                      <span className="min-w-0 flex-1">
+                        <strong>{person.ownerName}</strong>
+                        <small>{person.reason}</small>
+                      </span>
+                      <span className="discover-person-arrow" aria-hidden="true">→</span>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
             {!searchActive && <Link href="/" className="secondary-action mt-5 flex h-11 items-center justify-center rounded-xl px-4 text-sm font-black"><Music2 size={16} /> Akışa dön</Link>}
           </aside>}
         </div>

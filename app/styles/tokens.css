@@ -73,13 +73,13 @@
 [data-theme="light"] {
   color-scheme: light;
 
-  --ui-bg: #eaf1f4;
-  --ui-bg-subtle: #e4edf1;
-  --ui-surface: #f9fbfc;
-  --ui-surface-raised: #ffffff;
-  --ui-surface-muted: #e8f0f3;
-  --ui-surface-hover: #deeaee;
-  --ui-surface-translucent: rgba(249, 252, 253, 0.93);
+  --ui-bg: #dfe8ec;
+  --ui-bg-subtle: #d8e3e8;
+  --ui-surface: #f1f5f7;
+  --ui-surface-raised: #f8fafb;
+  --ui-surface-muted: #e2eaee;
+  --ui-surface-hover: #d7e4e9;
+  --ui-surface-translucent: rgba(241, 246, 248, 0.94);
   --ui-surface-tint-xs: rgba(9, 63, 74, 0.022);
   --ui-surface-tint-sm: rgba(9, 63, 74, 0.04);
   --ui-surface-tint-md: rgba(9, 63, 74, 0.058);
@@ -87,14 +87,14 @@
   --ui-surface-tint-xl: rgba(9, 63, 74, 0.098);
   --ui-surface-tint-strong: rgba(9, 63, 74, 0.13);
   --ui-overlay: rgba(10, 21, 29, 0.48);
-  --ui-topbar: rgba(249, 252, 253, 0.92);
-  --ui-page-bg: linear-gradient(125deg, #eaf5f6 0%, #f3f4fa 48%, #e9f4ef 100%);
+  --ui-topbar: rgba(242, 247, 249, 0.94);
+  --ui-page-bg: linear-gradient(125deg, #dfeaed 0%, #e8eaf0 48%, #deebe6 100%);
   --ui-grid-line: rgba(8, 120, 142, 0.04);
 
   --ui-text: #24333d;
   --ui-text-strong: #111d25;
-  --ui-text-muted: #586974;
-  --ui-text-subtle: #6f7d86;
+  --ui-text-muted: #4f606b;
+  --ui-text-subtle: #65747d;
   --ui-text-inverse: #ffffff;
 
   --ui-primary: #08788e;
@@ -115,21 +115,22 @@
   --ui-danger-soft: rgba(181, 72, 87, 0.1);
   --brand-spotify: #1a9f4b;
 
-  --ui-border: #cad9de;
-  --ui-border-strong: #8fbac3;
-  --ui-divider: #d9e5e8;
+  --ui-border: #bacbd2;
+  --ui-border-strong: #7faeb9;
+  --ui-divider: #ccd9de;
   --ui-focus: #08788e;
   --ui-focus-soft: rgba(8, 120, 142, 0.2);
   --ui-disabled-bg: #e1e7ea;
   --ui-disabled-text: #7b8991;
 
-  --ui-shadow-xs: 0 1px 3px rgba(19, 39, 48, 0.06);
-  --ui-shadow-sm: 0 8px 22px rgba(19, 39, 48, 0.075);
-  --ui-shadow-md: 0 18px 42px rgba(19, 39, 48, 0.105);
+  --ui-shadow-xs: 0 1px 3px rgba(19, 39, 48, 0.08);
+  --ui-shadow-sm: 0 8px 22px rgba(19, 39, 48, 0.1);
+  --ui-shadow-md: 0 18px 42px rgba(19, 39, 48, 0.13);
   --ui-shadow-overlay: 0 24px 60px rgba(19, 39, 48, 0.16);
 }
 
 :root {
+  --ui-mask-solid: #000;
   --ui-font-sans: "Segoe UI Variable", "Inter Variable", "SF Pro Text", "Segoe UI", system-ui, -apple-system, sans-serif;
   --ui-font-display: "Segoe UI Variable Display", "Segoe UI Variable", "Inter Variable", "SF Pro Display", "Segoe UI", system-ui, -apple-system, sans-serif;
 
@@ -145,7 +146,9 @@
   --ui-leading-relaxed: 1.7;
 
   --ui-weight-regular: 400;
+  --ui-weight-medium: 600;
   --ui-weight-semibold: 700;
+  --ui-weight-bold: 800;
 
   --ui-radius-xs: 4px;
   --ui-radius-sm: 6px;
@@ -157,6 +160,12 @@
   --ui-control-sm: 36px;
   --ui-control-md: 44px;
   --ui-control-lg: 50px;
+
+  --ui-desktop-gutter: clamp(20px, 1.7vw, 28px);
+  --ui-desktop-gap: 20px;
+  --ui-desktop-sidebar: 224px;
+  --ui-desktop-sidebar-collapsed: 72px;
+  --ui-desktop-rail: minmax(300px, 360px);
 
   --ui-space-1: 4px;
   --ui-space-2: 8px;
@@ -171,6 +180,50 @@
   --ui-motion-slow: 220ms;
   --ui-ease: cubic-bezier(0.2, 0, 0, 1);
   --ui-ease-standard: var(--ui-ease);
+
+  /* Backgammon material system */
+  --game-board-shell: #07111d;
+  --game-board-shell-raised: #0d1c2d;
+  --game-board-frame: #081521;
+  --game-board-frame-mid: #13283a;
+  --game-board-frame-edge: #2a4357;
+  --game-board-frame-line: rgba(85, 234, 255, 0.2);
+  --game-board-surface: #0a1726;
+  --game-board-surface-deep: #07131f;
+  --game-board-surface-line: rgba(168, 180, 195, 0.038);
+  --game-board-surface-glow: rgba(32, 223, 245, 0.045);
+  --game-board-frame-highlight: rgba(255, 255, 255, 0.42);
+  --game-board-point-shadow: rgba(7, 17, 29, 0.24);
+  --game-board-point-highlight: rgba(85, 234, 255, 0.13);
+  --game-board-point-steel: #ecece6;
+  --game-board-point-steel-deep: #b9c2c5;
+  --game-board-point-cyan: #1c6b7e;
+  --game-board-point-cyan-deep: #145567;
+  --game-board-accent: #20dff5;
+  --game-board-accent-soft: rgba(32, 223, 245, 0.14);
+  --game-board-label: rgba(239, 247, 249, 0.82);
+  --game-board-label-dark: #1b3341;
+  --game-checker-light: #f3eee4;
+  --game-checker-light-mid: #e7decd;
+  --game-checker-light-side: #b8aa92;
+  --game-checker-light-edge: #d5c7ad;
+  --game-checker-light-ring: rgba(137, 119, 91, 0.28);
+  --game-checker-dark: #152333;
+  --game-checker-dark-side: #08111a;
+  --game-checker-dark-edge: #263a4f;
+  --game-checker-dark-ring: rgba(104, 142, 165, 0.24);
+  --game-checker-dark-sheen: rgba(255, 255, 255, 0.13);
+  --game-checker-dark-highlight: rgba(255, 255, 255, 0.08);
+  --game-checker-light-sheen: rgba(255, 255, 255, 0.62);
+  --game-checker-light-highlight: rgba(255, 255, 255, 0.48);
+  --game-board-danger: #ff5d5d;
+  --game-board-danger-soft: rgba(255, 93, 93, 0.18);
+  --game-board-last-move: #ffc857;
+  --game-board-last-move-soft: rgba(255, 200, 87, 0.16);
+  --game-board-blocked: rgba(168, 180, 195, 0.34);
+  --game-board-shadow: rgba(0, 0, 0, 0.48);
+  --game-board-shadow-soft: rgba(0, 0, 0, 0.24);
+  --game-board-highlight: rgba(255, 255, 255, 0.34);
 }
 
 @media (max-width: 639px) {

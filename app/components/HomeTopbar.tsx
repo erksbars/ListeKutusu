@@ -3,9 +3,7 @@
 import Link from "next/link";
 import { AudioWaveform, LogIn, MessageSquarePlus } from "lucide-react";
 import { AccountMenu } from "./AccountMenu";
-import { NotificationCenter } from "./NotificationCenter";
 import { ProfileSearch } from "./ProfileSearch";
-import { ThemeToggle } from "./ThemeToggle";
 
 type HomeTopbarAccount = {
   ownerName: string;
@@ -41,7 +39,6 @@ export function HomeTopbar({ account, onLogout }: HomeTopbarProps) {
       </div>
       <div className="flex min-w-0 items-center justify-end gap-2">
         <ProfileSearch />
-        <ThemeToggle />
         {account ? (
           <>
             <button
@@ -52,7 +49,6 @@ export function HomeTopbar({ account, onLogout }: HomeTopbarProps) {
               <MessageSquarePlus size={17} aria-hidden="true" />
               <span>Şarkı paylaş</span>
             </button>
-            <NotificationCenter />
             <AccountMenu
               ownerName={account.ownerName}
               email={account.email}

@@ -10,6 +10,7 @@ import { AccountMenu } from "@/app/components/AccountMenu";
 import { MobileDock } from "@/app/components/MobileDock";
 import { PageTopbar } from "@/app/components/PageTopbar";
 import { useSessionNavigation } from "@/app/hooks/useSessionNavigation";
+import { loadAccountSession } from "@/lib/clientAccountSession";
 
 type ForumAuthor = {
   id: string;
@@ -50,7 +51,7 @@ type ForumThread = {
 
 type Account = {
   ownerName: string;
-  email: string | null;
+  email?: string | null;
   slug: string;
   role?: string | null;
 };
@@ -106,12 +107,8 @@ export default function ForumThreadPage() {
   useEffect(() => { void loadThread(); }, [loadThread]);
 
   useEffect(() => {
-    fetch("/api/accounts/me")
-      .then(async (response) => {
-        if (!response.ok) return;
-        const data = await response.json();
-        setAccount(data.list || null);
-      })
+    loadAccountSession()
+      .then((nextAccount) => setAccount(nextAccount))
       .catch(() => null);
   }, []);
 
@@ -230,6 +227,7 @@ export default function ForumThreadPage() {
           icon={<MessageSquareText size={19} />}
           backHref="/forum"
           backLabel="Foruma dön"
+          showPrimaryNavigation
           actions={account ? (
             <AccountMenu
               ownerName={account.ownerName}

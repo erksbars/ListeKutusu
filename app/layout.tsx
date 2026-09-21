@@ -1,11 +1,14 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
+import { AmbientMusicBackground } from "./components/AmbientMusicBackground";
+import { NavigationProgress } from "./components/NavigationProgress";
 import "./globals.css";
 import "./styles/feature-surfaces.css";
-import "./styles/forum.css";
 import "./styles/interaction-refinements.css";
 import "./styles/unified-surfaces.css";
 import "./styles/tokens.css";
 import "./styles/primitives.css";
+import "./styles/profile.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.APP_URL || "http://127.0.0.1:3000"),
@@ -32,26 +35,9 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f3f6f8" },
-    { media: "(prefers-color-scheme: dark)", color: "#080b12" },
-  ],
-  colorScheme: "light dark",
+  themeColor: "#080b12",
+  colorScheme: "dark",
 };
-
-const themeScript = `
-  (() => {
-    try {
-      const stored = localStorage.getItem("listekutusu-theme");
-      const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      const theme = stored === "light" || stored === "dark" ? stored : systemDark ? "dark" : "light";
-      document.documentElement.dataset.theme = theme;
-      document.documentElement.style.colorScheme = theme;
-    } catch {
-      document.documentElement.dataset.theme = "dark";
-    }
-  })();
-`;
 
 export default function RootLayout({
   children,
@@ -59,14 +45,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="tr" data-theme="dark" suppressHydrationWarning>
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-      </head>
+    <html lang="tr" data-theme="dark" data-scroll-behavior="smooth">
       <body className="min-h-screen antialiased">
         <a href="#main-content" className="skip-link">
           Ana içeriğe geç
         </a>
+        <Suspense fallback={null}>
+          <NavigationProgress />
+        </Suspense>
+        <AmbientMusicBackground />
         {children}
       </body>
     </html>

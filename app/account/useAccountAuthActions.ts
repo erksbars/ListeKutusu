@@ -3,6 +3,7 @@
 import { useState, type Dispatch, type SetStateAction } from "react";
 import { useRouter } from "next/navigation";
 import { safeInternalPath } from "@/lib/navigation";
+import { primeAccountSession } from "@/lib/clientAccountSession";
 
 type UseAccountAuthActionsOptions = {
   loading: boolean;
@@ -55,6 +56,7 @@ export function useAccountAuthActions({ loading, setLoading, setMessage }: UseAc
       }
       setRegisterPassword("");
       setRegisterPasswordConfirm("");
+      primeAccountSession(data.list);
       router.replace(returnPathAfterAuth());
       router.refresh();
     } catch {
@@ -85,6 +87,7 @@ export function useAccountAuthActions({ loading, setLoading, setMessage }: UseAc
         setMessage(data.error || "Giriş başarısız.");
         return;
       }
+      primeAccountSession(data.list);
       router.replace(returnPathAfterAuth());
       router.refresh();
     } catch {

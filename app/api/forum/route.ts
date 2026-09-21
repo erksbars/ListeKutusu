@@ -19,12 +19,22 @@ export async function GET(req: NextRequest) {
   const query = req.nextUrl.searchParams.get("q")?.trim().slice(0, 80) || "";
   const sort = req.nextUrl.searchParams.get("sort") || "latest";
   const state = req.nextUrl.searchParams.get("state") || "all";
+  const mine = req.nextUrl.searchParams.get("mine") === "1";
+  const viewerId = mine ? await getAuthenticatedAccountListId() : null;
+  if (mine && !viewerId) {
+    return NextResponse.json(
+      { error: "Kendi konularını görmek için giriş yapmalısın." },
+      { status: 401 }
+    );
+  }
   const categoryIds = category ? forumCategoryIdsForFilter(category) : [];
   const requestedPage = Number.parseInt(req.nextUrl.searchParams.get("page") || "1", 10);
   const page = Number.isFinite(requestedPage) ? Math.min(Math.max(requestedPage, 1), 100) : 1;
   const pageSize = 20;
   const where: Prisma.ForumThreadWhereInput = {
-    status: "published",
+    ...(mine
+      ? { authorId: viewerId!, status: { in: ["published", "pending", "rejected"] } }
+      : { status: "published" }),
     ...(categoryIds.length ? { category: { in: categoryIds } } : {}),
     ...(query
       ? { OR: [{ title: { contains: query } }, { body: { contains: query } }] }
@@ -86,6 +96,7 @@ export async function GET(req: NextRequest) {
     lastActivityAt: thread.lastActivityAt,
     locked: Boolean(thread.lockedAt),
     solved: Boolean(thread.acceptedReplyId),
+    status: thread.status,
     author: thread.author,
     replyCount: thread._count.replies,
     latestReply: thread.replies[0] ?? null,
@@ -142,7 +153,13 @@ export async function GET(req: NextRequest) {
         totalPages: Math.max(1, Math.ceil(total / pageSize)),
       },
     },
-    { headers: { "Cache-Control": "public, max-age=15, stale-while-revalidate=45" } }
+    {
+      headers: {
+        "Cache-Control": mine
+          ? "private, no-store"
+          : "public, max-age=15, stale-while-revalidate=45",
+      },
+    }
   );
 }
 

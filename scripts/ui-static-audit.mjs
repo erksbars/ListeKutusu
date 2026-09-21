@@ -35,7 +35,16 @@ for (const file of sourceFiles) {
   assert(!/[ÃÄÅÂ][\x80-\xBF]/u.test(content), `${relative(file)} içinde bozuk UTF-8/Türkçe karakter dizisi bulundu.`);
   if (file.endsWith(".css")) {
     try {
-      postcss.parse(content, { from: file });
+      const stylesheet = postcss.parse(content, { from: file });
+      stylesheet.walkRules((rule) => {
+        if (!/:hover|:focus-visible/u.test(rule.selector)) return;
+        rule.walkDecls(/^(?:background|background-color)$/u, (declaration) => {
+          assert(
+            !/(?:^|\s)(?:white|#fff(?:fff)?|rgb\(255\s*,\s*255\s*,\s*255\))(?:\s|$)/iu.test(declaration.value),
+            `${relative(file)}:${rule.source?.start?.line ?? "?"} koyu tema etkileÅŸiminde beyaz yÃ¼zey kullanÄ±yor: ${rule.selector}`
+          );
+        });
+      });
     } catch (error) {
       failures.push(`${relative(file)} CSS sözdizimi geçersiz: ${error.reason || error.message}`);
     }

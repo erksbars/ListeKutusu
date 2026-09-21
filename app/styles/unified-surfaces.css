@@ -917,7 +917,7 @@
   border-radius: 11px;
   background: var(--ui-accent-soft);
   padding: 11px 13px;
-  color: var(--ui-success-soft);
+  color: var(--ui-success);
   font-size: 12px;
   font-weight: 750;
 }

@@ -16,23 +16,29 @@ $resolvedOutput = [System.IO.Path]::GetFullPath($OutputPath)
 $stagingRoot = Join-Path ([System.IO.Path]::GetTempPath()) "listekutusu-source-$([Guid]::NewGuid().ToString('N'))"
 $stagingProject = Join-Path $stagingRoot $projectName
 
-$sourceDirectories = @("app", "lib", "public", "scripts", "tests")
+$sourceDirectories = @("app", "docs", "lib", "public", "scripts", "tests", "types")
 $sourceFiles = @(
   ".env.example",
   ".eslintrc.json",
   ".gitignore",
+  "AGENTS.md",
+  "ARCHITECTURE.md",
+  "DECISIONS.md",
   "DESIGN_SYSTEM.md",
-  "LISTEKUTUSU_GUNCEL_ANALIZ_VE_YOL_HARITASI_2026-07-18.md",
+  "GAMES_DESIGN_SYSTEM.md",
   "middleware.ts",
   "next.config.mjs",
   "package.json",
   "package-lock.json",
   "playwright.config.ts",
   "postcss.config.js",
+  "PROJECT_STATUS.md",
   "README.md",
   "RELEASE_CHECKLIST.md",
+  "ROADMAP.md",
   "SOURCE_PACKAGE.md",
   "tailwind.config.ts",
+  "TESTING.md",
   "tsconfig.json"
 )
 

@@ -3,6 +3,7 @@
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { accountLoginPath } from "@/lib/navigation";
+import { clearAccountSessionCache } from "@/lib/clientAccountSession";
 
 export function useSessionNavigation() {
   const router = useRouter();
@@ -20,6 +21,7 @@ export function useSessionNavigation() {
       const data = await response.json().catch(() => null);
       throw new Error(data?.error || "Çıkış işlemi tamamlanamadı.");
     }
+    clearAccountSessionCache();
     router.replace("/");
     router.refresh();
   }, [router]);

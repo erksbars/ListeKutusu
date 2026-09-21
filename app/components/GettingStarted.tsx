@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Check, ChevronRight, Heart, ListPlus, Sparkles, UserRound, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { loadAccountSession } from "@/lib/clientAccountSession";
 
 export type OnboardingState = {
   profileComplete: boolean;
@@ -29,9 +30,8 @@ export function GettingStarted({ initial }: GettingStartedProps) {
 
   useEffect(() => {
     async function refresh() {
-      const response = await fetch("/api/accounts/me");
-      const data = await response.json().catch(() => null);
-      if (response.ok && data?.list?.onboarding) setState(data.list.onboarding);
+      const account = await loadAccountSession({ force: true }).catch(() => null);
+      if (account?.onboarding) setState(account.onboarding);
     }
     window.addEventListener("onboarding:refresh", refresh);
     return () => window.removeEventListener("onboarding:refresh", refresh);

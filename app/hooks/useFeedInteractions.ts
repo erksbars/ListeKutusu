@@ -384,6 +384,7 @@ export function useFeedInteractions({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           postId: editingPost.id,
+          note: editingPost.note,
           tags: editingPost.tags,
         }),
       });
@@ -395,7 +396,7 @@ export function useFeedInteractions({
       setFeedPosts((current) =>
         current.map((post) =>
           post.id === editingPost.id
-            ? { ...post, note: null, tags: data.post.tags || [] }
+            ? { ...post, note: data.post.note ?? null, tags: data.post.tags || [] }
             : post
         )
       );

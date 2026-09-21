@@ -21,6 +21,7 @@ import {
   Search,
   SlidersHorizontal,
   UsersRound,
+  UserRound,
   X,
 } from "lucide-react";
 import {
@@ -34,6 +35,7 @@ import { MobileDock } from "@/app/components/MobileDock";
 import { ProfileSearch } from "@/app/components/ProfileSearch";
 import { PageTopbar } from "@/app/components/PageTopbar";
 import { useSessionNavigation } from "@/app/hooks/useSessionNavigation";
+import { loadAccountSession } from "@/lib/clientAccountSession";
 
 type ForumThread = {
   id: string;
@@ -46,6 +48,7 @@ type ForumThread = {
   lastActivityAt: string;
   locked: boolean;
   solved: boolean;
+  status: "published" | "pending" | "rejected";
   replyCount: number;
   author: { ownerName: string; slug: string; profileTheme: string };
   latestReply: { createdAt: string; author: { ownerName: string } } | null;
@@ -155,6 +158,7 @@ export default function ForumPage() {
   const [expandedGroup, setExpandedGroup] = useState("muzik");
   const [sort, setSort] = useState("latest");
   const [state, setState] = useState<"all" | "open" | "solved">("all");
+  const [mine, setMine] = useState(false);
   const [query, setQuery] = useState("");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -186,6 +190,7 @@ export default function ForumPage() {
       if (category) params.set("category", category);
       if (search) params.set("q", search);
       if (state !== "all") params.set("state", state);
+      if (mine) params.set("mine", "1");
       const response = await fetch(`/api/forum?${params.toString()}`);
       const data = await response.json().catch(() => null);
       if (!response.ok) throw new Error(data?.error || "Forum yüklenemedi.");
@@ -202,7 +207,7 @@ export default function ForumPage() {
     } finally {
       setLoading(false);
     }
-  }, [category, page, search, sort, state]);
+  }, [category, mine, page, search, sort, state]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -215,6 +220,7 @@ export default function ForumPage() {
     if (validSorts.has(nextSort)) setSort(nextSort);
     const nextState = params.get("state") || "all";
     if (validStates.has(nextState)) setState(nextState as "all" | "open" | "solved");
+    setMine(params.get("mine") === "1");
     const nextSearch = params.get("q")?.trim().slice(0, 80) || "";
     setQuery(nextSearch);
     setSearch(nextSearch);
@@ -230,19 +236,16 @@ export default function ForumPage() {
     if (search) params.set("q", search);
     if (sort !== "latest") params.set("sort", sort);
     if (state !== "all") params.set("state", state);
+    if (mine) params.set("mine", "1");
     if (page > 1) params.set("page", String(page));
     const queryString = params.toString();
     window.history.replaceState(null, "", queryString ? `/forum?${queryString}` : "/forum");
     void loadThreads();
-  }, [filtersReady, loadThreads, category, search, sort, state, page]);
+  }, [filtersReady, loadThreads, category, search, sort, state, mine, page]);
 
   useEffect(() => {
-    fetch("/api/accounts/me")
-      .then(async (response) => {
-        if (!response.ok) return;
-        const data = await response.json();
-        setAccount(data.list || null);
-      })
+    loadAccountSession()
+      .then((nextAccount) => setAccount(nextAccount))
       .catch(() => null);
   }, []);
 
@@ -272,6 +275,7 @@ export default function ForumPage() {
     setSearch("");
     setSort("latest");
     setState("all");
+    setMine(false);
     setPage(1);
   }
 
@@ -305,7 +309,7 @@ export default function ForumPage() {
   const activeGroup = category
     ? FORUM_CATEGORY_GROUPS.find((group) => group.id === category) || forumCategoryGroup(category)
     : FORUM_CATEGORY_GROUPS.find((group) => group.id === expandedGroup) || FORUM_CATEGORY_GROUPS[0];
-  const hasActiveFilters = Boolean(category || search || state !== "all" || sort !== "latest");
+  const hasActiveFilters = Boolean(category || search || state !== "all" || sort !== "latest" || mine);
 
   return (
     <main id="main-content" tabIndex={-1} className="stage-shell min-h-screen bg-app px-3 pb-24 text-white sm:px-6">
@@ -316,6 +320,7 @@ export default function ForumPage() {
           subtitle="Sor, deneyimini paylaş, birlikte çöz"
           icon={<MessageSquareText size={19} />}
           backLabel="Ana akışa dön"
+          showPrimaryNavigation
           actions={<>
             <div className="hidden lg:block"><ProfileSearch /></div>
             <Link
@@ -490,6 +495,20 @@ export default function ForumPage() {
                   </button>
                 ))}
               </div>
+              {account && (
+                <button
+                  type="button"
+                  aria-pressed={mine}
+                  onClick={() => {
+                    setMine((current) => !current);
+                    setState("all");
+                    setPage(1);
+                  }}
+                  className={mine ? "forum-mine-filter active" : "forum-mine-filter"}
+                >
+                  <UserRound size={14} /> Konularım
+                </button>
+              )}
               {hasActiveFilters && (
                 <button type="button" onClick={clearFilters} className="forum-clear-filters">
                   <X size={14} /> Filtreleri temizle
@@ -501,7 +520,7 @@ export default function ForumPage() {
               <header className="forum-thread-list-header">
                 <div>
                   <p>{selectedLabel}</p>
-                  <h2>{search ? `"${search}" için sonuçlar` : category ? "Bölümdeki konular" : "Güncel tartışmalar"}</h2>
+                  <h2>{search ? `"${search}" için sonuçlar` : mine ? "Gönderdiğin konular" : category ? "Bölümdeki konular" : "Güncel tartışmalar"}</h2>
                 </div>
                 <span aria-live="polite">{loading ? "Yükleniyor" : `${pagination.total} konu`}</span>
               </header>
@@ -552,6 +571,8 @@ export default function ForumPage() {
                       </button>
                       {thread.solved && <span className="forum-solved-badge"><CheckCircle2 size={13} /> Çözüldü</span>}
                       {thread.locked && <span className="forum-locked-badge"><LockKeyhole size={12} /> Kilitli</span>}
+                      {thread.status === "pending" && <span className="forum-review-badge forum-review-pending"><Clock3 size={12} /> Onay bekliyor</span>}
+                      {thread.status === "rejected" && <span className="forum-review-badge forum-review-rejected"><X size={12} /> Yayınlanmadı</span>}
                     </div>
                     <Link href={`/forum/${thread.slug}`} className="forum-thread-title">
                       {thread.title}

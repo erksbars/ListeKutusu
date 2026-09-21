@@ -413,7 +413,7 @@
   align-items: center;
   gap: 4px;
   margin-left: 7px;
-  color: var(--ui-success-soft);
+  color: var(--ui-success);
   font-weight: 750;
 }
 
@@ -919,12 +919,12 @@
 
 .suggest-result:hover {
   border-color: var(--ui-border-strong);
-  background: white;
+  background: var(--ui-surface-hover);
 }
 
 .suggest-result-selected {
   border-color: var(--ui-border-strong);
-  background: var(--ui-text-muted);
+  background: var(--ui-primary-soft);
 }
 
 .suggest-result-check {

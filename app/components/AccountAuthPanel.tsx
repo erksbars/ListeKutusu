@@ -104,11 +104,7 @@ export function AccountAuthPanel({
               type="button"
               onClick={() => changeMode(item)}
               aria-pressed={mode === item}
-              className={`h-11 rounded-lg text-sm font-black transition ${
-                mode === item
-                  ? "bg-white text-navy shadow-sm"
-                  : "text-slate-500 hover:bg-white/70 hover:text-navy"
-              }`}
+              className="auth-tab"
             >
               {item === "login" ? "Giriş yap" : "Kayıt ol"}
             </button>

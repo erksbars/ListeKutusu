@@ -3,6 +3,7 @@ export type AchievementMetrics = {
   likes: number;
   adds: number;
   followers: number;
+  games: number;
 };
 
 export type Achievement = {
@@ -73,6 +74,20 @@ const DEFINITIONS: Array<
     title: "Topluluk Sesi",
     description: "10 takipçiye ulaş.",
     metric: "followers",
+    target: 10,
+  },
+  {
+    id: "first-final",
+    title: "İlk Final",
+    description: "İlk Şarkı Düellosu oyununu tamamla.",
+    metric: "games",
+    target: 1,
+  },
+  {
+    id: "elimination-regular",
+    title: "Eleme Müdavimi",
+    description: "10 Şarkı Düellosu oyununu tamamla.",
+    metric: "games",
     target: 10,
   },
 ];

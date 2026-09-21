@@ -14,3 +14,10 @@ export function paginationMeta(total: number, requestedPage: number, pageSize: n
   const page = Math.min(requestedPage, totalPages);
   return { page, pageSize, total, totalPages };
 }
+
+export function parseOffsetCursor(value: string | null | undefined, maximum = 100) {
+  if (!value?.startsWith("offset:")) return 0;
+  const parsed = Number(value.slice("offset:".length));
+  if (!Number.isInteger(parsed) || parsed < 0) return 0;
+  return Math.min(parsed, maximum);
+}

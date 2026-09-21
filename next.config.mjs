@@ -21,6 +21,7 @@ const securityHeaders = [
       "default-src 'self'",
       "base-uri 'self'",
       "object-src 'none'",
+      "frame-src https://www.youtube-nocookie.com https://www.youtube.com",
       "frame-ancestors 'none'",
       "form-action 'self'",
       "img-src 'self' data: https://i.scdn.co https://*.scdn.co",

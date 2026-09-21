@@ -3,11 +3,13 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
-import { ChevronDown, ExternalLink, ListMusic, LogIn, Music2, Plus, RefreshCw, Search, Settings2, ShieldCheck, Tags, UsersRound } from "lucide-react";
+import { ChevronDown, ExternalLink, ListMusic, LogIn, Music2, Plus, RefreshCw, Search, ShieldCheck, Tags, UsersRound } from "lucide-react";
 import { SpotifyAttribution } from "../components/SpotifyAttribution";
 import { Toast } from "../components/Toast";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { PageTopbar } from "../components/PageTopbar";
+import { AccountMenu } from "../components/AccountMenu";
+import { useSessionNavigation } from "../hooks/useSessionNavigation";
 
 type ControlTrack = {
   id: string;
@@ -38,6 +40,9 @@ type SearchTrack = {
 type ControlList = {
   id: string;
   ownerName: string;
+  email: string | null;
+  slug: string;
+  role: string | null;
   playlistName: string | null;
   spotifyExternalUrl: string | null;
   lastExportedAt: string | null;
@@ -71,6 +76,7 @@ function groupByArtist(tracks: ControlTrack[]) {
 }
 
 export default function ControlPage() {
+  const { logoutToHome } = useSessionNavigation();
   const [list, setList] = useState<ControlList | null>(null);
   const [tracks, setTracks] = useState<ControlTrack[]>([]);
   const [mode, setMode] = useState<"genre" | "artist">("genre");
@@ -174,6 +180,14 @@ export default function ControlPage() {
     }
   }
 
+  async function logoutAccount() {
+    try {
+      await logoutToHome();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Çıkış işlemi tamamlanamadı.");
+    }
+  }
+
   async function addTrack(track: SearchTrack) {
     if (busyId) return;
     setBusyId(track.id);
@@ -262,15 +276,18 @@ export default function ControlPage() {
           className="control-topbar mb-6"
           actions={!needsLogin && list && (
             <div className="flex items-center gap-2">
-              <Link href="/account" className="topbar-text-button" aria-label="Hesap paneli" title="Hesap paneli">
-                <Settings2 size={17} />
-                <span>Hesap paneli</span>
-              </Link>
               {list?.spotifyExternalUrl && (
                 <a href={list.spotifyExternalUrl} target="_blank" rel="noreferrer" className="topbar-icon-button" aria-label="Spotify'da aç" title="Spotify'da aç">
                   <ExternalLink size={18} />
                 </a>
               )}
+              <AccountMenu
+                ownerName={list.ownerName}
+                email={list.email}
+                profileSlug={list.slug}
+                role={list.role}
+                onLogout={() => void logoutAccount()}
+              />
             </div>
           )}
         />
@@ -344,12 +361,12 @@ export default function ControlPage() {
                       <span className="sr-only">Listede şarkı, sanatçı veya tür ara</span>
                       <input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Şarkı, sanatçı veya tür ara..." />
                     </label>
-                    <div role="group" aria-label="Liste gruplama biçimi" className="flex rounded-xl border border-white/14 bg-white/10 p-1 text-xs font-bold backdrop-blur-xl">
+                    <div role="group" aria-label="Liste gruplama biçimi" className="control-view-toggle">
                       <button
                         type="button"
                         aria-pressed={mode === "genre"}
                         onClick={() => setMode("genre")}
-                        className={`rounded-lg px-3 py-2 transition ${mode === "genre" ? "bg-white/16 text-white shadow-sm" : "text-cyan-50/68 hover:bg-white/10 hover:text-white"}`}
+                        className={`control-view-toggle-button ${mode === "genre" ? "is-active" : ""}`}
                       >
                         Türe göre
                       </button>
@@ -357,7 +374,7 @@ export default function ControlPage() {
                         type="button"
                         aria-pressed={mode === "artist"}
                         onClick={() => setMode("artist")}
-                        className={`rounded-lg px-3 py-2 transition ${mode === "artist" ? "bg-white/16 text-white shadow-sm" : "text-cyan-50/68 hover:bg-white/10 hover:text-white"}`}
+                        className={`control-view-toggle-button ${mode === "artist" ? "is-active" : ""}`}
                       >
                         Sanatçıya göre
                       </button>
@@ -366,12 +383,12 @@ export default function ControlPage() {
                 </div>
 
                 {loading && (
-                  <p className="track-card mt-4 rounded-2xl p-5 text-sm text-slate-500">
+                  <p className="control-list-state mt-4">
                     Liste yükleniyor...
                   </p>
                 )}
                 {!loading && groups.length === 0 && (
-                  <div className="track-card mt-4 rounded-2xl p-5 text-sm text-slate-500">
+                  <div className="control-list-state mt-4">
                     <strong className="block text-navy">{tracks.length === 0 ? "Listen henüz boş" : "Bu filtreyle eşleşen şarkı yok"}</strong>
                     <p className="mt-1 leading-6">{tracks.length === 0 ? "Şarkı ekleme alanından ilk parçanı bulup listene ekleyebilirsin." : "Arama metnini temizleyerek bütün şarkıları yeniden göster."}</p>
                     {tracks.length > 0 && <button type="button" onClick={() => setFilter("")} className="secondary-action mt-3 h-10 rounded-xl px-4 text-xs font-bold">Filtreyi temizle</button>}
@@ -393,8 +410,8 @@ export default function ControlPage() {
                       </summary>
                       <ul className="control-group-tracks">
                         {groupTracks.map((track) => (
-                          <li key={`${groupName}-${track.id}`} className="track-card grid gap-3 rounded-2xl p-3 sm:grid-cols-[56px_minmax(0,1fr)_auto] sm:items-center">
-                            <div className="h-14 w-14 overflow-hidden rounded-xl bg-sky-100">
+                          <li key={`${groupName}-${track.id}`} className="track-card control-track-row">
+                            <div className="control-track-artwork">
                               {track.imageUrl ? (
                                 <Image src={track.imageUrl} alt="" width={56} height={56} className="h-full w-full object-contain" />
                               ) : (
@@ -414,9 +431,9 @@ export default function ControlPage() {
                                 ))}
                               </div>
                             </div>
-                            <div className="flex gap-2 sm:justify-end">
+                            <div className="control-track-actions">
                               {track.externalUrl && (
-                                <a href={track.externalUrl} target="_blank" rel="noreferrer" className="secondary-action flex h-10 items-center rounded-xl px-3 text-xs font-bold">
+                                <a href={track.externalUrl} target="_blank" rel="noreferrer" className="secondary-action ui-button-sm">
                                   <ExternalLink size={15} /><span>Aç</span>
                                 </a>
                               )}
@@ -424,7 +441,7 @@ export default function ControlPage() {
                                 type="button"
                                 onClick={() => setRemoveCandidate(track)}
                                 disabled={Boolean(busyId)}
-                                className="danger-action h-10 rounded-xl px-3 text-xs font-bold disabled:text-slate-400"
+                                className="danger-action ui-button-sm"
                               >
                                 {busyId === track.id ? "..." : "Çıkar"}
                               </button>
@@ -453,14 +470,14 @@ export default function ControlPage() {
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder="Şarkı veya sanatçı ara..."
-                    className="mt-2 h-12 w-full rounded-xl border border-white/16 bg-white/92 px-4 text-sm text-slate-950 outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-200"
+                    className="ui-field control-track-search-input mt-2"
                   />
                   <div className="mt-3 grid gap-2">
-                    {searching && <p className="rounded-xl bg-white/10 p-3 text-sm text-cyan-50/70" role="status">Aranıyor...</p>}
+                    {searching && <p className="control-search-state" role="status">Aranıyor...</p>}
                     {!searching &&
                       results.map((track) => (
-                        <div key={track.id} className="grid grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-3 rounded-2xl bg-white/10 p-2 ring-1 ring-white/10">
-                          <div className="h-11 w-11 overflow-hidden rounded-lg bg-sky-100">
+                        <div key={track.id} className="control-search-result">
+                          <div className="control-search-artwork">
                             {track.imageUrl ? (
                               <Image src={track.imageUrl} alt="" width={44} height={44} className="h-full w-full object-contain" />
                             ) : (
@@ -475,14 +492,14 @@ export default function ControlPage() {
                             type="button"
                             onClick={() => addTrack(track)}
                             disabled={Boolean(busyId)}
-                            className="primary-action h-9 rounded-xl px-3 text-xs font-black"
+                            className="primary-action control-search-add"
                           >
                             {busyId === track.id ? "..." : <><Plus size={14} /><span>Ekle</span></>}
                           </button>
                         </div>
                       ))}
                     {!searching && query.trim().length >= 2 && results.length === 0 && (
-                      <p className="rounded-2xl bg-white/10 p-3 text-sm text-cyan-50/70">Sonuç bulunamadı.</p>
+                      <p className="control-search-state">Sonuç bulunamadı.</p>
                     )}
                   </div>
                 </section>
@@ -495,7 +512,7 @@ export default function ControlPage() {
                     Tür bilgileri Spotify sanatçı verisinden gelir. Spotify bu
                     veriyi döndürmezse şarkılar “Tür belirtilmemiş” grubunda kalır.
                   </p>
-                  <button type="button" onClick={() => void loadControl()} disabled={loading || Boolean(busyId)} className="secondary-action mt-4 h-11 w-full rounded-xl px-3 text-sm font-bold disabled:cursor-wait disabled:opacity-60">
+                  <button type="button" onClick={() => void loadControl()} disabled={loading || Boolean(busyId)} className="secondary-action control-refresh-action mt-4">
                     <RefreshCw size={16} className={loading ? "animate-spin" : ""} /> <span>{loading ? "Yenileniyor..." : "Listeyi yenile"}</span>
                   </button>
                 </section>

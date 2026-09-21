@@ -79,6 +79,7 @@ export function FeedReportDialog({
 
 export type FeedEditState = {
   id: string;
+  note: string;
   tags: string;
 };
 
@@ -105,9 +106,20 @@ export function FeedEditDialog({ value, dialogRef, saving, onChange, onCancel, o
         onMouseDown={(event) => event.stopPropagation()}
       >
         <p className="text-xs font-black uppercase tracking-[0.16em] text-cyan-100/68">Paylaşım ayarları</p>
-        <h2 id="edit-post-dialog-title" className="mt-2 text-xl font-black text-white">Etiketlerini düzenle</h2>
-        <TextField
+        <h2 id="edit-post-dialog-title" className="mt-2 text-xl font-black text-white">Paylaşımı düzenle</h2>
+        <TextAreaField
           fieldClassName="mt-5"
+          label="Paylaşım açıklaması"
+          labelMeta={`${value.note.length}/400`}
+          hint="İsteğe bağlı. Şarkıyı neden seçtiğini anlatabilirsin."
+          value={value.note}
+          maxLength={400}
+          rows={4}
+          onChange={(event) => onChange({ ...value, note: event.target.value.slice(0, 400) })}
+          placeholder="Bu şarkıyı neden paylaşıyorsun?"
+        />
+        <TextField
+          fieldClassName="mt-3"
           label="Etiketler"
           hint="Virgülle ayır; en fazla dört etiket gösterilir."
           value={value.tags}

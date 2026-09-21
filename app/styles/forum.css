@@ -567,7 +567,7 @@
   border-radius: 7px;
   background: var(--ui-success-soft);
   padding: 3px 8px;
-  color: var(--ui-success-soft);
+  color: var(--ui-success);
   font-size: 12px;
   font-weight: 850;
 }
@@ -626,7 +626,7 @@
   align-items: center;
   gap: 8px;
   margin: -2px 0 14px;
-  color: var(--ui-success-soft);
+  color: var(--ui-success);
   font-size: 12px;
 }
 
@@ -649,7 +649,7 @@
 .forum-solution-action-active {
   border-color: color-mix(in srgb, var(--ui-success) 38%, transparent);
   background: var(--ui-success-soft);
-  color: var(--ui-success-soft);
+  color: var(--ui-success);
 }
 
 .forum-solution-action:disabled {
@@ -817,6 +817,23 @@
   background: color-mix(in srgb, var(--ui-surface) 70%, transparent);
   box-shadow: var(--shadow-sm);
   backdrop-filter: blur(16px);
+  scrollbar-color: var(--ui-border-strong) transparent;
+  scrollbar-width: thin;
+}
+
+.forum-navigation-panel::-webkit-scrollbar {
+  width: 7px;
+}
+
+.forum-navigation-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.forum-navigation-panel::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: var(--ui-radius-pill);
+  background: var(--ui-border-strong);
+  background-clip: padding-box;
 }
 
 .forum-navigation-heading {
@@ -970,6 +987,27 @@
   width: max-content;
 }
 
+.forum-mine-filter {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--ui-border);
+  border-radius: 10px;
+  background: var(--ui-surface-tint-sm);
+  padding: 0 11px;
+  color: var(--ui-text-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.forum-mine-filter:hover,
+.forum-mine-filter.active {
+  border-color: color-mix(in srgb, var(--ui-primary) 46%, transparent);
+  background: var(--ui-primary-soft);
+  color: var(--ui-primary-hover);
+}
+
 .forum-clear-filters {
   display: inline-flex;
   min-height: 36px;
@@ -979,6 +1017,7 @@
   color: var(--ui-text-muted);
   font-size: 12px;
   font-weight: 750;
+  margin-left: auto;
 }
 
 .forum-clear-filters:hover {
@@ -1073,6 +1112,30 @@
   color: var(--ui-warning);
   font-size: 12px;
   font-weight: 800;
+}
+
+.forum-review-badge {
+  display: inline-flex;
+  min-height: 22px;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  padding: 3px 8px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.forum-review-pending {
+  border-color: color-mix(in srgb, var(--ui-warning) 24%, transparent);
+  background: var(--ui-warning-soft);
+  color: var(--ui-warning);
+}
+
+.forum-review-rejected {
+  border-color: color-mix(in srgb, var(--ui-danger) 24%, transparent);
+  background: var(--ui-danger-soft);
+  color: var(--ui-danger);
 }
 
 .forum-thread-title {
@@ -1371,7 +1434,7 @@
   border-radius: 14px;
   background: var(--ui-danger-soft);
   padding: 24px;
-  color: var(--ui-danger-soft);
+  color: var(--ui-danger);
   text-align: center;
   box-shadow: var(--shadow-sm);
 }

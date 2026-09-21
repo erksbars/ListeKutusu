@@ -59,6 +59,7 @@ export async function DELETE(req: NextRequest) {
       where: { OR: [{ userId: listId }, { actorId: listId }] },
     });
     await tx.postReport.deleteMany({ where: { reporterId: listId } });
+    await tx.commentReport.deleteMany({ where: { reporterId: listId } });
     await tx.userBlock.deleteMany({
       where: { OR: [{ blockerId: listId }, { blockedId: listId }] },
     });
@@ -69,6 +70,7 @@ export async function DELETE(req: NextRequest) {
     await tx.feedListAdd.deleteMany({ where: { userId: listId } });
     await tx.feedSave.deleteMany({ where: { userId: listId } });
     await tx.feedHide.deleteMany({ where: { userId: listId } });
+    await tx.feedComment.deleteMany({ where: { authorId: listId } });
     await tx.feedPost.deleteMany({ where: { authorId: listId } });
     await tx.suggestion.deleteMany({ where: { listId } });
     await tx.userList.update({
@@ -77,8 +79,14 @@ export async function DELETE(req: NextRequest) {
         ownerName: "Silinmiş hesap",
         playlistName: null,
         bio: null,
+        profileStatus: null,
+        pinnedFeedPostId: null,
+        profileShowcase: null,
         favoriteGenres: null,
         profileTheme: "aurora",
+        profileDensity: "comfortable",
+        profileBanner: "line",
+        featuredAchievementId: null,
         email: null,
         passwordHash: null,
         slug: `silinmis-${listId}`,

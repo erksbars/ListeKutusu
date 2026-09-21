@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthenticatedAccountListId } from "@/lib/session";
+import { parseOffsetCursor } from "@/lib/pagination";
 
 export const dynamic = "force-dynamic";
+const CONNECTION_PAGE_SIZE = 20;
 
 type ConnectionProfile = {
   id: string;
@@ -21,6 +23,7 @@ type ConnectionItem = {
 export async function GET(req: NextRequest) {
   const slug = req.nextUrl.searchParams.get("slug")?.trim();
   const type = req.nextUrl.searchParams.get("type");
+  const offset = parseOffsetCursor(req.nextUrl.searchParams.get("cursor"), 10_000);
   if (!slug || (type !== "followers" && type !== "following")) {
     return NextResponse.json({ error: "Bağlantı bilgisi eksik." }, { status: 400 });
   }
@@ -37,7 +40,8 @@ export async function GET(req: NextRequest) {
   const follows = await prisma.follow.findMany({
     where: type === "followers" ? { followingId: profile.id } : { followerId: profile.id },
     orderBy: { createdAt: "desc" },
-    take: 50,
+    skip: offset,
+    take: CONNECTION_PAGE_SIZE + 1,
     select: type === "followers"
       ? {
           follower: {
@@ -69,7 +73,8 @@ export async function GET(req: NextRequest) {
         },
   });
 
-  const users = (follows as ConnectionItem[]).flatMap((item) => {
+  const hasMore = follows.length > CONNECTION_PAGE_SIZE;
+  const users = (follows as ConnectionItem[]).slice(0, CONNECTION_PAGE_SIZE).flatMap((item) => {
     const user = item.follower ?? item.following;
     if (!user) return [];
     return {
@@ -83,5 +88,10 @@ export async function GET(req: NextRequest) {
     };
   });
 
-  return NextResponse.json({ profile: { id: profile.id, ownerName: profile.ownerName }, type, users });
+  return NextResponse.json({
+    profile: { id: profile.id, ownerName: profile.ownerName },
+    type,
+    users,
+    nextCursor: hasMore ? `offset:${offset + CONNECTION_PAGE_SIZE}` : null,
+  });
 }

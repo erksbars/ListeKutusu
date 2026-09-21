@@ -23,6 +23,7 @@ export type FeedPost = {
   createdAt: string;
   likeCount: number;
   addCount: number;
+  commentCount: number;
   likedByMe: boolean;
   addedByMe: boolean;
   savedByMe: boolean;

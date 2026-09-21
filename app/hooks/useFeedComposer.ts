@@ -19,6 +19,7 @@ export function useFeedComposer({
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<TrackResult[]>([]);
   const [selectedTrack, setSelectedTrack] = useState<TrackResult | null>(null);
+  const [note, setNote] = useState("");
   const [tags, setTags] = useState("");
   const [searching, setSearching] = useState(false);
   const [posting, setPosting] = useState(false);
@@ -83,6 +84,7 @@ export function useFeedComposer({
             externalUrl: selectedTrack.externalUrl,
             durationMs: selectedTrack.durationMs,
           },
+          note,
           tags,
         }),
       });
@@ -96,6 +98,7 @@ export function useFeedComposer({
       setSelectedTrack(null);
       setQuery("");
       setResults([]);
+      setNote("");
       setTags("");
       window.dispatchEvent(new Event("feed-composer:close"));
       setMessage("Şarkı keşif akışına bırakıldı.");
@@ -128,10 +131,12 @@ export function useFeedComposer({
     query,
     results,
     selectedTrack,
+    note,
     tags,
     searching,
     posting,
     setTags,
+    setNote,
     changeQuery,
     selectTrack,
     clearTrack,

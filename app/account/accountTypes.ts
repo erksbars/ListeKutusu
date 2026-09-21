@@ -12,8 +12,15 @@ export type AccountList = {
   ownerName: string;
   playlistName: string | null;
   bio: string | null;
+  profileStatus: string | null;
+  pinnedFeedPostId: string | null;
+  profileShowcase: string | null;
   favoriteGenres: string | null;
   profileTheme: string;
+  profileDensity: string;
+  profileBanner: string;
+  featuredAchievementId: string | null;
+  profileAchievements: Array<{ id: string; title: string; description: string }>;
   role?: string | null;
   email: string | null;
   submitCode: string | null;
@@ -21,6 +28,7 @@ export type AccountList = {
   spotifyExternalUrl: string | null;
   lastExportedAt: string | null;
   suggestions: Suggestion[];
+  profilePosts: Array<{ id: string; trackName: string; artistName: string }>;
 };
 
 export type ScoreSummary = {

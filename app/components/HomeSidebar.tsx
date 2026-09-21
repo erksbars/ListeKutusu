@@ -4,6 +4,7 @@ import Link from "next/link";
 import {
   Bookmark,
   Compass,
+  Gamepad2,
   Home,
   ListMusic,
   MessageSquareText,
@@ -50,7 +51,6 @@ export function HomeSidebar({
       aria-label="Ana navigasyon"
     >
       <div className="home-sidebar-head">
-        <span className="home-sidebar-kicker home-nav-label">Gezin</span>
         <button
           type="button"
           className="home-sidebar-toggle"
@@ -66,10 +66,11 @@ export function HomeSidebar({
           <span className="home-sidebar-toggle-icon home-sidebar-toggle-open" aria-hidden="true">
             <PanelLeftOpen size={18} />
           </span>
+          <span className="home-sidebar-toggle-label home-nav-label">Menüyü daralt</span>
         </button>
       </div>
 
-      <nav id="home-sidebar-navigation" className="mt-2 grid gap-1">
+      <nav id="home-sidebar-navigation" className="grid gap-1">
         <a href="#main-feed" aria-label="Ana akış" title="Ana akış" aria-current="page" className={`${itemClass} home-nav-item-active`}>
           <Home size={18} strokeWidth={2.2} aria-hidden="true" />
           <span className="home-nav-label">Ana akış</span>
@@ -96,6 +97,10 @@ export function HomeSidebar({
         <Link href="/discover" aria-label="Keşfet" title="Keşfet" className={itemClass}>
           <Compass size={18} strokeWidth={2.2} aria-hidden="true" />
           <span className="home-nav-label">Keşfet</span>
+        </Link>
+        <Link href="/games" aria-label="Oyunlar" title="Oyunlar" className={itemClass}>
+          <Gamepad2 size={18} strokeWidth={2.2} aria-hidden="true" />
+          <span className="home-nav-label">Oyunlar</span>
         </Link>
         {authenticated && (
           <Link href="/?scope=saved" aria-label="Kaydedilenler" title="Kaydedilenler" className={itemClass}>

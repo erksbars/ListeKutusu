@@ -2,6 +2,7 @@
 
 import { useState, type Dispatch, type SetStateAction } from "react";
 import { useRouter } from "next/navigation";
+import { clearAccountSessionCache } from "@/lib/clientAccountSession";
 
 type UseAccountSecurityActionsOptions = {
   loading: boolean;
@@ -32,6 +33,7 @@ export function useAccountSecurityActions({
     try {
       const response = await fetch("/api/accounts/logout", { method: "POST" });
       if (!response.ok) throw new Error("Çıkış işlemi tamamlanamadı.");
+      clearAccountSessionCache();
       onSignedOut("Çıkış yapıldı.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Çıkış işlemi tamamlanamadı. Tekrar dene.");
@@ -67,6 +69,7 @@ export function useAccountSecurityActions({
       if (!response.ok) throw new Error(data.error || "Şifre değiştirilemedi.");
       setCurrentPassword("");
       setNewPassword("");
+      clearAccountSessionCache();
       onSignedOut("Şifre güncellendi. Güvenliğin için tüm cihazlardaki oturumlar kapatıldı; yeniden giriş yap.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Şifre değiştirilemedi. Bağlantını kontrol edip tekrar dene.");
@@ -95,6 +98,7 @@ export function useAccountSecurityActions({
         setMessage(data.error || "Hesap silinemedi.");
         return;
       }
+      clearAccountSessionCache();
       router.replace("/");
       router.refresh();
     } catch {

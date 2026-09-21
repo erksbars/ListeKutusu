@@ -5,6 +5,21 @@ edebildigi ve herkesin tek bir kisisel liste yonettigi sosyal muzik uygulamasidi
 Spotify; arama, baglanti ve istege bagli playlist senkronu icin kullanilir.
 Uygulama muzik oynatmaz veya Spotify dinleme deneyimini kopyalamaz.
 
+## Proje belgeleri
+
+Günlük geliştirmede bütün raporları okumak yerine şu sıra kullanılır:
+
+1. `PROJECT_STATUS.md`: çalışan kapsam ve son doğrulama durumu
+2. `ROADMAP.md`: yalnız açık ve ertelenen işler
+3. `DESIGN_SYSTEM.md`: ortak arayüz sözleşmesi
+4. `GAMES_DESIGN_SYSTEM.md`: oyun arayüzü ve ürün standardı
+5. `ARCHITECTURE.md`: veri, API ve servis sınırları
+6. `DECISIONS.md`: değiştirilmeden önce bilinmesi gereken kararlar
+7. `TESTING.md`: değişiklik büyüklüğüne göre kontrol sıklığı
+
+`docs/archive/` altındaki belgeler tarihsel referanstır ve normal geliştirme
+bağlamına yüklenmez.
+
 ## Mevcut kapsam
 
 - E-posta ve sifreyle tek kullanici hesabi
@@ -82,6 +97,18 @@ kontrolunu ve temel tablo okumalarini gerceklestirir.
 
 `maintenance:cleanup`, suresi dolmus/iptal edilmis oturumlari ve 180 gunden eski
 okunmus bildirimleri temizler. Tek sunuculu kurulumda bu komut gunluk zamanlanabilir.
+
+Canli oyunlarda 30 saniyelik hamle suresini sayfa goruntuleme isteklerinden bagimsiz
+uygulamak icin web sunucusunun yaninda ayri bir bakim sureci calistirilir:
+
+```bash
+npm run maintenance:games
+```
+
+Bu surec varsayilan olarak 20 saniyede bir zaman asimlarini kontrol eder. Process
+manager kullaniliyorsa web ve `maintenance:games` iki ayri, yeniden baslatilabilir
+surec olarak tanimlanmalidir. Kontrol araligi `GAME_MAINTENANCE_INTERVAL_MS` ile
+degistirilebilir; 5000 ms altindaki degerler kabul edilmez.
 
 ## Uretim notlari
 
