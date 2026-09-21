@@ -14,7 +14,7 @@ import {
   Target,
   Trophy,
 } from "lucide-react";
-import type { Profile, ProfileTab } from "@/app/u/[slug]/profileTypes";
+import type { Profile, ProfileTab } from "@/app/(social)/u/[slug]/profileTypes";
 import { FeedLoadSentinel } from "@/app/components/FeedLoadSentinel";
 
 type ProfileTabPanelsProps = {

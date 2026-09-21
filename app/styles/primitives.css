@@ -484,6 +484,54 @@ select.ui-field {
   color: var(--ui-text-muted);
 }
 
+.social-shell-navigation {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .social-shell-navigation {
+    display: block;
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background: var(--ui-bg);
+    border-bottom: 1px solid var(--ui-divider);
+  }
+
+  .social-shell-navigation-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ui-space-4);
+    max-width: 1480px;
+    margin-inline: auto;
+    padding: var(--ui-space-2) clamp(16px, 2.25vw, 40px);
+  }
+
+  .social-shell-brand {
+    color: var(--ui-text-strong);
+    font-size: var(--ui-text-lg);
+    font-weight: var(--ui-weight-bold);
+  }
+
+  .social-shell .social-shell-navigation .primary-navigation {
+    display: flex;
+  }
+
+  .social-shell .page-topbar .primary-navigation {
+    display: none;
+  }
+
+  .social-shell .app-topbar {
+    position: relative;
+    top: auto;
+  }
+
+  .social-shell .page-topbar-with-navigation {
+    display: flex;
+  }
+}
+
 .primary-navigation {
   display: none;
   min-width: 0;

@@ -2,6 +2,15 @@
 
 Son doğrulama: 11 Ağustos 2026
 
+## 21 Eylül 2026 — ortak sosyal kabuk
+
+- Ana akış, Keşfet, forum, profil, paylaşım ayrıntısı ve oyun rotaları
+  `app/(social)` grubuna taşındı; dış URL'ler korundu.
+- Masaüstü bölüm navigasyonu ortak layout'ta kalıcıdır; sayfaya özgü başlıklar
+  ve işlemler içerik katmanında kalır. Mobil kapsam askıdadır.
+- Bu paket yalnız typecheck, statik UI kontrolü ve tek masaüstü navigasyon
+  senaryosuyla doğrulanır; aşağıdaki geniş test sonuçları tarihsel kayıttır.
+
 ## Aktif ürün kapsamı
 
 - Masaüstü öncelikli, koyu temalı sosyal müzik keşif deneyimi.

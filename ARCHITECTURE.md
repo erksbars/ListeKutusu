@@ -3,6 +3,9 @@
 ## Uygulama katmanları
 
 - `app/`: Next.js App Router sayfaları, route handler'lar ve rota kapsamlı stiller.
+- `app/(social)/`: ana akış, Keşfet, forum, profil, paylaşım ve oyun rotaları;
+  URL'leri değiştirmeyen ortak layout masaüstü bölüm navigasyonunu kalıcı tutar.
+  Sayfaya özel başlıklar ve işlemler sayfa içinde kalır.
 - `app/components/`: ortak arayüz bileşenleri.
 - `app/hooks/`: istemci etkileşimi ve veri yükleme kancaları.
 - `lib/`: iş kuralları, oturum, moderasyon, liste, Spotify ve oyun servisleri.

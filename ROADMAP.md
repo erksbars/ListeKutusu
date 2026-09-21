@@ -5,14 +5,12 @@ dosyasındadır.
 
 ## Aktif masaüstü deneyim aşaması
 
-1. Sosyal rotaları kalıcı bir App Router route-group kabuğuna taşı; üst navigasyonun
-   rota değişimlerinde yeniden kurulmasını önle.
-2. Ana akış ve Keşfet'in ilk görünür içeriğini server-first veri sınırına taşı;
+1. Ana akış ve Keşfet'in ilk görünür içeriğini server-first veri sınırına taşı;
    etkileşimli filtre ve aksiyonları küçük client bileşenlerinde bırak.
-3. Forum, profil ve oyun merkezi sayfalarında ortak içerik başlangıç çizgisi,
+2. Forum, profil ve oyun merkezi sayfalarında ortak içerik başlangıç çizgisi,
    maksimum genişlik ve bölüm boşluğu tokenlarını tamamla.
-4. Büyük istemci sayfalarını sorumluluklarına göre bölerek rota JavaScript yükünü azalt.
-5. Dört ila altı masaüstü geliştirme paketi sonunda production build, koyu tema
+3. Büyük istemci sayfalarını sorumluluklarına göre bölerek rota JavaScript yükünü azalt.
+4. Dört ila altı masaüstü geliştirme paketi sonunda production build, koyu tema
    görsel rotalar ve performans bütçesini toplu doğrula.
 
 ## Sonraki ürün aşaması

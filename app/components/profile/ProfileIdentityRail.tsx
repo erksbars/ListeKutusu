@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { CalendarDays, Gamepad2, Headphones, Heart, ListPlus, MessageSquareText, Settings2, Sparkles, UsersRound } from "lucide-react";
-import type { Profile } from "@/app/u/[slug]/profileTypes";
+import type { Profile } from "@/app/(social)/u/[slug]/profileTypes";
 
 export function ProfileIdentityRail({ profile }: { profile: Profile }) {
   return (

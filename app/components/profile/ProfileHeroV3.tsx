@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Award, CalendarDays, Music2 } from "lucide-react";
-import type { Profile } from "@/app/u/[slug]/profileTypes";
+import type { Profile } from "@/app/(social)/u/[slug]/profileTypes";
 
 type ProfileHeroV3Props = {
   profile: Profile;

@@ -53,7 +53,7 @@ for (const file of sourceFiles) {
 
 const lineBudgets = {
   "app/globals.css": 1500,
-  "app/page.tsx": 520,
+  "app/(social)/page.tsx": 520,
   "app/account/page.tsx": 620,
   "app/admin/page.tsx": 650,
 };
