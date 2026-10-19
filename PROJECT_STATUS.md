@@ -8,8 +8,10 @@ Son dar doğrulama: 19 Ekim 2026
   Git kimlik yöneticisinden yalnız `Moooncake020` kaydı kaldırıldı. Sohbetin
   GitHub eklentisi ayrı bağlantıdır; onun hesabı otomatik değişmiş sayılmaz.
 - `erksbars/ListeKutusu` kullanıcı tercihiyle private oluşturuldu. Mevcut
-  commit geçmişi korunur; eski uzak depo içeriği değiştirilmez. İlk gönderim
-  sonrası origin ve main referansı ayrıca doğrulanmalıdır.
+  dört commit korundu; kaynak anlık kaydı `f6b04bb` ile main'e gönderildi.
+  GitHub sahibi/private durumu ve uzak SHA'nın yerel SHA ile eşleşmesi
+  doğrulandı. Origin yeni hesaba gider, eski adres previous-origin olarak
+  saklanır; eski uzak depoya yazılmadı.
 - README güncel kapsam, stack ve dürüst geliştirme/yayın sınırlarıyla
   portföye hazırlandı. AGENTS ve GitHub çalışma belgesine doğrulanan gerçek
   iş paketleriyle commit düzeni eklendi; tarih/katkı grafiği taklidi yoktur.

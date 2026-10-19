@@ -10,6 +10,12 @@ Git kimlik yöneticisinde erksbars doğrulandı; Moooncake020 yerel kaydı
 kaldırıldı. Sohbet eklentisi ayrı oturumdur. Private deponun kaynak kodu
 ziyaretçilere açık değildir; herkese açık portföy vitrini ayrıca planlanabilir.
 
+İlk aktarım `f6b04bb` kaynak anlık kaydıyla yapıldı; önceki dört commit korunur.
+GitHub repository owner/private durumu ve `main` uzak SHA eşleşmesi doğrulandı.
+`origin` yeni hedef, `previous-origin` yalnız eski adresin korunan kaydıdır.
+Kaynak aktarımında 11 değiştirilmiş PNG baseline dışarıda bırakıldı;
+çalışma alanından silinmedi. Bu commit'in geçmesi üretim yayını değildir.
+
 ## Commit yaklaşımı
 
 1. Bir iş paketini tamamla; riskine göre ilgili test ve tip/lint kontrolünü yap.
