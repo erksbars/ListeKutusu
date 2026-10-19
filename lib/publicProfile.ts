@@ -1,10 +1,12 @@
 import type { Prisma } from "@prisma/client";
+import { getMediaShowcase } from "@/lib/mediaShowcase";
 import { completedProfileGames } from "@/lib/profileGames";
 import { calculateAchievements } from "@/lib/achievements";
 import { prisma } from "@/lib/db";
 import { normalizeProfileShowcase } from "@/lib/profileShowcase";
 import { forumCategoryLabel } from "@/lib/forum";
 import { normalizeProfileBanner, normalizeProfileDensity } from "@/lib/profileAppearance";
+import { publicUniversity } from "@/lib/profileUniversity";
 
 const PROFILE_POST_PAGE_SIZE = 12;
 
@@ -59,6 +61,8 @@ export async function getPublicProfile(slug: string, viewerId: string | null) {
       playlistName: true,
       bio: true,
       profileStatus: true,
+      universityName: true,
+      universityPublic: true,
       pinnedFeedPostId: true,
       profileShowcase: true,
       favoriteGenres: true,
@@ -183,6 +187,8 @@ export async function getPublicProfile(slug: string, viewerId: string | null) {
   const blockedByMe = Boolean(profile.blocksReceived?.length);
   const hasBlockedMe = Boolean(profile.blocksInitiated?.length);
   const interactionBlocked = blockedByMe || hasBlockedMe;
+  const mediaShowcaseEnabled = process.env.MEDIA_CATALOG_ENABLED === "true";
+  const mediaShowcase = await getMediaShowcase(prisma, profile.id, mediaShowcaseEnabled, interactionBlocked);
   const recentVisiblePosts = interactionBlocked
     ? []
     : profile.feedPosts.slice(0, PROFILE_POST_PAGE_SIZE);
@@ -233,8 +239,11 @@ export async function getPublicProfile(slug: string, viewerId: string | null) {
     playlistName: profile.playlistName,
     bio: profile.bio,
     profileStatus: profile.profileStatus,
+    universityName: publicUniversity(profile, interactionBlocked),
     pinnedFeedPostId: profile.pinnedFeedPostId,
     showcaseModules: normalizeProfileShowcase(profile.profileShowcase),
+    mediaShowcaseEnabled,
+    mediaShowcase,
     favoriteGenres: profileGenres,
     sharedGenres,
     relatedProfiles,

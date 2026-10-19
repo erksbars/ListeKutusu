@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
+import { useRef, useState, type Dispatch, type SetStateAction } from "react";
 import type { FeedEditState } from "../components/FeedPostDialogs";
 import type { FeedScope } from "../components/FeedSectionHeader";
 import type { FeedPost } from "./feedTypes";
@@ -43,50 +43,6 @@ export function useFeedInteractions({
   const [editingPost, setEditingPost] = useState<FeedEditState | null>(null);
   const [editSaving, setEditSaving] = useState(false);
   const feedDialogRef = useRef<HTMLElement>(null);
-  const reportDialogOpen = Boolean(reportPostId);
-  const editDialogOpen = Boolean(editingPost);
-
-  useEffect(() => {
-    if (!reportDialogOpen && !editDialogOpen) return;
-    const previouslyFocused = document.activeElement as HTMLElement | null;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    window.setTimeout(() => {
-      feedDialogRef.current
-        ?.querySelector<HTMLElement>("select, input, textarea, button")
-        ?.focus();
-    }, 0);
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        if (reportSubmitting || editSaving) return;
-        setReportPostId(null);
-        setEditingPost(null);
-        return;
-      }
-      if (event.key !== "Tab") return;
-      const focusable = feedDialogRef.current?.querySelectorAll<HTMLElement>(
-        'button:not([disabled]), select:not([disabled]), input:not([disabled]), textarea:not([disabled]), a[href]'
-      );
-      if (!focusable?.length) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    }
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = previousOverflow;
-      previouslyFocused?.focus();
-    };
-  }, [editDialogOpen, editSaving, reportDialogOpen, reportSubmitting]);
 
   function requireAccount() {
     if (account) return false;

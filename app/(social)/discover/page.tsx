@@ -23,6 +23,10 @@ import { AccountMenu } from "@/app/components/AccountMenu";
 import { PageTopbar } from "@/app/components/PageTopbar";
 import { useSessionNavigation } from "@/app/hooks/useSessionNavigation";
 import { loadAccountSession } from "@/lib/clientAccountSession";
+import { communityError, communityFetch, communityRequestStatus } from "@/lib/communityRequest";
+import { CommunityReadFeedback } from "@/app/components/CommunityReadFeedback";
+import { ContentState } from "@/app/components/ui/ContentState";
+import { accountLoginPath } from "@/lib/navigation";
 
 type DiscoverTrack = {
   id: string;
@@ -109,7 +113,9 @@ export default function DiscoverPage() {
   const [searchScope, setSearchScope] = useState<SearchScope>("all");
   const [discoveryOrder, setDiscoveryOrder] = useState<DiscoveryOrder>("popular");
   const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState(false);
+  const [loadError, setLoadError] = useState("");
+  const [loadStatus, setLoadStatus] = useState<number | null>(null);
+  const requestRef = useRef<AbortController | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [workingIds, setWorkingIds] = useState<string[]>([]);
   const [urlStateReady, setUrlStateReady] = useState(false);
@@ -117,26 +123,29 @@ export default function DiscoverPage() {
   const trackSentinelRef = useRef<HTMLDivElement>(null);
 
   const loadDiscover = useCallback(async () => {
+    const controller = new AbortController();
+    requestRef.current?.abort(); requestRef.current = controller;
     setLoading(true);
-    setLoadError(false);
+    setLoadError(""); setLoadStatus(null); setData(null);
     try {
-      const [discoverResponse, nextAccount] = await Promise.all([
-        fetch("/api/discover"),
+      const [discover, nextAccount] = await Promise.all([
+        communityFetch<DiscoverData>("/api/discover", undefined, controller.signal),
         loadAccountSession(),
       ]);
-      if (!discoverResponse.ok) throw new Error("discover_failed");
-      const discover = await discoverResponse.json();
+      if (controller.signal.aborted) return;
+      if (![discover.tracks, discover.tags, discover.curators, discover.people, discover.lists].every(Array.isArray) || !discover.totals) throw new Error("Keşfet yanıtı doğrulanamadı. Yeniden deneyebilirsin.");
       setData(discover);
       setAccount(nextAccount);
-    } catch {
-      setLoadError(true);
+    } catch (cause) {
+      if (!controller.signal.aborted) { setLoadError(communityError(cause)); setLoadStatus(communityRequestStatus(cause)); }
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     void loadDiscover();
+    return () => requestRef.current?.abort();
   }, [loadDiscover]);
 
   useEffect(() => {
@@ -447,7 +456,7 @@ export default function DiscoverPage() {
                   onKeyDown={(event) => handleSearchTabKeyDown(event, index)}
                   className={searchScope === scope ? "discover-search-tab discover-search-tab-active" : "discover-search-tab"}
                 >
-                  {label}<span>{searchResultCount(scope)}</span>
+                  {label}<span>{data ? searchResultCount(scope) : "—"}</span>
                 </button>
               ))}
             </div>
@@ -466,10 +475,10 @@ export default function DiscoverPage() {
           <>
             <section className="discover-stats" aria-label="Keşfet özeti">
               {[
-                ["Paylaşım", data?.totals.posts ?? 0],
-                ["Şarkı", data?.totals.tracks ?? 0],
-                ["Etiket", data?.totals.tags ?? 0],
-                ["Liste", data?.totals.lists ?? 0],
+                ["Paylaşım", data?.totals.posts ?? "—"],
+                ["Şarkı", data?.totals.tracks ?? "—"],
+                ["Etiket", data?.totals.tags ?? "—"],
+                ["Liste", data?.totals.lists ?? "—"],
               ].map(([label, value]) => (
                 <div key={label} className="discover-stat"><strong>{value}</strong><span>{label}</span></div>
               ))}
@@ -480,12 +489,7 @@ export default function DiscoverPage() {
 
         <div className={showPeopleAside ? "mt-6 grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_320px]" : "mt-6"}>
           <div id={`discover-search-panel-${searchScope}`} role={searchActive ? "tabpanel" : undefined} aria-labelledby={searchActive ? `discover-search-tab-${searchScope}` : undefined} className="min-w-0">
-            {searchActive && loading && (
-              <section className="discover-search-loading" role="status" aria-live="polite">
-                <span className="discover-empty-icon"><Search size={20} /></span>
-                <div><strong>Topluluk taranıyor</strong><small>Şarkılar, kullanıcılar ve listeler hazırlanıyor.</small></div>
-              </section>
-            )}
+            <CommunityReadFeedback loading={loading} error={loadError} status={loadStatus} loadingLabel="Keşfet hazırlanıyor" errorTitle="Keşfet şu anda yüklenemedi" loginHref={accountLoginPath(`/discover${searchActive ? `?${new URLSearchParams({ q: query.trim(), type: searchScope })}` : ""}`)} onRetry={() => void loadDiscover()} />
             {noSearchResults && (
               <section className="discover-no-results" aria-live="polite">
                 <span className="discover-empty-icon"><Search size={20} /></span>
@@ -517,7 +521,7 @@ export default function DiscoverPage() {
                   </h2>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-cyan-100/72"><Flame size={15} /> {visibleTracks.length} sonuç</span>
+                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-cyan-100/72"><Flame size={15} /> {data ? `${visibleTracks.length} sonuç` : "Sonuç sayısı bilinmiyor"}</span>
                   {hasActiveFilters && (
                     <button
                       type="button"
@@ -533,14 +537,6 @@ export default function DiscoverPage() {
                 </div>
               </header>
               <div className="discover-track-list">
-                {loadError && (
-                  <div className="discover-empty-state">
-                    <span className="discover-empty-icon"><Music2 size={20} /></span>
-                    <h3>Keşfet şu anda yüklenemedi</h3>
-                    <p>Bağlantını kontrol edip yeniden deneyebilirsin.</p>
-                    <button type="button" onClick={() => void loadDiscover()} className="secondary-action mt-4 h-10 rounded-xl px-4 text-xs font-black">Yeniden dene</button>
-                  </div>
-                )}
                 {displayedTracks.map((track, index) => (
                   <article key={track.id} className="discover-track-row">
                     <span className="discover-rank">{index + 1}</span>
@@ -567,21 +563,14 @@ export default function DiscoverPage() {
                   </div>
                 )}
                 {!loading && !loadError && visibleTracks.length === 0 && (!searchActive || searchScope === "tracks") && (
-                  <div className="discover-empty-state">
-                    <span className="discover-empty-icon"><Search size={20} /></span>
-                    <h3>{data?.tracks.length ? "Bu filtreyle eşleşme yok" : "Keşfet akışı henüz boş"}</h3>
+                  <ContentState kind="empty" title={data?.tracks.length ? "Bu filtreyle eşleşme yok" : "Keşfet akışı henüz boş"}>
                     <p>{data?.tracks.length ? "Aramayı veya seçili konuyu temizleyerek yeniden bak." : "İlk paylaşımlar geldikçe yükselen şarkılar burada sıralanacak."}</p>
                     {data?.tracks.length ? (
                       <button type="button" onClick={() => { setQuery(""); setActiveTag(null); }} className="secondary-action mt-4 h-10 rounded-xl px-4 text-xs font-black">Filtreleri temizle</button>
                     ) : (
                       <Link href="/#feed-composer" className="secondary-action mt-4 inline-flex h-10 items-center rounded-xl px-4 text-xs font-black">Akışa şarkı bırak</Link>
                     )}
-                  </div>
-                )}
-                {loading && !searchActive && (
-                  <div className="grid" role="status" aria-live="polite" aria-label="Keşfet hazırlanıyor">
-                    {Array.from({ length: 5 }).map((_, index) => <div key={index} className="discover-track-skeleton" aria-hidden="true"><span /><div><i /><i /></div><b /></div>)}
-                  </div>
+                  </ContentState>
                 )}
               </div>
             </section>}
@@ -596,7 +585,7 @@ export default function DiscoverPage() {
                   {searchScope === "all" ? (
                     <button type="button" onClick={() => setSearchScope("people")} className="discover-section-link">Tümünü gör</button>
                   ) : (
-                    <span><UsersRound size={15} /> {visiblePeople.length} sonuç</span>
+                    <span><UsersRound size={15} /> {data ? `${visiblePeople.length} sonuç` : "Sonuç sayısı bilinmiyor"}</span>
                   )}
                 </header>
                 <div className="discover-people-grid">
@@ -611,7 +600,7 @@ export default function DiscoverPage() {
                     </Link>
                   ))}
                 </div>
-                {!loading && visiblePeople.length === 0 && searchScope === "people" && (
+                {!loading && !loadError && visiblePeople.length === 0 && searchScope === "people" && (
                   <div className="discover-empty-state">
                     <span className="discover-empty-icon"><UserRound size={20} /></span>
                     <h3>Kullanıcı bulunamadı</h3>
@@ -631,7 +620,7 @@ export default function DiscoverPage() {
                   {searchScope === "all" ? (
                     <button type="button" onClick={() => setSearchScope("lists")} className="discover-section-link">Tümünü gör</button>
                   ) : (
-                    <span><ListMusic size={15} /> {visibleLists.length} sonuç</span>
+                    <span><ListMusic size={15} /> {data ? `${visibleLists.length} sonuç` : "Sonuç sayısı bilinmiyor"}</span>
                   )}
                 </header>
                 <div className="discover-list-grid">
@@ -646,7 +635,7 @@ export default function DiscoverPage() {
                     </Link>
                   ))}
                 </div>
-                {!loading && visibleLists.length === 0 && searchScope === "lists" && (
+                {!loading && !loadError && visibleLists.length === 0 && searchScope === "lists" && (
                   <div className="discover-empty-state">
                     <span className="discover-empty-icon"><ListMusic size={20} /></span>
                     <h3>Liste bulunamadı</h3>
@@ -673,7 +662,7 @@ export default function DiscoverPage() {
                   <span className="text-xs font-black text-cyan-100">#{index + 1}</span>
                 </Link>
               ))}
-              {!loading && (data?.curators ?? []).length === 0 && <p className="py-4 text-sm leading-6 text-cyan-50/72">Aktif küratörler paylaşımlarla burada görünür.</p>}
+              {!loading && !loadError && (data?.curators ?? []).length === 0 && <p className="py-4 text-sm leading-6 text-cyan-50/72">Aktif küratörler paylaşımlarla burada görünür.</p>}
             </div>
             {!searchActive && (data?.people ?? []).length > 0 && (
               <section className="discover-people-aside" aria-labelledby="people-aside-title">

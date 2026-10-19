@@ -1,0 +1,2 @@
+ALTER TABLE "CommunityPost" ADD COLUMN "revision" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "CommunityPost" ADD COLUMN "editedAt" DATETIME;

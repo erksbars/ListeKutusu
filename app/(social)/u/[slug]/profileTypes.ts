@@ -43,11 +43,14 @@ export type ProfileGameSession = {
 };
 
 export type Profile = {
+  mediaShowcaseEnabled?: boolean;
+  mediaShowcase?: import("@/lib/mediaShowcase").MediaShowcaseItem[];
   id: string;
   ownerName: string;
   playlistName: string | null;
   bio: string | null;
   profileStatus: string | null;
+  universityName?: string | null;
   pinnedFeedPostId: string | null;
   showcaseModules: Array<"featured" | "identity" | "recent" | "forum">;
   favoriteGenres: string[];

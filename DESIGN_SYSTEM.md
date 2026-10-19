@@ -23,7 +23,18 @@ Bu belge ListeKutusu'nun açık ve koyu temada aynı ürün gibi görünmesini s
 - `app/components/ui`: yeni ekranların kullanacağı `Button`, `Card`, `TextField`, `TextAreaField`, `SelectField`, `Checkbox` ve `HorizontalScroller` bileşenleri.
 - `app/components/ThemeToggle.tsx`: tema seçimi ve kalıcı tercih.
 - `app/components/PageTopbar.tsx`: iç sayfaların ortak üst yapısı.
-- `app/components/HomeSidebar.tsx`: masaüstü sosyal navigasyon.
+- `app/components/AppShell.tsx` + `PrimaryNavigation.tsx`: ortak masaüstü sol navigasyon.
+- `app/components/HomeCommunitySummary.tsx`: ana akışın kişisel sağ bağlam özeti; ikinci ana menü değil.
+- `app/components/ModalPortal.tsx`: body modal katmanı, arka alan inert/scroll ve odak otoritesi.
+- `app/components/ui/ContentState.tsx`: yükleme, boş, giriş, hata ve kullanılamıyor durumları.
+- `app/components/CommunityReadFeedback.tsx`: HTTP durumunu doğru görünüme ve hedefi koruyan girişe bağlar.
+- `app/hooks/useNotifications.ts`: panelin okuma/yazma, bilinmeyen sayaç ve
+  oturum/yetki kaybında temizleme sınırı; görünüm ortak durum kartlarını kullanır.
+- `app/components/DraftNavigationProvider.tsx`: birden fazla form için tek, yalnız bellekte dirty/busy kayıt otoritesi.
+  Geçici kayıt/geri alma callback'leri metin kopyalamaz. Tek desteklenen dirty
+  profil kaydında kaydet-ve-devam-et açılır; başarısızlık hedefi korur.
+  Hesap bölüm/geri ve yetkili kuyruk filtre/sayfa/yenileme de ortak onaydadır.
+  Yeni içerik otomatik yayımlanmaz; bütün formlar/geçmiş kapsamda değildir.
 - `app/components/MobileDock.tsx`: mobil ana navigasyon.
 - `GAMES_DESIGN_SYSTEM.md`: oyun merkezi, oda, canlı maç, sonuç, performans ve çok oyunculu etkileşim sözleşmesi.
 
@@ -95,6 +106,8 @@ Her iç sayfa aşağıdaki yapıyı korur:
 - `ui-page-frame` geniş ekranı kullanır ancak 1480 px üzerinde satırları kontrol eder.
 - Ana sayfa `home-grid` ile sosyal ürün kabuğunu kullanır.
 - Sol navigasyon her zaman sola hizalıdır; ikon ve metin başlangıç çizgisi sayfalar arasında değişmez.
+- 17 Ekim ilk uygulama: root `AppShell` 1024 px ve üstünde tek 224 px sol menüdür; içerik onun sağında akar. Sosyal sayfalarda üstte ikinci ana menü yoktur. Yerel üst çubuk normal belge akışındadır; sayfa başlangıcını örten ikinci sticky katman oluşturulmaz. Maksimum içerik genişliği 1480 px hedefi korunur.
+- Profil/onay/rapor modalları `ModalPortal` üzerinden body'ye taşınır; arka alan yalnız görsel olarak karartılmaz, etkileşime de kapatılır. Form kendi Escape/focus/scroll dinleyicisini yeniden kurmaz; ortak katmanı kullanır.
 - Mobilde ana işler `MobileDock` üzerinden erişilir; masaüstü kenar çubuğu mobilde kopyalanmaz.
 
 ## 7. Butonlar
@@ -124,16 +137,39 @@ Kurallar:
 - Kart içine dekoratif ikinci kart konulmaz.
 - Gölge: normal içerikte `--ui-shadow-xs`, yalnız yükseltilmiş araçta `--ui-shadow-md`, modal/menüde `--ui-shadow-overlay`.
 - Sağ ray kartları ana akış kartından daha baskın görünmez.
+- Karma akışta müzik, sohbet, inceleme ve etkinlik aynı `feed-post-card`
+  kimlik/başlık bandını kullanır; `feed-content-kind` türü metinle belirtir.
+  Kaynak, puan/spoiler ve etkinlik tarih/mekân/kapasitesi korunur. Kart bütünü
+  link yapılmaz; detay ve etkileşim hedefleri ayrıdır.
 - Yeni tekrar eden içeriklerde `Card`, `CardHeader`, `CardContent` ve `CardFooter` bileşenleri tercih edilir.
 
 ## 9. Formlar
+
+Akış gezinmesi: kapsam/içerik türü/müzik konusu URL'de tutulur. Müzik detayı
+dönüşü yalnız normalize root filtreleri ve kart işaretini taşır. Yeniden
+yüklenen listede kart bulunduğunda görünür/odaklı dönüş yapılır; eski özel
+içerik saklanmaz veya otomatik sınırsız sayfalama yapılmaz. Giriş aynı yolu
+korur; form metni veya otomatik işlem taşımaz. Diğer detay aileleri açık.
 
 - Alan sınıfı: `ui-field`.
 - Etiket: `form-label`; placeholder etiket yerine geçmez.
 - Hata metni alanın hemen altında, `--ui-danger` ile ve metinsel açıklamayla gösterilir.
 - Başarılı işlem toast ile bildirilir; form içi doğrulama hatası toast'a taşınmaz.
+- Toast için açıkça verilen `tone` otoritedir; eski çağrılarda metin çıkarımı geçiş uyumluluğudur. Normal giriş gereksinimi kırmızı hata sayılmaz. Bilinmeyen/yüklenemeyen kayıt sayısı sıfır değildir.
+- Özel okumalarda 401 giriş, 403 yetki sınırı, 404 erişilemeyen kaynak, ağ/5xx okuma hatası olarak ayrılır. Giriş yalnız 401'de önerilir; eski hedefin özel verisi ve durumu yeni hedefe taşınmaz. 503 servisin kullanılamadığı nötr durumdur; boş sonuç değildir.
+- Keşfet aynı durum yüzeyini aramanın tüm kapsamlarında gösterir. Bilinmeyen
+  toplam/sonuç sayısı sıfır yazılmaz; gerçek boş sonuç yalnız başarılı veriyle
+  gösterilir. Başvurunun tür/rapor değişimi onay ve güncel bağlam kontrolü
+  ister; yeni konuya eski açıklama taşınmaz.
+- Kayıtlı formlar iç linkten ayrılırken tek çıkış onayı kullanır. İptal metni korur; pending işlem geçişi engeller. Ortak beforeunload belgeden ayrılmayı uyarır; bu, aynı belge geri/ileri veya tüm yerel düğmeler için tamamlanmış koruma değildir. Otomatik/persist edilmiş taslak veya otomatik gönderim yoktur.
 - Şifre, arama ve seçim alanları aynı 44 px kontrol yüksekliğini kullanır.
+- Yorumda yanıt hedefi değiştirme/vazgeçme metin varsa onay ister. Kaldırma
+  onayı bağlı yanıtları açıklar. Hata metni korur; silinmiş hedefin taslağı
+  sessizce kök yoruma dönüştürülmez. Sayı yüklenmediyse — gösterilir.
 - Klavye odağı kaldırılmaz; merkezi focus ring korunur.
+- Müzik kartı menüsü açılınca ilk kullanılabilir işlem odaklanır; ok tuşları,
+  Home/End, Escape ile tetikleyiciye dönüş ve Tab ile kapanma desteklenir.
+  Uzun not aç/kapa düğmesi aria-expanded ve aria-controls ilişkisini taşır.
 - Yeni alanlarda `TextField`, `TextAreaField` veya `SelectField` kullanılır; bu bileşenler etiket, sayaç/meta, ipucu, hata, `aria-invalid` ve `aria-describedby` ilişkisini birlikte kurar.
 
 ## 10. Tema davranışı

@@ -122,10 +122,10 @@ export function AccountMenu({ ownerName, email, profileSlug, role, onLogout }: A
           </Link>
         )}
         <Link href="/account" role="menuitem" onClick={() => setOpen(false)}>
-          <ListMusic size={16} /> Hesap ve listem
+          <ListMusic size={16} /> Hesabım
         </Link>
-        <Link href="/control" role="menuitem" onClick={() => setOpen(false)}>
-          <Settings2 size={16} /> Liste kontrolü
+        <Link href="/library?type=music" role="menuitem" onClick={() => setOpen(false)}>
+          <Settings2 size={16} /> Kitaplığım
         </Link>
         {(role === "moderator" || role === "admin") && (
           <Link href="/admin/forum" role="menuitem" onClick={() => setOpen(false)}>

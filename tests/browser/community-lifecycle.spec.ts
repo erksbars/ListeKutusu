@@ -1,0 +1,96 @@
+import { expect, test } from "@playwright/test";
+import { PrismaClient } from "@prisma/client";
+import { randomUUID } from "node:crypto";
+
+test("two-party ownership, read-only archive and explicit account closure", async ({ page, context, browser, request, baseURL }) => {
+  test.skip(process.env.COMMUNITY_E2E !== "1", "Local lifecycle integration is opt-in.");
+  if (!baseURL || new URL(baseURL).hostname !== "127.0.0.1") throw new Error("Local test only");
+  test.setTimeout(180_000); page.setDefaultTimeout(25_000);
+  const db = new PrismaClient(), suffix = randomUUID(), password = `Test-${suffix}-42`, ids: string[] = [];
+  const emails = [0, 1].map(i => `lifecycle-${i}-${suffix}@example.test`);
+  const recipient = await browser.newContext({ baseURL, viewport: { width: 1280, height: 900 }, colorScheme: "dark" });
+  const recipientPage = await recipient.newPage(); recipientPage.setDefaultTimeout(25_000);
+  const errors: string[] = []; for (const target of [page, recipientPage]) target.on("pageerror", error => errors.push(error.message));
+  const headers = { Origin: baseURL };
+  try {
+    for (const [i, client] of [context, recipient].entries()) {
+      expect((await client.request.post("/api/accounts", { headers: { ...headers, "X-Forwarded-For": `192.0.2.${1 + parseInt(suffix.slice(0, 2), 16) % 254}` }, data: { email: emails[i], password, ownerName: i ? "Yeni Topluluk Sahibi" : "İlk Topluluk Sahibi", playlistName: "Geçici test" } })).status()).toBe(200);
+      ids.push((await db.userList.findUniqueOrThrow({ where: { email: emails[i] } })).id);
+    }
+    const receiver = await db.userList.findUniqueOrThrow({ where: { id: ids[1] } });
+    const body = { name: "Devir ve Arşiv Denemesi", description: "Gerçek etkinlik içermeyen geçici yaşam döngüsü topluluğu.", category: "interest", rules: "Bu yalnız otomatik test topluluğudur." };
+    const created = await context.request.post("/api/communities", { headers, data: body }); expect(created.status()).toBe(201);
+    const { slug } = await created.json(), api = `/api/communities/${slug}`;
+    expect((await recipient.request.post(api, { headers, data: { action: "join" } })).status()).toBe(200);
+    const postResponse = await recipient.request.post(api, { headers, data: { action: "create-post", title: "Arşivde korunan içerik", body: "Üye içeriği devirde ve arşivde korunur.", distribution: "general" } });
+    expect(postResponse.status()).toBe(200); const post = (await postResponse.json()).post;
+    const eventResponse = await context.request.post(`${api}/events`, { headers, data: { title: "Kurgusal yaşam döngüsü etkinliği", description: "Bu gerçek bir buluşma değil, geçici otomatik test duyurusudur.", localStart: new Date(Date.now() + 7 * 86_400_000 + 3 * 3_600_000).toISOString().slice(0, 16), city: "Ankara", venue: "Kurgusal kamusal mekân", publicLocationConfirmed: true, distribution: "general" } });
+    expect(eventResponse.status()).toBe(201); const event = (await eventResponse.json()).event;
+    expect((await recipient.request.post(`${api}/events/${event.id}`, { headers, data: { action: "rsvp", status: "attending" } })).status()).toBe(200);
+    expect((await request.get(`${api}/ownership`)).status()).toBe(401);
+    expect((await recipient.request.post(`${api}/ownership`, { headers, data: { action: "archive", confirmation: "TOPLULUĞU ARŞİVLE" } })).status()).toBe(403);
+    for (const target of [page, recipientPage]) await target.addInitScript(() => localStorage.setItem("listekutusu-theme", "dark"));
+    await page.goto(`/communities/${slug}`);
+    const ownerPanel = page.getByRole("region", { name: "Sahiplik ve arşiv", exact: true });
+    const target = ownerPanel.getByRole("textbox", { name: "Yeni sahibin profil kullanıcı adı", exact: true });
+    await target.fill(receiver.slug);
+    let failOffer = true;
+    await page.route(`**${api}/ownership`, route => {
+      if (route.request().method() !== "POST" || !failOffer) return route.continue();
+      failOffer = false; return route.fulfill({ status: 503, json: { error: "Geçici sahiplik yazma hatası" } });
+    });
+    await ownerPanel.getByRole("button", { name: "Sahiplik teklifi gönder", exact: true }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "Onayla", exact: true }).click();
+    await expect(ownerPanel.getByRole("alert")).toContainText("Geçici sahiplik yazma hatası"); await expect(target).toHaveValue(receiver.slug);
+    await ownerPanel.getByRole("button", { name: "Sahiplik teklifi gönder", exact: true }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "Onayla", exact: true }).click();
+    await expect(ownerPanel.getByRole("button", { name: "Teklifi geri çek", exact: true })).toBeVisible();
+    await page.unroute(`**${api}/ownership`);
+    expect((await db.community.findUniqueOrThrow({ where: { slug } })).ownerId).toBe(ids[0]);
+    await recipientPage.goto("/communities");
+    await recipientPage.getByRole("region", { name: "Gelen sahiplik teklifleri", exact: true }).getByRole("link").click();
+    const newPanel = recipientPage.getByRole("region", { name: "Sahiplik ve arşiv", exact: true });
+    await newPanel.getByRole("button", { name: "Sahipliği kabul et", exact: true }).click();
+    await recipientPage.getByRole("dialog").getByRole("button", { name: "Onayla", exact: true }).click();
+    await expect(recipientPage.getByText("Topluluğun sahibisin", { exact: true })).toBeVisible();
+    expect((await context.request.post(`${api}/ownership`, { headers, data: { action: "archive", confirmation: "TOPLULUĞU ARŞİVLE" } })).status()).toBe(403);
+    await page.reload(); await expect(page.getByText("Topluluğu yönet", { exact: true })).toHaveCount(0);
+    await newPanel.getByRole("button", { name: "Topluluğu arşivle", exact: true }).click();
+    await recipientPage.getByRole("dialog").getByRole("button", { name: "Onayla", exact: true }).click();
+    await expect(recipientPage.getByText("Bu topluluk arşivde. İçerikler okunabilir; yeni katılım, paylaşım ve etkinlik işlemleri kapalıdır.", { exact: true })).toBeVisible();
+    expect((await (await request.get(`${api}/posts/${post.id}`)).json()).post.body).toBe("Üye içeriği devirde ve arşivde korunur.");
+    const archivedEvent = await (await recipient.request.get(`${api}/events/${event.id}`)).json();
+    expect(archivedEvent.event.status).toBe("cancelled"); expect(archivedEvent.event.viewerStatus).toBe("withdrawn"); expect(archivedEvent.canRespond).toBe(false);
+    await recipientPage.getByText("Topluluğu yönet", { exact: true }).click();
+    await recipientPage.getByRole("button", { name: "Karar geçmişi", exact: true }).click();
+    await expect(recipientPage.getByRole("heading", { name: "Topluluk arşivlendi", exact: true })).toBeVisible();
+    await newPanel.scrollIntoViewIfNeeded();
+    await recipientPage.screenshot({ path: "test-results/browser/community-lifecycle-desktop.png", fullPage: false, animations: "disabled" });
+    await newPanel.getByRole("button", { name: "Topluluğu yeniden aç", exact: true }).click();
+    await recipientPage.getByRole("dialog").getByRole("button", { name: "Onayla", exact: true }).click();
+    await expect(newPanel.getByRole("button", { name: "Topluluğu arşivle", exact: true })).toBeVisible();
+    expect((await (await recipient.request.get(`${api}/events/${event.id}`)).json()).event.status).toBe("cancelled");
+    const extra = await context.request.post("/api/communities", { headers, data: { ...body, name: "Hesap Kapatma Denemesi" } }); expect(extra.status()).toBe(201); const secondSlug = (await extra.json()).slug;
+    expect((await context.request.delete("/api/accounts/delete", { headers: { Origin: "https://example.invalid" }, data: { password, confirmation: "HESABIMI SİL", archiveOwnedCommunities: true } })).status()).toBe(403);
+    await page.goto("/account?tab=data");
+    const danger = page.locator("section.account-danger-zone");
+    await danger.getByRole("textbox", { name: "Onay metni", exact: true }).fill("HESABIMI SİL");
+    await danger.getByPlaceholder("Mevcut şifre", { exact: true }).fill(password);
+    const attempt = page.waitForResponse(value => new URL(value.url()).pathname === "/api/accounts/delete" && value.request().method() === "DELETE");
+    await danger.getByRole("button", { name: "Hesabımı sil", exact: true }).click(); expect((await attempt).status()).toBe(409);
+    await expect(danger.getByPlaceholder("Mevcut şifre", { exact: true })).toHaveValue(password);
+    await danger.getByRole("checkbox", { name: "Sahibi olduğum aktif toplulukları arşivleyerek hesabımı silmeyi onaylıyorum.", exact: true }).check();
+    await danger.getByRole("button", { name: "Hesabımı sil", exact: true }).click(); await expect(page).toHaveURL(baseURL + "/");
+    expect((await db.userList.findUniqueOrThrow({ where: { id: ids[0] } })).status).toBe("deleted");
+    expect((await db.community.findUniqueOrThrow({ where: { slug: secondSlug } })).status).toBe("archived");
+    const kept = await db.community.findUniqueOrThrow({ where: { slug } }); expect(kept.status).toBe("active"); expect(kept.ownerId).toBe(ids[1]);
+    expect((await request.get(`${api}/posts/${post.id}`)).status()).toBe(200);
+    expect(await recipientPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); expect(errors).toEqual([]);
+  } finally {
+    const leftovers = await db.userList.findMany({ where: { email: { in: emails } }, select: { id: true } });
+    const ownIds = [...new Set([...ids, ...leftovers.map(row => row.id)])];
+    await db.community.deleteMany({ where: { ownerId: { in: ownIds } } });
+    await db.userList.deleteMany({ where: { id: { in: ownIds } } });
+    await db.$disconnect(); await recipient.close();
+  }
+});

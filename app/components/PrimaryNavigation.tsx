@@ -2,19 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Compass, Gamepad2, Home, MessageSquareText } from "lucide-react";
+import { Compass, Gamepad2, Home, Library, Users } from "lucide-react";
+import { isPrimaryPathActive } from "@/lib/primaryNavigation";
 
 const primaryItems = [
   { href: "/", label: "Ana akış", icon: Home },
   { href: "/discover", label: "Keşfet", icon: Compass },
-  { href: "/forum", label: "Forum", icon: MessageSquareText },
+  { href: "/communities", label: "Topluluklar", icon: Users },
   { href: "/games", label: "Oyunlar", icon: Gamepad2 },
+  { href: "/library", label: "Kitaplığım", icon: Library },
 ] as const;
-
-function isActivePath(pathname: string, href: string) {
-  if (href === "/") return pathname === href;
-  return pathname === href || pathname.startsWith(`${href}/`);
-}
 
 export function PrimaryNavigation() {
   const pathname = usePathname();
@@ -22,7 +19,7 @@ export function PrimaryNavigation() {
   return (
     <nav className="primary-navigation" aria-label="Ana bölümler">
       {primaryItems.map(({ href, label, icon: Icon }) => {
-        const active = isActivePath(pathname, href);
+        const active = isPrimaryPathActive(pathname, href);
         return (
           <Link
             key={href}

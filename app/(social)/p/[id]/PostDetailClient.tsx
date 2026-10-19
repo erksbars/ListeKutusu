@@ -31,18 +31,21 @@ const dateFormatter = new Intl.DateTimeFormat("tr-TR", {
 export default function PostDetailClient({
   initialPost,
   viewer,
+  returnTo = "/",
 }: {
   initialPost: FeedPostDetail;
   viewer: Viewer;
+  returnTo?: string;
 }) {
-  const { logoutToHome } = useSessionNavigation();
+  const { logoutToHome, goToLogin } = useSessionNavigation();
   const [post, setPost] = useState(initialPost);
   const [busy, setBusy] = useState<"like" | "save" | "add" | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const detailPath = `/p/${post.id}${returnTo !== "/" ? `?from=${encodeURIComponent(returnTo)}` : ""}`;
 
   function requireViewer() {
     if (viewer) return false;
-    window.location.href = accountLoginPath(`/p/${post.id}`);
+    goToLogin(detailPath);
     return true;
   }
 
@@ -136,7 +139,7 @@ export default function PostDetailClient({
           title="Paylaşım"
           subtitle={`${post.author.ownerName} tarafından paylaşıldı`}
           icon={<Music2 size={18} />}
-          backHref="/"
+          backHref={returnTo}
           backLabel="Akışa dön"
           showPrimaryNavigation
           actions={viewer ? (
@@ -148,7 +151,7 @@ export default function PostDetailClient({
               onLogout={() => void logoutToHome()}
             />
           ) : (
-            <Link href={accountLoginPath(`/p/${post.id}`)} className={buttonClassName({ variant: "primary", size: "sm" })}>
+            <Link href={accountLoginPath(detailPath)} className={buttonClassName({ variant: "primary", size: "sm" })}>
               Giriş yap
             </Link>
           )}
@@ -221,7 +224,7 @@ export default function PostDetailClient({
             </Link>
           </aside>
         </div>
-        <PostComments postId={post.id} viewer={viewer ? { id: viewer.id, role: viewer.role } : null} onMessage={setMessage} />
+        <PostComments postId={post.id} loginReturnTo={`${detailPath}#comments`} viewer={viewer ? { id: viewer.id, role: viewer.role } : null} onMessage={setMessage} />
       </section>
     </main>
   );

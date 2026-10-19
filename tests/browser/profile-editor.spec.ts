@@ -1,0 +1,143 @@
+import { expect, test } from "@playwright/test";
+
+test("save and continue retains the destination across errors and locks duplicate saves", async ({ page }) => {
+  let account = { id: "save-exit", ownerName: "Taslak", slug: "save-exit", playlistName: "Liste", suggestions: [], bio: "", profileStatus: "Eski durum", favoriteGenres: "[]", profileShowcase: '["featured","identity","recent","forum"]', profilePosts: [], profileAchievements: [] };
+  let requests = 0;
+  let release!: () => void;
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  await page.addInitScript(() => localStorage.setItem("listekutusu-theme", "dark"));
+  await page.route("**/api/accounts/me", route => route.fulfill({ json: { list: account } }));
+  await page.route("**/api/accounts/settings", async route => {
+    requests++;
+    if (requests === 1) { await route.fulfill({ status: 401, json: { error: "Oturum" } }); return; }
+    if (requests === 2) { await route.abort("failed"); return; }
+    await gate;
+    const data = route.request().postDataJSON();
+    account = { ...account, ...data, favoriteGenres: JSON.stringify(data.favoriteGenres), profileShowcase: JSON.stringify(data.profileShowcase) };
+    await route.fulfill({ json: { list: account } });
+  });
+  await page.goto("/account?tab=profile");
+  const status = page.getByLabel("Kısa durum", { exact: true });
+  await expect(status).toHaveValue("Eski durum");
+  await status.fill("Korunacak durum");
+  await page.getByRole("navigation", { name: "Ana bölümler", exact: true }).getByRole("link", { name: "Kitaplığım", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Değişiklikler kaydedilmedi", exact: true });
+  const save = dialog.getByRole("button", { name: "Kaydet ve devam et", exact: true });
+  await save.click();
+  await expect(dialog.getByText(/Kayıt tamamlanamadı/)).toBeVisible();
+  await expect(status).toHaveValue("Korunacak durum");
+  await expect(page).toHaveURL(/\/account\?tab=profile/);
+  await save.click();
+  await expect.poll(() => requests).toBe(2);
+  await expect(save).toBeEnabled();
+  await expect(status).toHaveValue("Korunacak durum");
+  await save.click();
+  try {
+    await expect(dialog).toHaveAttribute("aria-busy", "true");
+    await expect(dialog.getByRole("button", { name: "Kaydediliyor...", exact: true })).toBeDisabled();
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeVisible();
+    expect(requests).toBe(3);
+  } finally { release(); }
+  await expect(page).toHaveURL(/\/library$/, { timeout: 20_000 });
+  await page.goto("/account?tab=profile");
+  await expect(status).toHaveValue("Korunacak durum");
+  await status.fill("Bölüm geçişi");
+  await page.getByRole("navigation", { name: "Hesap paneli bölümleri", exact: true }).getByRole("button", { name: "Güvenlik", exact: true }).click();
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole("button", { name: "Vazgeç", exact: true }).click();
+  await expect(status).toHaveValue("Bölüm geçişi");
+  await page.getByRole("navigation", { name: "Hesap paneli bölümleri", exact: true }).getByRole("button", { name: "Güvenlik", exact: true }).click();
+  await dialog.getByRole("button", { name: "Kaydet ve devam et", exact: true }).click();
+  await expect(page).toHaveURL(/tab=security/);
+  expect(account.profileStatus).toBe("Bölüm geçişi");
+  await page.getByRole("navigation", { name: "Hesap paneli bölümleri", exact: true }).getByRole("button", { name: /^Profil/ }).click();
+  await expect(status).toHaveValue("Bölüm geçişi");
+  await status.fill("Bırakılacak");
+  await page.getByRole("button", { name: "Ana akışa dön", exact: true }).click();
+  await dialog.getByRole("button", { name: "Kaydetmeden çık", exact: true }).click();
+  await expect(page).toHaveURL(/\/$/);
+  expect(requests).toBe(4);
+});
+
+test("profile draft discard, failed save recovery and pending edit lock", async ({ page }, testInfo) => {
+  test.setTimeout(90_000);
+  let account = { id: "editor-test", ownerName: "Profil Denemesi", slug: "editor-test", playlistName: "Seçkim", suggestions: [], bio: "Kayıtlı açıklama", profileStatus: "Kayıtlı durum", favoriteGenres: '["Rock"]', profileTheme: "aurora", profileDensity: "comfortable", profileBanner: "line", profileShowcase: '["featured","identity","recent","forum"]', profilePosts: [], profileAchievements: [], featuredAchievementId: "", pinnedFeedPostId: "" };
+  let requests = 0;
+  let releaseSave!: () => void;
+  const saveGate = new Promise<void>(resolve => { releaseSave = resolve; });
+  await page.addInitScript(() => localStorage.setItem("listekutusu-theme", "dark"));
+  await page.route("**/api/accounts/me", route => route.fulfill({ json: { list: account } }));
+  await page.route("**/api/accounts/settings", async route => {
+    requests++;
+    if (requests === 1) { await route.abort("failed"); return; }
+    const data = route.request().postDataJSON();
+    expect(data.action).toBe("update-profile");
+    await saveGate;
+    account = { ...account, ...data, favoriteGenres: JSON.stringify(data.favoriteGenres), profileShowcase: JSON.stringify(data.profileShowcase) };
+    await route.fulfill({ json: { list: account } });
+  });
+  await page.goto("/account?tab=profile");
+  const status = page.getByLabel("Kısa durum", { exact: true });
+  const bio = page.getByLabel("Profil açıklaması", { exact: true });
+  const discard = page.locator(".account-profile-save-panel").getByRole("button", { name: "Değişiklikleri geri al", exact: true });
+  await expect(status).toHaveValue("Kayıtlı durum");
+  await expect(discard).toBeDisabled();
+  await status.fill("Vazgeçilecek taslak");
+  await bio.fill("Geçici açıklama");
+  await page.getByRole("navigation", { name: "Ana bölümler", exact: true }).getByRole("link", { name: "Kitaplığım", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "Değişiklikler kaydedilmedi", exact: true })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page).toHaveURL(/\/account\?tab=profile/);
+  await expect(status).toHaveValue("Vazgeçilecek taslak");
+  await discard.click();
+  await expect(page.locator(".ui-modal-layer").getByRole("dialog")).toBeVisible();
+  await expect(page.locator(".desktop-shell")).toHaveAttribute("inert", "");
+  expect(await page.evaluate(() => document.body.style.overflow)).toBe("hidden");
+  await page.getByRole("dialog").getByRole("button", { name: "Değişiklikleri geri al", exact: true }).focus();
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("dialog").getByRole("button", { name: "Vazgeç", exact: true })).toBeFocused();
+  await page.getByRole("dialog").getByRole("button", { name: "Vazgeç", exact: true }).click();
+  await expect(discard).toBeFocused();
+  await expect(page.locator(".desktop-shell")).not.toHaveAttribute("inert", "");
+  expect(await page.evaluate(() => document.body.style.overflow)).toBe("");
+  await expect(status).toHaveValue("Vazgeçilecek taslak");
+  await discard.click();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(discard).toBeFocused();
+  await expect(status).toHaveValue("Vazgeçilecek taslak");
+  await discard.click();
+  await page.getByRole("dialog").getByRole("button", { name: "Değişiklikleri geri al", exact: true }).click();
+  await expect(status).toHaveValue("Kayıtlı durum");
+  await expect(bio).toHaveValue("Kayıtlı açıklama");
+  expect(requests).toBe(0);
+  await status.fill("Korunacak taslak");
+  await page.getByRole("button", { name: "Profili kaydet", exact: true }).click();
+  await expect(page.getByText("Profil kaydedilemedi. Bağlantını kontrol edip tekrar dene.", { exact: true })).toBeVisible();
+  await expect(status).toHaveValue("Korunacak taslak");
+  await expect(status).toBeEnabled();
+  await page.getByRole("button", { name: "Profili kaydet", exact: true }).click();
+  await expect(status).toBeDisabled();
+  await page.getByRole("navigation", { name: "Ana bölümler", exact: true }).getByRole("link", { name: "Kitaplığım", exact: true }).click();
+  await expect(page).toHaveURL(/\/account/);
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("textbox", { name: "Üniversite (isteğe bağlı)", exact: true })).toBeDisabled();
+  await expect(discard).toBeDisabled();
+  try {
+    await page.getByRole("tab", { name: /^Görünüm/ }).click();
+    await expect(page.getByRole("button", { name: "Mor", exact: true })).toBeDisabled();
+  } finally { releaseSave(); }
+  await expect(page.getByText("Profil görünümü güncellendi.", { exact: true })).toBeVisible();
+  await expect(discard).toBeDisabled();
+  expect(requests).toBe(2);
+  await page.reload();
+  await expect(status).toHaveValue("Korunacak taslak");
+  await status.fill("Ayrılırken bırakılacak taslak");
+  await page.getByRole("navigation", { name: "Ana bölümler", exact: true }).getByRole("link", { name: "Topluluklar", exact: true }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Kaydetmeden çık", exact: true }).click();
+  await expect(page).toHaveURL(/\/communities$/);
+  await expect(page.locator(".desktop-shell")).not.toHaveAttribute("inert", "");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: testInfo.outputPath("profile-editor-desktop.png"), fullPage: true });
+});

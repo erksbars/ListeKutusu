@@ -22,7 +22,6 @@ function inferTone(message: string | null, fallback: ToastTone): ToastTone {
     text.includes("hata") ||
     text.includes("geçersiz") ||
     text.includes("bulunamadı") ||
-    text.includes("gerekli") ||
     text.includes("olamaz") ||
     text.includes("açılamadı") ||
     text.includes("kaydedilemedi") ||
@@ -52,10 +51,10 @@ function inferTone(message: string | null, fallback: ToastTone): ToastTone {
   return fallback;
 }
 
-export function Toast({ message, tone = "info", onClose }: ToastProps) {
+export function Toast({ message, tone, onClose }: ToastProps) {
   useEffect(() => {
     if (!message || !onClose) return;
-    const nextTone = inferTone(message, tone);
+    const nextTone = tone ?? inferTone(message, "info");
     const timeout = window.setTimeout(
       onClose,
       nextTone === "error" ? 7000 : 4200
@@ -65,7 +64,7 @@ export function Toast({ message, tone = "info", onClose }: ToastProps) {
 
   if (!message) return null;
 
-  const nextTone = inferTone(message, tone);
+  const nextTone = tone ?? inferTone(message, "info");
   const label =
     nextTone === "success" ? "Tamam" : nextTone === "error" ? "Dikkat" : "Bilgi";
   const Icon = nextTone === "success" ? CircleCheck : nextTone === "error" ? TriangleAlert : Info;

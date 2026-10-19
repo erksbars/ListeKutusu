@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent } from "react";
 import { Bookmark, EyeOff, ExternalLink, Flag, Heart, ListPlus, MessageCircle, MoreHorizontal, Music2, Pencil, Trash2, UserPlus } from "lucide-react";
+import { feedPostPath, feedReturnPath } from "@/lib/feedNavigation";
 
 export type FeedCardPost = {
   id: string;
@@ -31,6 +32,7 @@ export type FeedCardPost = {
 
 type FeedPostCardProps = {
   post: FeedCardPost;
+  returnTo?: string;
   tone?: "primary" | "accent" | "secondary";
   liking: boolean;
   adding: boolean;
@@ -57,6 +59,7 @@ const dateFormatter = new Intl.DateTimeFormat("tr-TR", {
 
 export function FeedPostCard({
   post,
+  returnTo,
   tone = "primary",
   liking,
   adding,
@@ -74,18 +77,28 @@ export function FeedPostCard({
   onReport,
 }: FeedPostCardProps) {
   const menuRef = useRef<HTMLDivElement>(null);
+  const detailHref = returnTo ? feedPostPath(post.id, returnTo) : `/p/${post.id}`;
+  const commentsHref = returnTo ? feedPostPath(post.id, returnTo, true) : `/p/${post.id}#comments`;
+  function rememberSource(event: ReactMouseEvent<HTMLAnchorElement>) {
+    if (!returnTo || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || window.location.pathname !== "/") return;
+    const from = new URL(detailHref, window.location.origin).searchParams.get("from");
+    window.history.replaceState(window.history.state, "", feedReturnPath(from));
+  }
+  const menuTriggerRef = useRef<HTMLButtonElement>(null);
+  const menuId = useId(), noteId = useId();
   const [noteExpanded, setNoteExpanded] = useState(false);
   const noteCanExpand = Boolean(post.note && (post.note.length > 180 || post.note.split("\n").length > 3));
 
   useEffect(() => {
     if (!menuOpen) return;
+    menuRef.current?.querySelector<HTMLElement>('[role="menuitem"]:not(:disabled)')?.focus();
 
     function closeMenu(event: MouseEvent) {
       if (!menuRef.current?.contains(event.target as Node)) onToggleMenu();
     }
 
     function closeWithEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") onToggleMenu();
+      if (event.key === "Escape") { event.preventDefault(); onToggleMenu(); menuTriggerRef.current?.focus(); }
     }
 
     document.addEventListener("mousedown", closeMenu);
@@ -96,9 +109,21 @@ export function FeedPostCard({
     };
   }, [menuOpen, onToggleMenu]);
 
+  function navigateMenu(event: ReactKeyboardEvent<HTMLDivElement>) {
+    if (event.key === "Tab") { onToggleMenu(); menuTriggerRef.current?.focus(); return; }
+    if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
+    event.preventDefault();
+    const controls = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="menuitem"]:not(:disabled)'));
+    const index = controls.indexOf(document.activeElement as HTMLButtonElement);
+    const next = event.key === "Home" ? 0 : event.key === "End" ? controls.length - 1 : (index + (event.key === "ArrowDown" ? 1 : -1) + controls.length) % controls.length;
+    controls[next]?.focus();
+  }
+
   return (
     <article
       id={`post-${post.id}`}
+      data-feed-kind="music"
+      data-feed-id={`music:${post.id}`}
       className={`feed-post-card feed-post-tone-${tone} scroll-mt-24`}
     >
       <header className="feed-post-header">
@@ -119,7 +144,7 @@ export function FeedPostCard({
                 {post.author.ownerName}
               </Link>
               <span aria-hidden="true">·</span>
-              <Link href={`/p/${post.id}`} className="feed-post-permalink" aria-label={`${post.trackName} paylaşımını aç`}>
+              <Link href={detailHref} onClick={rememberSource} className="feed-post-permalink" aria-label={`${post.trackName} paylaşımını aç`}>
                 <time dateTime={post.createdAt}>
                   {dateFormatter.format(new Date(post.createdAt))}
                 </time>
@@ -133,6 +158,7 @@ export function FeedPostCard({
           </div>
         </div>
         <div ref={menuRef} className="relative flex shrink-0 items-center gap-2">
+          <span className="feed-content-kind">Müzik</span>
           {!post.isMine && (
             <button
               type="button"
@@ -148,17 +174,19 @@ export function FeedPostCard({
             </button>
           )}
           <button
+            ref={menuTriggerRef}
             type="button"
             aria-label={`Paylaşım menüsü - ${post.trackName}`}
             aria-expanded={menuOpen}
             aria-haspopup="menu"
+            aria-controls={menuOpen ? menuId : undefined}
             onClick={onToggleMenu}
             className="feed-menu-button"
           >
             <MoreHorizontal size={19} />
           </button>
           {menuOpen && (
-            <div className="feed-post-menu" role="menu">
+            <div id={menuId} className="feed-post-menu" role="menu" aria-label="Paylaşım işlemleri" onKeyDown={navigateMenu}>
               <button
                 type="button"
                 role="menuitem"
@@ -223,7 +251,7 @@ export function FeedPostCard({
       <div className="feed-track-block">
         <span className="feed-track-icon" aria-hidden="true"><Music2 size={18} /></span>
         <div className="min-w-0">
-          <h2><Link href={`/p/${post.id}`}>{post.trackName}</Link></h2>
+          <h2><Link href={detailHref} onClick={rememberSource}>{post.trackName}</Link></h2>
           <p>
             {post.artistName}{post.albumName ? ` · ${post.albumName}` : ""}
           </p>
@@ -238,9 +266,9 @@ export function FeedPostCard({
         <div className="feed-post-context">
           {post.note && (
             <div className="feed-post-note-wrap">
-              <p className={`feed-post-note ${noteExpanded ? "feed-post-note-expanded" : ""}`}>{post.note}</p>
+              <p id={noteId} className={`feed-post-note ${noteExpanded ? "feed-post-note-expanded" : ""}`}>{post.note}</p>
               {noteCanExpand && (
-                <button type="button" className="feed-post-note-toggle" onClick={() => setNoteExpanded((current) => !current)}>
+                <button type="button" className="feed-post-note-toggle" aria-expanded={noteExpanded} aria-controls={noteId} onClick={() => setNoteExpanded((current) => !current)}>
                   {noteExpanded ? "Daha az göster" : "Devamını gör"}
                 </button>
               )}
@@ -276,7 +304,8 @@ export function FeedPostCard({
           <span>{saving ? "Kaydediliyor" : post.savedByMe ? "Kaydedildi" : "Kaydet"}</span>
         </button>
         <Link
-          href={`/p/${post.id}#comments`}
+          href={commentsHref}
+          onClick={rememberSource}
           className="feed-action"
           aria-label={`${post.commentCount} yorumu görüntüle`}
         >

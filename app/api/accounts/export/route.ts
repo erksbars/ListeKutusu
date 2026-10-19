@@ -19,6 +19,8 @@ export async function GET() {
       slug: true,
       bio: true,
       profileStatus: true,
+      universityName: true,
+      universityPublic: true,
       pinnedFeedPostId: true,
       profileShowcase: true,
       favoriteGenres: true,
@@ -154,6 +156,18 @@ export async function GET() {
           createdAt: true,
           actor: { select: { ownerName: true, slug: true } },
         },
+      },
+      platformCommunityCases: {
+        orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+        select: { kind: true, reason: true, status: true, response: true, createdAt: true, reviewedAt: true, community: { select: { name: true, slug: true } } },
+      },
+      communityPostLikes: {
+        orderBy: [{ createdAt: "asc" }, { postId: "asc" }],
+        select: { createdAt: true, post: { select: { id: true, community: { select: { slug: true } } } } },
+      },
+      communityPostSaves: {
+        orderBy: [{ createdAt: "asc" }, { postId: "asc" }],
+        select: { createdAt: true, post: { select: { id: true, community: { select: { slug: true } } } } },
       },
       sessions: {
         orderBy: { createdAt: "asc" },

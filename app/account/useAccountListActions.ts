@@ -1,10 +1,12 @@
 "use client";
 
 import type { Dispatch, SetStateAction } from "react";
+import { useRef } from "react";
 import { useRouter } from "next/navigation";
 import type { AccountList, Suggestion } from "./accountTypes";
 import type { ProfileShowcaseModule } from "@/lib/profileShowcase";
 import type { ProfileBanner, ProfileDensity } from "@/lib/profileAppearance";
+import { changedUniversity, universityDraft, type UniversityDraft } from "@/lib/profileUniversity";
 
 type AccountListActionsOptions = {
   list: AccountList | null;
@@ -14,6 +16,8 @@ type AccountListActionsOptions = {
   friendCode: string;
   profileBio: string;
   profileStatus: string;
+  profileUniversity?: UniversityDraft;
+  setProfileUniversity?: (value: UniversityDraft) => void;
   pinnedFeedPostId: string;
   profileShowcaseModules: ProfileShowcaseModule[];
   profileGenres: string;
@@ -36,6 +40,7 @@ export function useAccountListActions({
   friendCode,
   profileBio,
   profileStatus,
+  profileUniversity, setProfileUniversity,
   pinnedFeedPostId,
   profileShowcaseModules,
   profileGenres,
@@ -50,6 +55,7 @@ export function useAccountListActions({
   onUnauthorized,
 }: AccountListActionsOptions) {
   const router = useRouter();
+  const profileSaving = useRef(false);
   async function runDecision(id: string, action: "approve" | "reject" | "remove") {
     if (loading) return;
     setLoading(true);
@@ -233,6 +239,8 @@ export function useAccountListActions({
   }
 
   async function saveProfile() {
+    if (loading || profileSaving.current) return false;
+    profileSaving.current = true;
     const favoriteGenres = profileGenres
       .split(",")
       .map((item) => item.trim())
@@ -249,6 +257,7 @@ export function useAccountListActions({
           action: "update-profile",
           bio: profileBio,
           profileStatus,
+          university: changedUniversity(profileUniversity, list),
           pinnedFeedPostId,
           profileShowcase: profileShowcaseModules,
           favoriteGenres,
@@ -260,19 +269,23 @@ export function useAccountListActions({
       });
       const data = await res.json().catch(() => ({}));
       if (res.status === 401) {
-        onUnauthorized();
-        return;
+        setMessage("Oturum süren dolmuş. Profil kaydedilmedi; taslağın bu sayfada korunuyor.");
+        return false;
       }
       if (!res.ok || !data.list) throw new Error(data.error || "Profil kaydedilemedi.");
       setList((current) => (current ? { ...current, ...data.list } : current));
+      setProfileUniversity?.(universityDraft(data.list));
       setMessage("Profil görünümü güncellendi.");
+      return true;
     } catch (profileError) {
       setMessage(
-        profileError instanceof Error
+        profileError instanceof Error && !(profileError instanceof TypeError)
           ? profileError.message
           : "Profil kaydedilemedi. Bağlantını kontrol edip tekrar dene."
       );
+      return false;
     } finally {
+      profileSaving.current = false;
       setLoading(false);
     }
   }

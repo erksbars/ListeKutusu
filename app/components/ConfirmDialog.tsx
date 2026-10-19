@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useId, useRef } from "react";
+import { useId } from "react";
 import { Info, TriangleAlert } from "lucide-react";
 import { Button } from "./ui";
+import { ModalPortal } from "./ModalPortal";
 
 type ConfirmTone = "default" | "danger";
 
@@ -16,6 +17,7 @@ type ConfirmDialogProps = {
   busy?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
+  onSave?: () => void;
 };
 
 export function ConfirmDialog({
@@ -28,59 +30,15 @@ export function ConfirmDialog({
   busy = false,
   onConfirm,
   onCancel,
+  onSave,
 }: ConfirmDialogProps) {
-  const cancelButtonRef = useRef<HTMLButtonElement>(null);
-  const dialogRef = useRef<HTMLElement>(null);
-  const onCancelRef = useRef(onCancel);
   const titleId = useId();
-
-  useEffect(() => {
-    onCancelRef.current = onCancel;
-  }, [onCancel]);
-
-  useEffect(() => {
-    if (!open) return;
-    const previouslyFocused = document.activeElement as HTMLElement | null;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    cancelButtonRef.current?.focus();
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        if (!busy) onCancelRef.current();
-        return;
-      }
-      if (event.key !== "Tab") return;
-
-      const focusable = dialogRef.current?.querySelectorAll<HTMLElement>(
-        'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled])'
-      );
-      if (!focusable?.length) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    }
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = previousOverflow;
-      previouslyFocused?.focus();
-    };
-  }, [busy, open]);
 
   if (!open) return null;
 
   return (
-    <div className="modal-backdrop" role="presentation" onMouseDown={() => { if (!busy) onCancel(); }}>
+    <ModalPortal onEscape={onCancel} busy={busy}><div className="modal-backdrop" role="presentation" onMouseDown={() => { if (!busy) onCancel(); }}>
       <section
-        ref={dialogRef}
         className="confirm-card"
         role="dialog"
         aria-modal="true"
@@ -107,7 +65,6 @@ export function ConfirmDialog({
         </div>
         <div className="mt-6 grid gap-2 sm:grid-cols-[1fr_1fr]">
           <Button
-            ref={cancelButtonRef}
             onClick={onCancel}
             disabled={busy}
             variant="secondary"
@@ -126,7 +83,8 @@ export function ConfirmDialog({
             {busy ? "İşleniyor..." : confirmLabel}
           </Button>
         </div>
+        {onSave && <Button onClick={onSave} disabled={busy} variant="primary" size="md" className="mt-2 w-full">{busy ? "Kaydediliyor..." : "Kaydet ve devam et"}</Button>}
       </section>
-    </div>
+    </div></ModalPortal>
   );
 }

@@ -1,0 +1,20 @@
+[Unit]
+Description=ListeKutusu private runtime health and operator webhook
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=listekutusu
+Group=listekutusu
+WorkingDirectory=/srv/listekutusu/app
+Environment=NODE_ENV=production
+EnvironmentFile=/etc/listekutusu/app.env
+ExecStart=/usr/bin/node --disable-warning=ExperimentalWarning --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/check-runtime.mjs --notify
+TimeoutStartSec=60
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/srv/listekutusu/data /srv/listekutusu/app/tmp

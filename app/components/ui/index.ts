@@ -3,3 +3,4 @@ export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 export { Checkbox, type CheckboxVariant } from "./Checkbox";
 export { SelectField, TextAreaField, TextField } from "./Field";
 export { HorizontalScroller } from "./HorizontalScroller";
+export { ContentState } from "./ContentState";

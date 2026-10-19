@@ -523,6 +523,7 @@ export default function AdminPage() {
         </nav>
 
         <div className="admin-section-content" key={adminView}>
+          <Link href="/admin/community-cases">Topluluk platform başvuruları ↗</Link>
           {adminView === "overview" && (
             <>
               <AdminOverview
@@ -613,4 +614,3 @@ export default function AdminPage() {
     </main>
   );
 }
-

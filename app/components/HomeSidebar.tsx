@@ -3,11 +3,12 @@
 import Link from "next/link";
 import {
   Bookmark,
+  CalendarDays,
   Compass,
   Gamepad2,
   Home,
   ListMusic,
-  MessageSquareText,
+  Users,
   MessageSquarePlus,
   PanelLeftClose,
   PanelLeftOpen,
@@ -39,7 +40,6 @@ export function HomeSidebar({
   onCollapsedChange,
   onMessage,
 }: HomeSidebarProps) {
-  const accountHref = authenticated ? "/account" : "/account?mode=login&next=%2Faccount";
   const shareHref = authenticated
     ? "#feed-composer"
     : "/account?mode=login&next=%2F%23feed-composer";
@@ -108,10 +108,18 @@ export function HomeSidebar({
             <span className="home-nav-label">Kaydedilenler</span>
           </Link>
         )}
-        <Link href="/forum" aria-label="Forum" title="Forum" className={itemClass}>
-          <MessageSquareText size={18} strokeWidth={2.2} aria-hidden="true" />
-          <span className="home-nav-label">Forum</span>
+        <Link href="/communities" aria-label="Topluluklar" title="Topluluklar" className={itemClass}>
+          <Users size={18} strokeWidth={2.2} aria-hidden="true" />
+          <span className="home-nav-label">Topluluklar</span>
         </Link>
+        {authenticated && <Link href="/community-saved" aria-label="Topluluk kayıtlarım" title="Topluluk kayıtlarım" className={itemClass}>
+          <Bookmark size={18} strokeWidth={2.2} aria-hidden="true" />
+          <span className="home-nav-label">Topluluk kayıtlarım</span>
+        </Link>}
+        {authenticated && <Link href="/community-events" aria-label="Etkinliklerim" title="Etkinliklerim" className={itemClass}>
+          <CalendarDays size={18} strokeWidth={2.2} aria-hidden="true" />
+          <span className="home-nav-label">Etkinliklerim</span>
+        </Link>}
         {authenticated && profileSlug && (
           <Link href={`/u/${profileSlug}`} aria-label="Profilim" title="Profilim" className={itemClass}>
             <UserRound size={18} strokeWidth={2.2} aria-hidden="true" />
@@ -126,18 +134,18 @@ export function HomeSidebar({
           <MessageSquarePlus size={18} strokeWidth={2.2} aria-hidden="true" />
           <span className="home-nav-label">Listeye öner</span>
         </Link>
-        <Link href={accountHref} aria-label="Listem" title="Listem" className={itemClass}>
+        <Link href="/library?type=music" aria-label="Müzik listem" title="Müzik listem" className={itemClass}>
           <ListMusic size={18} strokeWidth={2.2} aria-hidden="true" />
-          <span className="home-nav-label">Listem</span>
+          <span className="home-nav-label">Müzik listem</span>
         </Link>
         <Link
-          href={authenticated ? "/control" : "/account?mode=login&next=%2Fcontrol"}
-          aria-label="Liste kontrolü"
-          title="Liste kontrolü"
+          href={authenticated ? "/library?type=music" : "/account?mode=login&next=%2Flibrary%3Ftype%3Dmusic"}
+          aria-label="Kitaplığım"
+          title="Kitaplığım"
           className={itemClass}
         >
           <Settings2 size={18} strokeWidth={2.2} aria-hidden="true" />
-          <span className="home-nav-label">Liste kontrolü</span>
+          <span className="home-nav-label">Kitaplığım</span>
         </Link>
       </div>
 

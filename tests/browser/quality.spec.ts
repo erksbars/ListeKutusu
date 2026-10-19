@@ -241,7 +241,7 @@ async function mockLongFeed(page: Page) {
       })),
     }),
   }));
-  await page.route("**/api/feed?**", async (route) => {
+  await page.route(/\/api\/feed(?:\/mixed)?\?/, async (route) => {
     const posts = Array.from({ length: 10 }, (_, index) => ({
       id: `feed-${index + 1}`,
       trackId: `track-${index + 1}`,
@@ -272,7 +272,7 @@ async function mockLongFeed(page: Page) {
     await route.fulfill({
       status: 200,
       contentType: "application/json; charset=utf-8",
-      body: JSON.stringify({ posts, nextCursor: null, emptyReason: null }),
+      body: JSON.stringify({ posts, communityItems: [], nextCursor: null, emptyReason: null }),
     });
   });
   await page.route("**/api/leaderboard", async (route) => {
@@ -569,11 +569,11 @@ for (const theme of themes) {
 }
 
 test("ana akış: açık temada boş durum okunabilir", async ({ page }) => {
-  await page.route("**/api/feed?**", async (route) => {
+  await page.route(/\/api\/feed(?:\/mixed)?\?/, async (route) => {
     await route.fulfill({
       status: 200,
       contentType: "application/json; charset=utf-8",
-      body: JSON.stringify({ posts: [], nextCursor: null, emptyReason: null }),
+      body: JSON.stringify({ posts: [], communityItems: [], nextCursor: null, emptyReason: null }),
     });
   });
 
@@ -592,10 +592,10 @@ test("ana akış: açık temada boş durum okunabilir", async ({ page }) => {
 test("giriş gerektiren akış istemci yönlendirmesiyle hesap sayfasına geçer", async ({ page }, testInfo) => {
   test.skip(!["wide", "mobile"].includes(testInfo.project.name), "İstemci yönlendirmesi geniş ve mobil uçlarda izleniyor.");
   await page.route("**/api/accounts/me**", (route) => route.fulfill({ status: 401, body: "{}" }));
-  await page.route("**/api/feed?**", (route) => route.fulfill({
+  await page.route(/\/api\/feed(?:\/mixed)?\?/, (route) => route.fulfill({
     status: 200,
     contentType: "application/json; charset=utf-8",
-    body: JSON.stringify({ posts: [], nextCursor: null, emptyReason: null }),
+    body: JSON.stringify({ posts: [], communityItems: [], nextCursor: null, emptyReason: null }),
   }));
   await openStablePage(page, "/", "dark");
   await page.evaluate(() => {

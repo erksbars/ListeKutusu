@@ -8,6 +8,7 @@ test("yalnız uygulama içi dönüş yolları kabul edilir", () => {
   assert.equal(safeInternalPath("//example.com"), "/");
   assert.equal(safeInternalPath("https://example.com"), "/");
   assert.equal(safeInternalPath(null), "/");
+  for (const value of ["/\\example.org", "/\n/example.org", "/\t/evil", "/path\u0000end"]) assert.equal(safeInternalPath(value), "/");
 });
 
 test("giriş adresi hedef rotayı güvenli biçimde kodlar", () => {

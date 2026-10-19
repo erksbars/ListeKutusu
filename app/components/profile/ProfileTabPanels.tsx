@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import type { Profile, ProfileTab } from "@/app/(social)/u/[slug]/profileTypes";
 import { FeedLoadSentinel } from "@/app/components/FeedLoadSentinel";
+import { ProfileMediaShowcase } from "./ProfileMediaShowcase";
 
 type ProfileTabPanelsProps = {
   profile: Profile;
@@ -121,6 +122,7 @@ export function ProfileTabPanels({
     >
       {activeTab === "posts" && (
         <div className="profile-posts-panel">
+          <ProfileMediaShowcase profile={profile} />
           <div className="profile-showcase-grid">
             {profile.showcaseModules.includes("featured") && (
             <section

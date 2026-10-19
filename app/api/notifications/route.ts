@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getAuthenticatedAccountListId } from "@/lib/session";
 import { parseOffsetCursor } from "@/lib/pagination";
+import { notificationVisibility } from "@/lib/communityEventNotifications";
 
 export const dynamic = "force-dynamic";
 const NOTIFICATION_PAGE_SIZE = 20;
@@ -12,10 +13,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Yetkisiz." }, { status: 401 });
   }
   const offset = parseOffsetCursor(req.nextUrl.searchParams.get("cursor"), 10_000);
+  const visibility = notificationVisibility(userId);
 
   const [notifications, unreadCount, account] = await Promise.all([
     prisma.notification.findMany({
-      where: { userId },
+      where: visibility,
       orderBy: { createdAt: "desc" },
       skip: offset,
       take: NOTIFICATION_PAGE_SIZE + 1,
@@ -23,9 +25,10 @@ export async function GET(req: NextRequest) {
         actor: { select: { id: true, ownerName: true, slug: true, profileTheme: true } },
         post: { select: { id: true, trackName: true, artistName: true } },
         forumThread: { select: { slug: true, title: true } },
+        communityEvent: { select: { id: true, title: true, status: true, community: { select: { slug: true } } } },
       },
     }),
-    prisma.notification.count({ where: { userId, readAt: null } }),
+    prisma.notification.count({ where: { ...visibility, readAt: null } }),
     prisma.userList.findUnique({
       where: { id: userId },
       select: { notifyFollows: true, notifyLikes: true, notifyAdds: true },
@@ -33,7 +36,7 @@ export async function GET(req: NextRequest) {
   ]);
 
   return NextResponse.json({
-    notifications: notifications.slice(0, NOTIFICATION_PAGE_SIZE),
+    notifications: notifications.slice(0, NOTIFICATION_PAGE_SIZE).map(item => ({ ...item, communityEvent: item.communityEvent?.status === "removed" ? { ...item.communityEvent, title: "Kaldırılan etkinlik" } : item.communityEvent })),
     nextCursor: notifications.length > NOTIFICATION_PAGE_SIZE
       ? `offset:${offset + NOTIFICATION_PAGE_SIZE}`
       : null,
@@ -43,7 +46,7 @@ export async function GET(req: NextRequest) {
       likes: account?.notifyLikes ?? true,
       adds: account?.notifyAdds ?? true,
     },
-  });
+  }, { headers: { "Cache-Control": "private, no-store" } });
 }
 
 export async function PATCH(req: NextRequest) {

@@ -8,6 +8,7 @@ export function ProfileIdentityRail({ profile }: { profile: Profile }) {
       <section className="profile-v3-rail-card">
         <p className="section-kicker">Hakkında</p>
         <p className="profile-v3-about-copy">{profile.bio || "Bu müziksever henüz kendini anlatan kısa bir not eklemedi."}</p>
+        {profile.universityName && <section className="mt-4 grid gap-2" aria-label="Üniversite bilgisi"><h3 className="section-kicker">Üniversite</h3><p className="profile-v3-about-copy break-words">{profile.universityName}</p><p className="profile-v3-muted">Kullanıcı beyanı · Öğrencilik doğrulanmadı.</p></section>}
         <div className="profile-v3-rail-meta">
           <span><CalendarDays size={15} /> {new Date(profile.createdAt).toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })}</span>
           <span><Headphones size={15} /> {profile.playlistName || `${profile.ownerName} seçkisi`}</span>

@@ -1,6 +1,7 @@
 export type NotificationPresentationItem = {
   id: string;
-  type: "follow" | "feed_like" | "feed_add" | "feed_comment" | "feed_comment_reply" | "forum_reply" | "forum_solution";
+  type: "follow" | "feed_like" | "feed_add" | "feed_comment" | "feed_comment_reply" | "forum_reply" | "forum_solution" | "community_event_updated" | "community_event_cancelled" | "community_event_removed";
+  communityEvent?: { id: string; title: string; status: string; community: { slug: string } } | null;
   readAt: string | null;
   createdAt: string;
   actor: {
@@ -28,6 +29,7 @@ export type NotificationGroup = {
 };
 
 function targetKey(item: NotificationPresentationItem) {
+  if (item.communityEvent) return `${item.type}:event:${item.communityEvent.id}`;
   if (item.post) return `${item.type}:post:${item.post.id}`;
   if (item.forumThread) return `${item.type}:thread:${item.forumThread.slug}`;
   if (item.actor) return `${item.type}:actor:${item.actor.id}`;
@@ -73,6 +75,9 @@ function actorSummary(group: NotificationGroup) {
 export function messageForNotificationGroup(group: NotificationGroup) {
   const item = group.primary;
   const actor = actorSummary(group);
+  if (item.type === "community_event_updated") return `${item.communityEvent?.title || "Etkinlik"} bilgileri güncellendi. Güncel tarih ve mekânı kontrol et.`;
+  if (item.type === "community_event_cancelled") return `${item.communityEvent?.title || "Etkinlik"} iptal edildi.`;
+  if (item.type === "community_event_removed") return "İlgilendiğin bir etkinlik kaldırıldı.";
 
   if (item.type === "follow") return `${actor} seni takip etmeye başladı.`;
   if (item.type === "feed_add") {
@@ -94,4 +99,16 @@ export function messageForNotificationGroup(group: NotificationGroup) {
     return `${actor}, ${item.post?.trackName || "paylaşımındaki"} yorumuna yanıt verdi.`;
   }
   return `${actor}, ${item.post?.trackName || "paylaşımını"} beğendi.`;
+}
+
+export function targetForNotification(item: NotificationPresentationItem) {
+  if (item.communityEvent) {
+    const event = item.communityEvent;
+    const query = new URLSearchParams({ section: "events" });
+    if (event.status !== "removed") query.set("event", event.id);
+    return `/communities/${encodeURIComponent(event.community.slug)}?${query}`;
+  }
+  if (item.forumThread) return `/forum/${item.forumThread.slug}`;
+  if (item.post) return `/p/${item.post.id}`;
+  return item.actor ? `/u/${item.actor.slug}` : "/";
 }

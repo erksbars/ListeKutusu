@@ -1,0 +1,20 @@
+[Unit]
+Description=ListeKutusu authenticated encrypted SQLite snapshot
+
+[Service]
+Type=oneshot
+User=listekutusu
+Group=listekutusu
+WorkingDirectory=/srv/listekutusu/app
+Environment=NODE_ENV=production
+EnvironmentFile=/etc/listekutusu/app.env
+# Keep the backup key out of app.env; this file is read by the service manager only.
+EnvironmentFile=/etc/listekutusu/backup.env
+ExecStart=/usr/bin/node --disable-warning=ExperimentalWarning scripts/encrypted-database-backup.mjs
+TimeoutStartSec=15min
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/srv/listekutusu/data /srv/listekutusu/app/tmp /srv/listekutusu/app/backups

@@ -16,5 +16,5 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Profil bulunamadı." }, { status: 404 });
   }
 
-  return NextResponse.json({ profile });
+  return NextResponse.json({ profile }, { headers: { "Cache-Control": "private, no-store" } });
 }

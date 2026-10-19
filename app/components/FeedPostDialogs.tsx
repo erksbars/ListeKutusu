@@ -2,6 +2,7 @@
 
 import type { RefObject } from "react";
 import { Button, TextAreaField, TextField } from "./ui";
+import { ModalPortal } from "./ModalPortal";
 
 type DialogRef = RefObject<HTMLElement>;
 
@@ -31,7 +32,7 @@ export function FeedReportDialog({
   if (!open) return null;
 
   return (
-    <div className="modal-backdrop" role="presentation" onMouseDown={() => { if (!submitting) onCancel(); }}>
+    <ModalPortal onEscape={onCancel} busy={submitting}><div className="modal-backdrop" role="presentation" onMouseDown={() => { if (!submitting) onCancel(); }}>
       <section
         ref={dialogRef}
         role="dialog"
@@ -73,7 +74,7 @@ export function FeedReportDialog({
           </Button>
         </div>
       </section>
-    </div>
+    </div></ModalPortal>
   );
 }
 
@@ -96,7 +97,7 @@ export function FeedEditDialog({ value, dialogRef, saving, onChange, onCancel, o
   if (!value) return null;
 
   return (
-    <div className="modal-backdrop" role="presentation" onMouseDown={() => { if (!saving) onCancel(); }}>
+    <ModalPortal onEscape={onCancel} busy={saving}><div className="modal-backdrop" role="presentation" onMouseDown={() => { if (!saving) onCancel(); }}>
       <section
         ref={dialogRef}
         role="dialog"
@@ -131,6 +132,6 @@ export function FeedEditDialog({ value, dialogRef, saving, onChange, onCancel, o
           <Button type="button" onClick={onSave} loading={saving}>Kaydet</Button>
         </div>
       </section>
-    </div>
+    </div></ModalPortal>
   );
 }

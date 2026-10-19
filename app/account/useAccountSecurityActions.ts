@@ -78,7 +78,7 @@ export function useAccountSecurityActions({
     }
   }
 
-  async function deleteAccount() {
+  async function deleteAccount(archiveOwnedCommunities = false) {
     if (deletingAccount) return;
     if (!deletePassword || deleteConfirmation !== "HESABIMI SİL") {
       setMessage("Şifreni ve silme onay metnini eksiksiz gir.");
@@ -91,7 +91,7 @@ export function useAccountSecurityActions({
       const response = await fetch("/api/accounts/delete", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: deletePassword, confirmation: deleteConfirmation }),
+        body: JSON.stringify({ password: deletePassword, confirmation: deleteConfirmation, archiveOwnedCommunities }),
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {

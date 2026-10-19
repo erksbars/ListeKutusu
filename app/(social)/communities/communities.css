@@ -1,0 +1,24 @@
+.community-page { max-width: 1280px; padding-inline: var(--ui-desktop-gutter); }
+.community-page [hidden] { display: none; }
+.community-page .toast-stack { top: calc(var(--ui-control-lg) + var(--ui-space-5)); }
+.community-intro { padding-block: var(--ui-space-6); display: grid; gap: var(--ui-space-3); }
+.community-columns { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: var(--ui-space-6); align-items: start; padding-bottom: var(--ui-space-8); }
+.community-stack { display: grid; gap: var(--ui-space-3); min-width: 0; }
+.community-discovery-filter-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ui-space-3); }
+.community-page .ui-card, .community-page .ui-panel { padding: var(--ui-space-5); }
+.community-page h2, .community-page h3 { font-weight: 800; }
+.community-page p, .community-page span { overflow-wrap: anywhere; }
+.community-page p { color: var(--ui-text-muted); line-height: var(--ui-leading-relaxed); }
+.community-page a { color: var(--ui-accent); }
+.community-actions { display: flex; gap: var(--ui-space-3); align-items: center; flex-wrap: wrap; }
+.community-body { white-space: pre-wrap; overflow-wrap: anywhere; }
+.community-fieldset { border: 0; padding: 0; margin: 0; }
+.community-check { display: flex; gap: var(--ui-space-2); align-items: center; }
+.community-error { color: var(--ui-danger); }
+.community-page .community-error p { color: inherit; }
+.community-title-button { text-align: left; color: var(--ui-text-strong); font-size: var(--ui-text-xl); overflow-wrap: anywhere; }
+.community-divider { border-top: 1px solid var(--ui-border); padding-top: var(--ui-space-3); }
+.community-page summary { cursor: pointer; font-weight: 800; }
+.community-review-meta { border-bottom: 1px solid var(--ui-border); padding-bottom: var(--ui-space-3); }
+.community-review-tag { background: var(--ui-info-soft); color: var(--ui-accent); border-radius: var(--ui-radius-md); padding: var(--ui-space-1) var(--ui-space-2); }
+.community-spoiler { background: var(--ui-warning-soft); padding: var(--ui-space-3); border-radius: var(--ui-radius-md); }

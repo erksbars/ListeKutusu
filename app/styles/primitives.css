@@ -289,7 +289,8 @@ select:focus-visible {
 .ui-button-lg { min-height: var(--ui-control-lg); padding-inline: var(--ui-space-5); }
 .ui-button-icon { width: var(--ui-control-md); height: var(--ui-control-md); padding: 0; }
 
-.ui-button-primary {
+.ui-button-primary,
+.ui-button.ui-button-primary {
   background: var(--ui-primary);
   color: var(--ui-text-inverse);
   box-shadow: 0 8px 18px color-mix(in srgb, var(--ui-primary) 18%, transparent);
@@ -473,6 +474,24 @@ select.ui-field {
   box-shadow: var(--ui-shadow-overlay);
 }
 
+.ui-content-state {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ui-space-3);
+  padding: var(--ui-space-6);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  overflow-wrap: anywhere;
+}
+.ui-content-state > svg { flex-shrink: 0; color: var(--ui-text-muted); }
+.ui-content-state h3 { margin: 0; font-size: var(--ui-text-md); font-weight: var(--ui-weight-semibold); }
+.ui-content-state-copy { margin-top: var(--ui-space-2); color: var(--ui-text-muted); font-size: var(--ui-text-sm); }
+.ui-content-state-actions { display: flex; flex-wrap: wrap; gap: var(--ui-space-2); margin-top: var(--ui-space-4); }
+.ui-content-state-error { border-color: var(--ui-danger); }
+.ui-content-state-error > svg { color: var(--ui-danger); }
+
 .page-topbar-leading h1,
 .home-topbar h1 {
   color: var(--ui-text-strong);
@@ -488,48 +507,63 @@ select.ui-field {
   display: none;
 }
 
+.desktop-shell-sidebar { display: none; }
+
+.ui-modal-layer {
+  position: relative;
+  z-index: var(--ui-layer-modal);
+  color: var(--ui-text);
+  font-family: var(--ui-font-sans);
+}
+
+.ui-modal-layer .modal-backdrop { z-index: var(--ui-layer-modal); }
+.ui-modal-layer .modal-backdrop > [role="dialog"] {
+  max-height: calc(100dvh - var(--ui-space-8));
+  overflow-y: auto;
+  border-radius: var(--ui-radius-lg);
+  overflow-wrap: anywhere;
+}
+
 @media (min-width: 1024px) {
-  .social-shell-navigation {
-    display: block;
-    position: sticky;
-    top: 0;
-    z-index: 40;
+  .desktop-shell-content { margin-left: var(--ui-desktop-sidebar); min-width: 0; }
+  .desktop-shell-sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: var(--ui-layer-navigation);
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-space-6);
+    width: var(--ui-desktop-sidebar);
+    overflow-y: auto;
+    padding: var(--ui-space-6) var(--ui-space-3);
+    border-right: 1px solid var(--ui-divider);
     background: var(--ui-bg);
-    border-bottom: 1px solid var(--ui-divider);
   }
+  .desktop-shell-brand { padding: var(--ui-space-2) var(--ui-space-3); font-size: var(--ui-text-xl); font-weight: var(--ui-weight-bold); color: var(--ui-text-strong); }
+  .desktop-shell-sidebar .primary-navigation { display: grid; justify-content: stretch; gap: var(--ui-space-1); padding: 0; border: 0; background: transparent; box-shadow: none; }
+  .desktop-shell-sidebar .primary-navigation-item { justify-content: flex-start; min-height: var(--ui-control-md); font-size: var(--ui-text-sm); white-space: normal; overflow-wrap: anywhere; }
+  .desktop-shell-personal { display: grid; gap: var(--ui-space-1); }
+  .desktop-shell-personal p { padding-inline: var(--ui-space-3); margin-bottom: var(--ui-space-2); color: var(--ui-text-muted); font-size: var(--ui-text-xs); }
+  .desktop-shell-personal a, .desktop-shell-help { display: flex; align-items: center; gap: var(--ui-space-3); padding: var(--ui-space-2) var(--ui-space-3); min-height: var(--ui-control-md); border-radius: var(--ui-radius-md); color: var(--ui-text-muted); font-size: var(--ui-text-sm); }
+  .desktop-shell-personal a:hover, .desktop-shell-help:hover { background: var(--ui-surface-hover); color: var(--ui-text-strong); }
+  .desktop-shell-sidebar svg { flex-shrink: 0; }
+  .desktop-shell-help { margin-top: auto; }
+  .desktop-shell .page-topbar .primary-navigation { display: none; }
+  .desktop-shell .page-topbar-with-navigation { display: flex; }
+  .desktop-shell .app-topbar { position: relative; top: auto; flex-wrap: wrap; min-height: var(--ui-shell-header-height); }
+  .desktop-shell .page-topbar-leading { flex: 1 1 320px; align-items: flex-start; min-width: 0; }
+  .desktop-shell .page-topbar-title, .desktop-shell .page-topbar-subtitle { white-space: normal; overflow: visible; overflow-wrap: anywhere; }
+  .desktop-shell .page-topbar-actions { flex-wrap: wrap; margin-left: auto; }
+  .desktop-shell #main-content { scroll-margin-top: var(--ui-space-4); }
+  .desktop-shell .home-app-shell { padding-inline: var(--ui-desktop-gutter); max-width: var(--ui-page-max-width); margin-inline: auto; }
+  .desktop-shell .home-topbar { padding-inline: 0; }
+  .desktop-shell .home-grid-unified { grid-template-columns: minmax(0, 1fr); }
+  .home-personal-context { padding: var(--ui-space-5); }
+  .desktop-shell .home-context-rail #community-rankings { position: static; }
+}
 
-  .social-shell-navigation-inner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--ui-space-4);
-    max-width: 1480px;
-    margin-inline: auto;
-    padding: var(--ui-space-2) clamp(16px, 2.25vw, 40px);
-  }
-
-  .social-shell-brand {
-    color: var(--ui-text-strong);
-    font-size: var(--ui-text-lg);
-    font-weight: var(--ui-weight-bold);
-  }
-
-  .social-shell .social-shell-navigation .primary-navigation {
-    display: flex;
-  }
-
-  .social-shell .page-topbar .primary-navigation {
-    display: none;
-  }
-
-  .social-shell .app-topbar {
-    position: relative;
-    top: auto;
-  }
-
-  .social-shell .page-topbar-with-navigation {
-    display: flex;
-  }
+@media (min-width: 1280px) {
+  .desktop-shell .home-grid-unified { grid-template-columns: minmax(0, 1fr) minmax(260px, 300px); }
 }
 
 .primary-navigation {
@@ -3346,6 +3380,19 @@ textarea {
 
 .feed-post-header {
   align-items: center;
+}
+
+.feed-content-kind {
+  display: inline-flex;
+  flex-shrink: 0;
+  max-width: 12rem;
+  border: 1px solid var(--ui-divider);
+  border-radius: var(--ui-radius-sm);
+  padding: var(--ui-space-1) var(--ui-space-2);
+  color: var(--ui-text-muted);
+  font-size: var(--ui-text-xs);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .feed-post-avatar {

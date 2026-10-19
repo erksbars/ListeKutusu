@@ -1,9 +1,42 @@
 # ListeKutusu
 
-ListeKutusu; muzik kesiflerinin paylasildigi, kullanicilarin birbirini takip
-edebildigi ve herkesin tek bir kisisel liste yonettigi sosyal muzik uygulamasidir.
-Spotify; arama, baglanti ve istege bagli playlist senkronu icin kullanilir.
-Uygulama muzik oynatmaz veya Spotify dinleme deneyimini kopyalamaz.
+İlgi alanlarını keşif, kişisel kitaplık ve topluluk buluşmalarıyla birleştiren
+masaüstü öncelikli bir sosyal uygulama. Müzik, dizi, film ve kitap listeleri;
+incelemeler, topluluk akışı ve etkinlik katılımı aynı ürün içinde geliştirilir.
+
+> Geliştirme aşamasındaki portföy projesidir; canlıya hazır ürün veya tamamlanmış
+> güvenlik/erişilebilirlik kabulü iddiası değildir. Aktif çalışma koyu masaüstü
+> deneyimidir; mobil, açık tema ve bağımsız forum geliştirmesi ertelenmiştir.
+
+## Teknik özet
+
+- **Arayüz:** Next.js 15 App Router, React 18, TypeScript, Tailwind CSS ve ortak tasarım tokenları.
+- **Veri:** Prisma ve SQLite; sunucuda oturum, yetki ve içerik görünürlüğü kontrolleri.
+- **Entegrasyonlar:** Spotify, YouTube, TVmaze, Wikidata ve Open Library.
+- **Kalite:** Node.js birim testleri, Playwright + Axe, tip/lint ve statik UI denetimleri.
+
+Spotify arama, dış bağlantı ve isteğe bağlı liste senkronu içindir; uygulama
+müzik akışı sunmaz. Dizi/film/kitap katalogları metadata içindir; eserlerin
+tam içeriği sunulmaz. Sağlayıcı erişimi, atıf ve yayın koşulları ayrı değerlendirilir.
+
+## Ürün akışları
+
+- Müzik, sohbet, inceleme ve etkinlikleri ayıran karma akış ve filtreli keşif.
+- Müzik/dizi/film/kitap bölümleriyle kişisel kitaplık ve seçime bağlı profil vitrini.
+- Topluluk üyeliği, inceleme puanı/spoiler, etkinlik konumu/kapasitesi ve katılım niyeti.
+- Bildirim gruplaması, içerik moderasyonu ve özel platform başvuruları.
+- Ortak masaüstü menüsü, hata/boş/yükleme durumları ve desteklenen formlarda taslak koruması.
+
+Güncel tamamlanan ve açık işler [proje durumunda](PROJECT_STATUS.md), tasarım
+uygulamasının kabul sınırları [devir belgesinde](docs/TASARIM_ILERI_EKRANLAR_VE_UYGULAMA_DEVRI.md).
+Önizleme ekranları henüz canlı demo değildir; yayın adresi mevcutsa ayrıca belirtilir.
+
+## GitHub ve geliştirme geçmişi
+
+Doğrulanan, anlamlı iş paketleri ayrı commit edilir. Sahte tarihli veya yalnız
+katkı grafiğini doldurmak için boş commit üretilmez. Gizli anahtarlar, yerel
+veritabanları, loglar ve test çıktıları yayımlanmaz.
+[Commit ve yayın düzeni](docs/GITHUB_CALISMA_DUZENI.md).
 
 ## Proje belgeleri
 
@@ -20,6 +53,17 @@ Günlük geliştirmede bütün raporları okumak yerine şu sıra kullanılır:
 `docs/archive/` altındaki belgeler tarihsel referanstır ve normal geliştirme
 bağlamına yüklenmez.
 
+Pilot öncesi salt okunur toplu kontrol: `npm run pilot:check`.
+
+Gerçek veriye dokunmadan ayrı yerel HTTP+worker provası:
+`npm run pilot:rehearse-http`. [Kapsam ve sınırlar](docs/HTTP_ISCI_PROVASI.md).
+Otomatik kontrollerin geçmesi yayın onayı değildir; üretim yapılandırması ve
+manuel kanıt kapıları ayrı tutulur. [Pilot ön kontrol kılavuzu](docs/PILOT_ON_KONTROL.md).
+
+Tasarım öncesi teknik kapanış: `pilot:rehearse-recovery`,
+`pilot:build-isolated`, şifreli yedek/doğrulama, `runtime:check` ve
+kurulmamış süreç örnekleri hazırdır. [Komutlar ve gerçek yayın sınırları](docs/TEKNIK_KAPANIS_VE_YAYIN.md).
+
 ## Mevcut kapsam
 
 - E-posta ve sifreyle tek kullanici hesabi
@@ -34,6 +78,10 @@ bağlamına yüklenmez.
 - Rate limit, oturum korumasi ve temel guvenlik basliklari
 
 ## Kurulum
+
+Önkoşul: Node.js 24 ve npm. `.env.example` yalnız örnek değerler içerir;
+gerçek değerleri yerel `.env` dosyasına gir. Migration komutu hedef veritabanını
+değiştirir; canlı veya mevcut veri üzerinde çalıştırmadan önce yedek al.
 
 ```bash
 npm install

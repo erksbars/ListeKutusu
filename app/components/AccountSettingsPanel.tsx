@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Download, Eye, EyeOff, KeyRound, Trash2, UserRound } from "lucide-react";
 import { ActiveSessionsPanel } from "./ActiveSessionsPanel";
 import { BlockedAccountsPanel } from "./BlockedAccountsPanel";
-import { Button, TextField, buttonClassName } from "./ui";
+import { Button, Checkbox, TextField, buttonClassName } from "./ui";
 
 type AccountSettingsPanelProps = {
   view: "security" | "privacy" | "data";
@@ -21,7 +22,7 @@ type AccountSettingsPanelProps = {
   onDeletePasswordChange: (value: string) => void;
   onDeleteConfirmationChange: (value: string) => void;
   onChangePassword: () => void;
-  onDeleteAccount: () => void;
+  onDeleteAccount: (archiveOwnedCommunities?: boolean) => void;
 };
 
 export function AccountSettingsPanel({
@@ -44,6 +45,7 @@ export function AccountSettingsPanel({
   const deleteReady = Boolean(deletePassword) && deleteConfirmation === "HESABIMI SİL";
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
+  const [archiveOwned, setArchiveOwned] = useState(false);
 
   const visibilityAction = (visible: boolean, onToggle: () => void) => (
     <button
@@ -160,13 +162,15 @@ export function AccountSettingsPanel({
                 <p className="section-kicker account-danger-kicker">Tehlikeli alan</p>
                 <h2 className="mt-2 text-xl font-black">Hesabı kalıcı olarak sil</h2>
                 <p className="mt-2 max-w-2xl text-sm leading-6">
-                  Profilin, paylaşımların, önerilerin ve sosyal etkileşimlerin silinir. Bu işlem geri alınamaz. Önce Verilerim bölümünden bir kopya indirebilirsin.
+                  Profil kimliğin, müzik paylaşımların, önerilerin ve sosyal etkileşimlerin silinir. Bu işlem geri alınamaz. Önce Verilerim bölümünden bir kopya indirebilirsin.
                 </p>
+                <p className="mt-2 text-sm leading-6">Topluluk içerikleri korunur; silinen hesabın topluluk içerikleri kamuya gösterilmez. Önce sahipliği devredebilir veya aşağıda açıkça arşivlemeyi seçebilirsin. Yaklaşan etkinliklerin iptal edilir; katılım tercihlerin çekilir.</p>
+                <Link href="/communities?mine=1" className="text-sm">Topluluklarımı yönet ↗</Link>
               </div>
               <form
                 onSubmit={(event) => {
                   event.preventDefault();
-                  if (deleteReady) onDeleteAccount();
+                  if (deleteReady) onDeleteAccount(archiveOwned);
                 }}
               >
                 <TextField
@@ -190,6 +194,7 @@ export function AccountSettingsPanel({
                   hint="Devam etmek için HESABIMI SİL yaz."
                   required
                 />
+                <Checkbox checked={archiveOwned} onChange={event => setArchiveOwned(event.target.checked)} disabled={deletingAccount} label="Sahibi olduğum aktif toplulukları arşivleyerek hesabımı silmeyi onaylıyorum." />
                 <Button
                   type="submit"
                   variant="danger"

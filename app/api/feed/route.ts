@@ -11,6 +11,7 @@ import {
 } from "@/lib/feedRanking";
 import { parseOffsetCursor } from "@/lib/pagination";
 import { normalizeFeedNote } from "@/lib/feedContent";
+import { serializeMusicFeedPost } from "@/lib/musicFeedPresentation";
 
 export const dynamic = "force-dynamic";
 
@@ -71,34 +72,7 @@ function serializePost(
     recommendationReason?: string | null;
   }
 ) {
-  return {
-    id: post.id,
-    trackId: post.trackId,
-    trackName: post.trackName,
-    artistName: post.artistName,
-    albumName: post.albumName,
-    durationMs: post.durationMs,
-    externalUrl: post.externalUrl,
-    source: post.source,
-    note: post.note,
-    tags: parseTags(post.tags),
-    createdAt: post.createdAt,
-    likeCount: post._count?.likes ?? 0,
-    addCount: post._count?.adds ?? 0,
-    commentCount: post._count?.comments ?? 0,
-    likedByMe: Boolean(post.likes?.length),
-    addedByMe: Boolean(post.adds?.length),
-    savedByMe: Boolean(post.saves?.length),
-    followingAuthor: Boolean(post.author.followers?.length),
-    isMine: post.author.id === post.viewerId,
-    recommendationReason: post.recommendationReason ?? null,
-    author: {
-      id: post.author.id,
-      ownerName: post.author.ownerName,
-      playlistName: post.author.playlistName,
-      slug: post.author.slug,
-    },
-  };
+  return serializeMusicFeedPost(post, post.viewerId, post.recommendationReason ?? null);
 }
 
 export async function GET(req: NextRequest) {

@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Toast } from "@/app/components/Toast";
 import { ConfirmDialog } from "@/app/components/ConfirmDialog";
 import { FeedComposer } from "@/app/components/FeedComposer";
@@ -11,25 +11,31 @@ import { FeedSkeletons } from "@/app/components/FeedSkeletons";
 import { LeaderboardSidebar } from "@/app/components/LeaderboardSidebar";
 import { FeedPostCard } from "@/app/components/FeedPostCard";
 import { FeedCommunityPulse } from "@/app/components/FeedCommunityPulse";
-import { HomeSidebar } from "@/app/components/HomeSidebar";
+import { CommunityFeedCard } from "@/app/components/CommunityFeedCard";
+import { SelectField } from "@/app/components/ui/Field";
+import { Button } from "@/app/components/ui/Button";
+import { ContentState } from "@/app/components/ui/ContentState";
+import { useHomeFeed } from "@/app/hooks/useHomeFeed";
+import { compareTimelineItems } from "@/lib/feedTimelineOrder";
+import { HomeCommunitySummary } from "@/app/components/HomeCommunitySummary";
 import { MobileDock } from "@/app/components/MobileDock";
 import { GettingStarted, type OnboardingState } from "@/app/components/GettingStarted";
 import { DiscoverySession } from "@/app/components/DiscoverySession";
 import { HomeTopbar } from "@/app/components/HomeTopbar";
 import {
   FeedSectionHeader,
-  isFeedScope,
   type FeedScope,
 } from "@/app/components/FeedSectionHeader";
 import { FeedEditDialog, FeedReportDialog } from "@/app/components/FeedPostDialogs";
-import type { FeedPost } from "@/app/hooks/feedTypes";
 import { useFeedComposer } from "@/app/hooks/useFeedComposer";
 import { useFeedInteractions } from "@/app/hooks/useFeedInteractions";
 import { useFeedTopics } from "@/app/hooks/useFeedTopics";
 import { useInfiniteScroll } from "@/app/hooks/useInfiniteScroll";
 import { clearAccountSessionCache, loadAccountSession } from "@/lib/clientAccountSession";
+import { useFeedAnchor, useFeedLocation } from "@/app/hooks/useFeedLocation";
+import { feedLocationPath } from "@/lib/feedNavigation";
+import { accountLoginPath } from "@/lib/navigation";
 
-const SIDEBAR_COLLAPSED_STORAGE_KEY = "listekutusu-sidebar-collapsed";
 type Account = {
   id: string;
   slug: string;
@@ -88,78 +94,37 @@ export default function HomePage() {
   const router = useRouter();
   const [account, setAccount] = useState<Account | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [leaderboard, setLeaderboard] = useState<Leaderboard | null>(null);
-  const [feedPosts, setFeedPosts] = useState<FeedPost[]>([]);
-  const [feedNextCursor, setFeedNextCursor] = useState<string | null>(null);
-  const [feedPageLoading, setFeedPageLoading] = useState(true);
-  const [feedLoadingMore, setFeedLoadingMore] = useState(false);
-  const [feedLoadMoreError, setFeedLoadMoreError] = useState<string | null>(null);
-  const [feedScope, setFeedScope] = useState<FeedScope>("all");
-  const [feedEmptyReason, setFeedEmptyReason] = useState<string | null>(null);
+  const feedLocation = useFeedLocation();
+  const { scope: feedScope, kind: feedKind, topic: activeFeedTopic } = feedLocation.value;
+  const mixedScope = feedScope === "all" || feedScope === "following";
+  const { feedPosts, setFeedPosts, communityItems, feedNextCursor, feedPageLoading, feedLoadingMore, feedLoadMoreError, feedLoadError, feedEmptyReason, loadFeed } = useHomeFeed({ scope: feedScope, filter: feedKind, viewerId: account?.id ?? null, enabled: feedLocation.ready });
 
   const currentRank = useMemo(() => {
     if (!account || !leaderboard) return null;
     return leaderboard.users.find((item) => item.id === account.id) ?? null;
   }, [account, leaderboard]);
 
-  const { activeTopic: activeFeedTopic, setActiveTopic: setActiveFeedTopic,
-    topics: feedTopics, visiblePosts: visibleFeedPosts } = useFeedTopics(feedPosts);
+  const { topics: feedTopics, visiblePosts: visibleFeedPosts } = useFeedTopics(feedPosts, activeFeedTopic);
+  const setActiveFeedTopic = (topic: string | null) => feedLocation.update({ ...feedLocation.value, topic });
+  const visibleTimeline = useMemo(() => {
+    const music = visibleFeedPosts.map(post => ({ kind: "music" as const, id: post.id, createdAt: post.createdAt, post }));
+    if (!mixedScope) return music;
+    return [...(feedKind === "all" || feedKind === "music" ? music : []), ...communityItems].sort(compareTimelineItems);
+  }, [visibleFeedPosts, mixedScope, feedKind, communityItems]);
+  useFeedAnchor(feedPageLoading || !feedLocation.ready, visibleTimeline.map(item => `${item.kind}:${item.id}`).join(","));
 
   const feedComposer = useFeedComposer({
     authenticated: Boolean(account),
     setFeedPosts,
     setMessage,
-    onAuthRequired: () => router.push("/account?mode=login&next=%2F%23feed-composer"),
+    onAuthRequired: () => router.push(accountLoginPath(`${feedLocation.path}#feed-composer`)),
+    onCreated: () => void loadFeed(feedScope),
   });
 
-  const loadFeed = useCallback(async (
-    scope: FeedScope,
-    options: { append?: boolean; cursor?: string | null } = {}
-  ) => {
-    const append = Boolean(options.append && options.cursor);
-    if (append) {
-      setFeedLoadingMore(true);
-      setFeedLoadMoreError(null);
-    } else {
-      setFeedPageLoading(true);
-      setFeedLoadMoreError(null);
-    }
-
-    try {
-      const params = new URLSearchParams({ take: "10" });
-      if (scope !== "all") params.set("scope", scope);
-      if (append && options.cursor) params.set("cursor", options.cursor);
-
-      const res = await fetch(`/api/feed?${params.toString()}`);
-      const data = await res.json().catch(() => null);
-      if (!res.ok || !Array.isArray(data?.posts)) {
-        const errorMessage = data?.error || "Keşif akışı yüklenemedi.";
-        if (append) setFeedLoadMoreError(errorMessage);
-        else setMessage(errorMessage);
-        return;
-      }
-
-      setFeedPosts((current) => {
-        if (!append) return data.posts;
-        const existingIds = new Set(current.map((post) => post.id));
-        return [...current, ...data.posts.filter((post: FeedPost) => !existingIds.has(post.id))];
-      });
-      setFeedNextCursor(data.nextCursor ?? null);
-      setFeedEmptyReason(data.emptyReason ?? null);
-    } catch {
-      const errorMessage = "Keşif akışına ulaşılamadı. Bağlantını kontrol edip tekrar dene.";
-      if (append) setFeedLoadMoreError(errorMessage);
-      else setMessage(errorMessage);
-    } finally {
-      if (append) setFeedLoadingMore(false);
-      else setFeedPageLoading(false);
-    }
-  }, []);
-
   const feedLoadMoreRef = useInfiniteScroll({
-    enabled: Boolean(feedNextCursor) && !feedLoadMoreError,
-    loading: feedLoadingMore,
+    enabled: Boolean(feedNextCursor) && !feedLoadMoreError && !feedPageLoading,
+    loading: feedLoadingMore || feedPageLoading,
     onLoadMore: () => loadFeed(feedScope, { append: true, cursor: feedNextCursor }),
   });
 
@@ -199,7 +164,7 @@ export default function HomePage() {
     setMessage,
     loadFeed,
     loadLeaderboard,
-    onAuthRequired: () => router.push("/account?mode=login"),
+    onAuthRequired: () => router.push(accountLoginPath(feedLocation.path)),
   });
 
   useEffect(() => {
@@ -214,14 +179,10 @@ export default function HomePage() {
       return;
     }
 
-    const requestedScope = params.get("scope");
-    if (requestedScope === "trending") setFeedScope("trending");
-
     loadAccountSession()
       .then((nextAccount) => {
         if (!nextAccount) return;
         setAccount(nextAccount as Account);
-        if (isFeedScope(requestedScope)) setFeedScope(requestedScope);
       })
       .catch(() => null);
 
@@ -231,35 +192,12 @@ export default function HomePage() {
     loadLeaderboard();
   }, [router]);
 
-  useEffect(() => {
-    try {
-      setSidebarCollapsed(window.localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === "true");
-    } catch {
-      setSidebarCollapsed(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadFeed(feedScope);
-  }, [feedScope, loadFeed]);
-
-  useEffect(() => {
-    function syncScopeFromHistory() {
-      const requested = new URLSearchParams(window.location.search).get("scope");
-      const valid = isFeedScope(requested) ? requested : "all";
-      const protectedScope = valid === "following" || valid === "personalized" || valid === "saved";
-      setFeedScope(protectedScope && !account ? "all" : valid);
-    }
-    window.addEventListener("popstate", syncScopeFromHistory);
-    return () => window.removeEventListener("popstate", syncScopeFromHistory);
-  }, [account]);
-
   async function logoutAccount() {
     try {
       await fetch("/api/accounts/logout", { method: "POST" });
       clearAccountSessionCache();
       setAccount(null);
-      setFeedScope("all");
+      feedLocation.update({ scope: "all", kind: "all", topic: null });
       setMessage("Çıkış yapıldı.");
     } catch {
       setMessage("Çıkış işlemi tamamlanamadı. Bağlantını kontrol edip tekrar dene.");
@@ -278,24 +216,10 @@ export default function HomePage() {
 
   function selectFeedScope(scope: FeedScope) {
     if ((scope === "following" || scope === "personalized" || scope === "saved") && !account) {
-      router.push("/account?mode=login");
+      router.push(accountLoginPath(feedLocationPath({ scope, kind: "all", topic: null })));
       return;
     }
-    setActiveFeedTopic(null);
-    setFeedScope(scope);
-    const url = new URL(window.location.href);
-    if (scope !== "all") url.searchParams.set("scope", scope);
-    else url.searchParams.delete("scope");
-    window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
-  }
-
-  function changeSidebarCollapsed(collapsed: boolean) {
-    setSidebarCollapsed(collapsed);
-    try {
-      window.localStorage.setItem(SIDEBAR_COLLAPSED_STORAGE_KEY, String(collapsed));
-    } catch {
-      // Depolama kapalıysa tercih yalnız bu oturumda korunur.
-    }
+    feedLocation.update({ scope, kind: "all", topic: null });
   }
 
   function openFeedComposer() {
@@ -337,28 +261,17 @@ export default function HomePage() {
         onSave={savePostEdit}
       />
       <section className="home-app-shell desktop-density-comfortable relative min-h-screen w-full px-4 pb-28 sm:px-6 xl:pb-12">
-        <HomeTopbar account={account} onLogout={() => void logoutAccount()} />
+        <HomeTopbar account={account} loginHref={accountLoginPath(feedLocation.path)} onLogout={() => void logoutAccount()} />
         <MobileDock authenticated={Boolean(account)} profileSlug={account?.slug} />
         <section
               id="main-feed"
-              className={`home-grid mt-5 grid scroll-mt-24 items-start gap-5 ${
-                sidebarCollapsed ? "home-grid-sidebar-collapsed" : ""
-              }`}
+              className="home-grid home-grid-unified mt-5 grid scroll-mt-24 items-start gap-5"
             >
-              <HomeSidebar
-                authenticated={Boolean(account)}
-                profileSlug={account?.slug}
-                rank={currentRank?.rank}
-                score={currentRank?.score}
-                collapsed={sidebarCollapsed}
-                onCollapsedChange={changeSidebarCollapsed}
-                onMessage={setMessage}
-              />
               <div className="min-w-0">
                 <FeedSectionHeader
                   value={feedScope}
                   loading={feedPageLoading}
-                  topics={feedTopics}
+                  topics={!mixedScope || feedKind === "music" ? feedTopics : []}
                   activeTopic={activeFeedTopic}
                   onChange={selectFeedScope}
                   onTopicChange={setActiveFeedTopic}
@@ -366,6 +279,7 @@ export default function HomePage() {
                 />
 
                 {account?.onboarding && <GettingStarted initial={account.onboarding} />}
+                {mixedScope ? <div className="ui-panel mt-3 p-4"><SelectField label="Akış içerik türü" value={feedKind} onChange={event => feedLocation.update({ ...feedLocation.value, kind: event.target.value as typeof feedKind, topic: null })} hint="Müzik ve genel akışa açılan topluluk içerikleri, en yeni önce. Etkinlik katılımı aktif topluluk üyeliği gerektirir."><option value="all">Tüm içerikler</option><option value="music">Müzik</option><option value="discussion">Sohbetler</option><option value="review">İncelemeler</option><option value="event">Etkinlikler</option></SelectField></div> : <p className="mt-3 text-sm text-muted">Bu görünüm yalnız müzik paylaşımlarını kapsar. Topluluk içerikleri Yeni ve Takip akışındadır.</p>}
 
                 <FeedComposer
                   account={account}
@@ -393,11 +307,15 @@ export default function HomePage() {
                   className="mt-5 grid scroll-mt-24 gap-3"
                 >
                   {feedPageLoading && <FeedSkeletons />}
+                  {feedLoadError && <ContentState kind="error" title="Akış yüklenemedi" actions={<Button type="button" onClick={() => void loadFeed(feedScope)}>Akışı yeniden dene</Button>}><p>{feedLoadError}</p></ContentState>}
                   {!feedPageLoading &&
-                    visibleFeedPosts.map((post, index) => (
-                      <div className="contents" key={post.id}>
+                    visibleTimeline.map((item, index) => {
+                      if (item.kind !== "music") return <CommunityFeedCard key={`${item.kind}:${item.id}`} item={item} viewerId={account?.id ?? null} />;
+                      const post = item.post;
+                      return <div className="contents" key={`music:${post.id}`}>
                       <FeedPostCard
                         post={post}
+                        returnTo={feedLocation.path}
                         tone={index % 3 === 1 ? "accent" : index % 3 === 2 ? "secondary" : "primary"}
                         liking={feedLikeBusyIds.includes(post.id)}
                         adding={feedAddingIds.includes(post.id)}
@@ -433,8 +351,8 @@ export default function HomePage() {
                       />
                       {index === 3 && !activeFeedTopic && ["all", "trending"].includes(feedScope) && <FeedCommunityPulse />}
                       </div>
-                    ))}
-                  {!feedPageLoading && feedPosts.length > 0 && visibleFeedPosts.length === 0 && (
+                    })}
+                  {!feedPageLoading && !feedLoadError && feedPosts.length > 0 && visibleTimeline.length === 0 && (
                     <FeedEmptyState
                       scope={feedScope}
                       authenticated={Boolean(account)}
@@ -444,11 +362,11 @@ export default function HomePage() {
                       onCompose={openFeedComposer}
                     />
                   )}
-                  {!feedPageLoading && feedPosts.length === 0 && (
+                  {!feedPageLoading && !feedLoadError && feedPosts.length === 0 && visibleTimeline.length === 0 && (
                     <FeedEmptyState
                       scope={feedScope}
                       authenticated={Boolean(account)}
-                      reason={feedEmptyReason}
+                      reason={mixedScope && feedKind !== "all" ? "Seçtiğin türde görünür içerik yok. Başka bir tür seçebilir veya toplulukları keşfedebilirsin." : feedEmptyReason}
                       onSelectAll={() => selectFeedScope("all")}
                       onCompose={openFeedComposer}
                     />
@@ -463,11 +381,14 @@ export default function HomePage() {
                   )}
                 </div>
               </div>
-              <LeaderboardSidebar
+              <div className="home-context-rail grid min-w-0 gap-4">
+                <HomeCommunitySummary authenticated={Boolean(account)} rank={currentRank?.rank} score={currentRank?.score} onMessage={setMessage} />
+                <LeaderboardSidebar
                 leaderboard={leaderboard}
                 onRefresh={loadLeaderboard}
                 authenticated={Boolean(account)}
               />
+              </div>
         </section>
       </section>
     </main>

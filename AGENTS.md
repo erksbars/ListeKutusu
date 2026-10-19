@@ -2,7 +2,8 @@
 
 ## Product direction
 
-- Keep the product focused on a desktop-first social music discovery experience.
+- Keep the product desktop-first: music, TV, film, books, games and shared-interest communities.
+- Develop communities in phases; independent forum development is frozen, but existing forum content and routes must be preserved.
 - Preserve correct Turkish characters in all user-facing copy.
 - Use the shared design system and existing components before adding new styles.
 - Do not work on mobile-specific layouts unless the user explicitly asks for it.
@@ -20,6 +21,12 @@
 - Do not read `docs/archive/` during normal development. It is historical
   reference only.
 - Update `PROJECT_STATUS.md` after a milestone, not after every small edit.
+- The user requested regular, genuine Git commits for the portfolio. After a
+  coherent verified milestone, inspect the diff and commit the vetted scope.
+  Use truthful messages and dates; never create empty or backdated activity.
+  Do not bundle unrelated changes or generated screenshots. Push only to the
+  verified, user-approved repository/account; never assume the old origin is
+  still the intended target. Check repository safety before staging/publishing.
 - Keep completed roadmap history out of active context; archive it when useful.
 
 ## Data and secrets
@@ -29,6 +36,13 @@
 - Use `.env.example` only for documented placeholder values.
 
 ## Validation cadence
+
+- Prefer longer cohesive sessions: finish several related implementation steps,
+  focused verification and documentation before handing back. Do not ask for
+  confirmation for routine in-scope implementation choices; report material
+  assumptions and product decisions in the handoff. Spending, publishing,
+  destructive data operations and other meaningful scope expansions still
+  require the appropriate user authority.
 
 - Small CSS or copy edits: inspect affected files and run a focused typecheck when needed.
 - Narrow component changes: run only the related tests.

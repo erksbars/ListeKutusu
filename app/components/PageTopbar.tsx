@@ -21,7 +21,7 @@ export function PageTopbar({
   subtitle,
   icon,
   backHref = "/",
-  backLabel = "Geri",
+  backLabel = backHref === "/" ? "Ana akışa dön" : "Geri",
   onBack,
   actions,
   className = "",
@@ -44,8 +44,8 @@ export function PageTopbar({
         )}
         <span className="brand-mark" aria-hidden="true">{icon}</span>
         <div className="min-w-0">
-          <Title className="truncate text-lg font-bold text-white">{title}</Title>
-          <p className="truncate text-xs font-medium text-cyan-50/72">{subtitle}</p>
+          <Title className="page-topbar-title text-lg font-bold text-white">{title}</Title>
+          <p className="page-topbar-subtitle text-xs font-medium text-cyan-50/72">{subtitle}</p>
         </div>
       </div>
       {showPrimaryNavigation && <PrimaryNavigation />}

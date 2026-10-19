@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { AmbientMusicBackground } from "./components/AmbientMusicBackground";
 import { NavigationProgress } from "./components/NavigationProgress";
+import { AppShell } from "./components/AppShell";
 import "./globals.css";
 import "./styles/feature-surfaces.css";
 import "./styles/interaction-refinements.css";
@@ -54,7 +55,7 @@ export default function RootLayout({
           <NavigationProgress />
         </Suspense>
         <AmbientMusicBackground />
-        {children}
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

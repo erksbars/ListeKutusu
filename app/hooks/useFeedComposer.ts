@@ -8,6 +8,7 @@ type FeedComposerOptions = {
   setFeedPosts: Dispatch<SetStateAction<FeedPost[]>>;
   setMessage: Dispatch<SetStateAction<string | null>>;
   onAuthRequired: () => void;
+  onCreated?: () => void;
 };
 
 export function useFeedComposer({
@@ -15,6 +16,7 @@ export function useFeedComposer({
   setFeedPosts,
   setMessage,
   onAuthRequired,
+  onCreated,
 }: FeedComposerOptions) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<TrackResult[]>([]);
@@ -94,7 +96,8 @@ export function useFeedComposer({
         return;
       }
 
-      setFeedPosts((current) => [data.post, ...current]);
+      if (onCreated) onCreated();
+      else setFeedPosts((current) => [data.post, ...current]);
       setSelectedTrack(null);
       setQuery("");
       setResults([]);

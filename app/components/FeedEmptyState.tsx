@@ -6,7 +6,7 @@ import type { FeedScope } from "./FeedSectionHeader";
 const emptyCopy: Record<FeedScope, { title: string; description: string }> = {
   all: {
     title: "Akış henüz boş",
-    description: "İlk şarkıyı paylaşınca burası sosyal keşif sayfasına dönüşmeye başlar.",
+    description: "Bir şarkı paylaşabilir veya topluluğundaki sohbet, inceleme ve etkinliğini genel akışa açabilirsin.",
   },
   trending: {
     title: "Henüz yükselen paylaşım yok",

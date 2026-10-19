@@ -4,8 +4,9 @@ import { prisma } from "@/lib/db";
 import { getFeedPostDetail } from "@/lib/feedPostDetail";
 import { getAuthenticatedAccountListId } from "@/lib/session";
 import PostDetailClient from "@/app/(social)/p/[id]/PostDetailClient";
+import { feedReturnPath } from "@/lib/feedNavigation";
 
-type PageProps = { params: Promise<{ id: string }> };
+type PageProps = { params: Promise<{ id: string }>; searchParams: Promise<{ from?: string | string[] }> };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params;
@@ -27,8 +28,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function PostDetailPage({ params }: PageProps) {
+export default async function PostDetailPage({ params, searchParams }: PageProps) {
   const { id } = await params;
+  const query = await searchParams;
   const viewerId = await getAuthenticatedAccountListId();
   const [post, viewer] = await Promise.all([
     getFeedPostDetail(id, viewerId),
@@ -41,5 +43,5 @@ export default async function PostDetailPage({ params }: PageProps) {
   ]);
 
   if (!post) notFound();
-  return <PostDetailClient initialPost={post} viewer={viewer} />;
+  return <PostDetailClient initialPost={post} viewer={viewer} returnTo={feedReturnPath(typeof query.from === "string" ? query.from : null)} />;
 }

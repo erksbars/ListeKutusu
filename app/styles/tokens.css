@@ -164,6 +164,10 @@
   --ui-desktop-gutter: clamp(20px, 1.7vw, 28px);
   --ui-desktop-gap: 20px;
   --ui-desktop-sidebar: 224px;
+  --ui-shell-header-height: 80px;
+  --ui-layer-navigation: 40;
+  --ui-layer-modal: 80;
+  --ui-page-max-width: 1480px;
   --ui-desktop-sidebar-collapsed: 72px;
   --ui-desktop-rail: minmax(300px, 360px);
 

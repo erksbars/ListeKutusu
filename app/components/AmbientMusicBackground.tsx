@@ -3,11 +3,18 @@
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 
-const NOTE_COUNT = 104;
-const NOTE_SYMBOLS = ["♪", "♫", "♩", "♬"] as const;
+// Monochrome 24px outlines: music, TV series, film, book and games.
+// Paths avoid platform-dependent emoji rendering and extra DOM nodes.
+const SYMBOL_PATHS = [
+  "M9 18V5l12-2v13 M9 8l12-2 M9 18a3 3 0 1 1-3-3a3 3 0 0 1 3 3 M21 16a3 3 0 1 1-3-3a3 3 0 0 1 3 3",
+  "M8 2l4 4l4-4 M4 7h16v13H4Z M9 23h6",
+  "M3 3h18v18H3Z M7 3v18 M17 3v18 M3 8h4 M3 16h4 M17 8h4 M17 16h4 M7 12h10",
+  "M12 5C9 3 5 3 2 4v16c3-1 7-1 10 1c3-2 7-2 10-1V4c-3-1-7-1-10 1v16",
+  "M7 6h10c3 0 4 3 5 10c.5 4-2 5-4 2l-2-2H8l-2 2c-2 3-4.5 2-4-2c1-7 2-10 5-10Z M5 10v4 M3 12h4 M16 10h.1 M19 13h.1",
+] as const;
 
 type AmbientNote = {
-  symbol: string;
+  symbol: number;
   x: number;
   y: number;
   size: number;
@@ -17,12 +24,14 @@ type AmbientNote = {
 };
 
 function makeNotes(width: number, height: number): AmbientNote[] {
-  return Array.from({ length: NOTE_COUNT }, (_, index) => ({
-    symbol: NOTE_SYMBOLS[index % NOTE_SYMBOLS.length],
+  // 40 at a typical desktop viewport, down from 104; keep all five kinds balanced.
+  const count = Math.max(15, Math.min(45, Math.round(width * height / 29_000 / 5) * 5));
+  return Array.from({ length: count }, (_, index) => ({
+    symbol: index % SYMBOL_PATHS.length,
     x: ((index * 37) % 101) / 100 * width,
     y: ((index * 67) % 103) / 102 * height,
-    size: 12 + ((index * 7) % 12),
-    speed: 8 + ((index * 11) % 14),
+    size: 18 + ((index * 7) % 10),
+    speed: 6 + ((index * 11) % 9),
     drift: (index % 2 === 0 ? 1 : -1) * (8 + ((index * 9) % 18)),
     phase: (index * 0.73) % (Math.PI * 2),
   })).sort((a, b) => a.size - b.size);
@@ -38,6 +47,8 @@ export function AmbientMusicBackground() {
     if (!canvas) return;
     const context = canvas.getContext("2d", { alpha: true });
     if (!context) return;
+    const paths = SYMBOL_PATHS.map(path => new Path2D(path));
+    const accent = getComputedStyle(document.documentElement).getPropertyValue("--ui-accent").trim() || "currentColor";
 
     let width = 1;
     let height = 1;
@@ -70,24 +81,25 @@ export function AmbientMusicBackground() {
       previousTime = time;
       previousFrame = time;
       context.clearRect(0, 0, width, height);
-      context.textAlign = "center";
-      context.textBaseline = "middle";
       const animationTime = reducedMotion ? 0 : time;
 
-      let currentFontSize = -1;
       for (const note of notes) {
         if (!reducedMotion) {
           note.y -= note.speed * elapsed;
           if (note.y < -32) note.y = height + 32;
         }
         const sway = Math.sin(animationTime / 4200 + note.phase) * note.drift;
-        const opacity = 0.035 + ((Math.sin(animationTime / 3600 + note.phase) + 1) / 2) * 0.09;
-        if (currentFontSize !== note.size) {
-          currentFontSize = note.size;
-          context.font = `700 ${note.size}px system-ui, sans-serif`;
-        }
-        context.fillStyle = `rgba(47, 211, 202, ${opacity})`;
-        context.fillText(note.symbol, note.x + sway, note.y);
+        const opacity = 0.025 + ((Math.sin(animationTime / 4800 + note.phase) + 1) / 2) * 0.065;
+        context.save();
+        context.translate(note.x + sway - note.size / 2, note.y - note.size / 2);
+        context.scale(note.size / 24, note.size / 24);
+        context.strokeStyle = accent;
+        context.globalAlpha = opacity;
+        context.lineWidth = 1.7;
+        context.lineCap = "round";
+        context.lineJoin = "round";
+        context.stroke(paths[note.symbol]);
+        context.restore();
       }
       if (!reducedMotion) animationFrame = window.requestAnimationFrame(draw);
     };

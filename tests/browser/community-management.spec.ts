@@ -1,0 +1,93 @@
+import { expect, test } from "@playwright/test";
+import { PrismaClient } from "@prisma/client";
+import { randomUUID } from "node:crypto";
+
+test("scoped management pagination, decision drafts, member actions and revocation", async ({ page, context, browser, request, baseURL }) => {
+  test.skip(process.env.COMMUNITY_E2E !== "1", "Local management integration is opt-in.");
+  if (!baseURL || new URL(baseURL).hostname !== "127.0.0.1") throw new Error("Local test only");
+  test.setTimeout(180_000); page.setDefaultTimeout(25_000);
+  const db = new PrismaClient(), suffix = randomUUID(), emails = [0, 1].map(index => `management-${index}-${suffix}@example.test`);
+  const synthetic = Array.from({ length: 22 }, (_, i) => `management-fixture-${suffix}-${i}`);
+  const memberContext = await browser.newContext({ baseURL, viewport: { width: 1280, height: 900 }, colorScheme: "dark" });
+  const memberPage = await memberContext.newPage(); memberPage.setDefaultTimeout(25_000);
+  const errors: string[] = []; for (const target of [page, memberPage]) target.on("pageerror", error => errors.push(error.message));
+  try {
+    const headers = { Origin: baseURL };
+    for (const [index, client] of [context, memberContext].entries()) {
+      expect((await client.request.post("/api/accounts", { headers: { ...headers, "X-Forwarded-For": `192.0.2.${1 + parseInt(suffix.slice(0, 2), 16) % 254}` }, data: { email: emails[index], password: `Test-${suffix}-42`, ownerName: index ? "Yönetim Üyesi" : "Yönetim Kurucusu", playlistName: "Geçici test" } })).status()).toBe(200);
+    }
+    const owner = await db.userList.findUniqueOrThrow({ where: { email: emails[0] } }), member = await db.userList.findUniqueOrThrow({ where: { email: emails[1] } });
+    const created = await context.request.post("/api/communities", { headers, data: { name: "Sayfalı Yönetim Denemesi", description: "Yalnız geçici otomatik yönetim kontrolü topluluğu.", category: "interest", rules: "Hassas veri yoktur; yalnız otomatik testtir." } });
+    expect(created.status()).toBe(201); const { slug } = await created.json(), api = `/api/communities/${slug}`;
+    expect((await memberContext.request.post(api, { headers, data: { action: "join" } })).status()).toBe(200);
+    const community = await db.community.findUniqueOrThrow({ where: { slug } });
+    await db.userList.createMany({ data: synthetic.map((id, index) => ({ id, slug: id, ownerName: `Geçici Üye ${index}` })) });
+    await db.communityMember.createMany({ data: synthetic.map(userId => ({ communityId: community.id, userId })) });
+    const posts = Array.from({ length: 31 }, (_, i) => ({ id: `management-post-${suffix}-${i}`, communityId: community.id, authorId: owner.id, title: `Test sohbeti ${i}`, body: "Yalnız geçici test için sohbet içeriği." }));
+    await db.communityPost.createMany({ data: posts });
+    await db.communityReport.createMany({ data: posts.map((post, index) => ({ id: `management-report-${suffix}-${index}`, communityId: community.id, reporterId: member.id, targetType: "post", targetId: post.id, reason: `Test bildirim gerekçesi ${index}`, createdAt: new Date(Date.now() + index) })) });
+    expect((await request.get(`${api}/management`)).status()).toBe(401);
+    expect((await memberContext.request.get(`${api}/management`)).status()).toBe(403);
+    expect((await context.request.get(`${api}/management?page=101`)).status()).toBe(400);
+    for (const target of [page, memberPage]) await target.addInitScript(() => localStorage.setItem("listekutusu-theme", "dark"));
+    await page.goto(`/communities/${slug}`); await page.getByText("Topluluğu yönet", { exact: true }).click();
+    const panel = page.getByRole("region", { name: "Topluluk yönetimi", exact: true });
+    await expect(panel.getByText("31 kayıt · Sayfa 1", { exact: true })).toBeVisible();
+    await expect(panel.getByRole("form", { name: "Bildirim kararı", exact: true })).toHaveCount(20);
+    await panel.getByRole("button", { name: "Sonraki yönetim sayfası", exact: true }).click();
+    await expect(panel.getByText("31 kayıt · Sayfa 2", { exact: true })).toBeVisible();
+    await expect(panel.getByRole("form", { name: "Bildirim kararı", exact: true })).toHaveCount(11);
+    const form = panel.getByRole("form", { name: "Bildirim kararı", exact: true }).first();
+    const note = form.getByRole("textbox", { name: "Karar notu (isteğe bağlı)", exact: true });
+    await note.fill("İncelendi, kurallara aykırılık bulunmadı");
+    let failWrite = true;
+    await page.route(`**${api}`, route => {
+      if (route.request().method() !== "POST" || !failWrite) return route.continue();
+      failWrite = false; return route.fulfill({ status: 503, json: { error: "Geçici yönetim yazma hatası" } });
+    });
+    await form.getByRole("button", { name: "İncelendi", exact: true }).click();
+    await expect(page.getByRole("alert").filter({ hasText: "Geçici yönetim yazma hatası" })).toBeVisible();
+    await expect(note).toHaveValue("İncelendi, kurallara aykırılık bulunmadı");
+    await form.getByRole("button", { name: "İncelendi", exact: true }).click();
+    await expect(panel.getByText("30 kayıt · Sayfa 2", { exact: true })).toBeVisible();
+    await page.unroute(`**${api}`);
+    await panel.getByRole("combobox", { name: "Bildirim durumu", exact: true }).selectOption("reviewed");
+    await expect(panel.getByText("1 kayıt · Sayfa 1", { exact: true })).toBeVisible();
+    await expect(panel.getByText(/İnceleme:.*Yönetim Kurucusu/)).toBeVisible();
+    const read = await context.request.get(`${api}/management?status=reviewed`);
+    expect(read.headers()["cache-control"]).toContain("no-store");
+    expect(JSON.stringify(await read.json())).not.toContain(member.id);
+    await panel.getByRole("button", { name: "Karar geçmişi", exact: true }).click();
+    await expect(panel.getByText("Not: İncelendi, kurallara aykırılık bulunmadı", { exact: true })).toBeVisible();
+    await page.screenshot({ path: "test-results/browser/community-management-desktop.png", fullPage: true, animations: "disabled" });
+    await panel.getByRole("button", { name: "Üyeler", exact: true }).click();
+    await expect(panel.getByText("24 kayıt · Sayfa 1", { exact: true })).toBeVisible();
+    await panel.getByRole("button", { name: "Sonraki yönetim sayfası", exact: true }).click();
+    await expect(panel.getByText("24 kayıt · Sayfa 2", { exact: true })).toBeVisible();
+    await panel.getByRole("textbox", { name: "Üye ara", exact: true }).fill("Yönetim Üyesi");
+    await panel.getByRole("button", { name: "Üyelerde ara", exact: true }).click();
+    await expect(panel.getByText("1 kayıt · Sayfa 1", { exact: true })).toBeVisible();
+    await panel.getByRole("button", { name: "Uzaklaştır", exact: true }).click();
+    await panel.getByRole("textbox", { name: "Üye işlemi notu (isteğe bağlı)", exact: true }).fill("Geçici otomatik uzaklaştırma kontrolü");
+    await panel.getByRole("button", { name: "Üye işlemini onayla", exact: true }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "Onayla", exact: true }).click();
+    await panel.getByRole("combobox", { name: "Üye durumu", exact: true }).selectOption("banned");
+    await expect(panel.getByRole("button", { name: "Engeli kaldır", exact: true })).toBeVisible();
+    await panel.getByRole("button", { name: "Engeli kaldır", exact: true }).click();
+    await panel.getByRole("button", { name: "Üye işlemini onayla", exact: true }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "Onayla", exact: true }).click();
+    await expect(panel.getByText("Bu filtrelerde kayıt yok.", { exact: true })).toBeVisible();
+    expect((await context.request.post(api, { headers, data: { action: "moderate-member", userId: member.id, operation: "promote" } })).status()).toBe(200);
+    await memberPage.goto(`/communities/${slug}`); await memberPage.getByText("Topluluğu yönet", { exact: true }).click();
+    await expect(memberPage.getByRole("region", { name: "Topluluk yönetimi", exact: true }).getByText("30 kayıt · Sayfa 1", { exact: true })).toBeVisible();
+    expect((await context.request.post(api, { headers, data: { action: "moderate-member", userId: member.id, operation: "demote" } })).status()).toBe(200);
+    expect((await memberContext.request.get(`${api}/management?view=history`)).status()).toBe(403);
+    await memberPage.reload(); await expect(memberPage.getByText("Topluluğu yönet", { exact: true })).toHaveCount(0);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); expect(errors).toEqual([]);
+  } finally {
+    const users = await db.userList.findMany({ where: { email: { in: emails } }, select: { id: true } });
+    await db.community.deleteMany({ where: { ownerId: { in: users.map(user => user.id) } } });
+    await db.userList.deleteMany({ where: { OR: [{ id: { in: users.map(user => user.id) } }, { id: { in: synthetic } }] } });
+    await db.$disconnect(); await memberContext.close();
+  }
+});

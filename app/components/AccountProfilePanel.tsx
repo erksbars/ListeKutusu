@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { Button } from "./ui/Button";
+import { ConfirmDialog } from "./ConfirmDialog";
 import { KeyboardEvent as ReactKeyboardEvent, useEffect, useState } from "react";
 import {
   ChevronDown,
@@ -25,6 +27,8 @@ import {
 } from "@/lib/profileShowcase";
 import type { ProfileBanner, ProfileDensity } from "@/lib/profileAppearance";
 import { PROFILE_PRESETS, getProfilePreset } from "@/lib/profileAppearance";
+import type { UniversityDraft } from "@/lib/profileUniversity";
+import { UniversityProfileFields } from "./profile/UniversityProfileFields";
 
 const PROFILE_THEMES = Object.entries(PROFILE_PRESETS);
 
@@ -56,6 +60,8 @@ const BANNER_OPTIONS: Array<{ value: ProfileBanner; label: string; description: 
 type EditorSection = (typeof EDITOR_SECTIONS)[number][0];
 
 type AccountProfilePanelProps = {
+  university: UniversityDraft;
+  onUniversityChange: (value: UniversityDraft) => void;
   ownerName: string;
   slug: string;
   bio: string;
@@ -81,9 +87,11 @@ type AccountProfilePanelProps = {
   onBannerChange: (value: ProfileBanner) => void;
   onFeaturedAchievementChange: (value: string) => void;
   onSave: () => void;
+  onDiscard: () => void;
 };
 
 export function AccountProfilePanel({
+  university, onUniversityChange,
   ownerName,
   slug,
   bio,
@@ -109,7 +117,9 @@ export function AccountProfilePanel({
   onBannerChange,
   onFeaturedAchievementChange,
   onSave,
+  onDiscard,
 }: AccountProfilePanelProps) {
+  const [discardOpen, setDiscardOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<EditorSection>("identity");
   const hiddenModules = PROFILE_SHOWCASE_MODULES.filter((module) => !showcaseModules.includes(module));
   const orderedModules = [...showcaseModules, ...hiddenModules];
@@ -179,6 +189,7 @@ export function AccountProfilePanel({
 
   return (
     <div className="account-profile-editor-shell">
+      <ConfirmDialog open={discardOpen} title="Taslak değişiklikleri geri al?" body="Kaydetmediğin profil değişiklikleri silinecek. Son kaydedilen görünümün korunacak." confirmLabel="Değişiklikleri geri al" tone="danger" onCancel={() => setDiscardOpen(false)} onConfirm={() => { if (loading) return; onDiscard(); setDiscardOpen(false); }} />
       <section className="account-content-panel account-profile-editor-main">
         <div className="account-profile-editor-heading">
           <div>
@@ -232,11 +243,11 @@ export function AccountProfilePanel({
           </p>
         </div>
 
-        <div
+        <fieldset disabled={loading}
           id={`profile-editor-panel-${activeSection}`}
           role="tabpanel"
           aria-labelledby={`profile-editor-tab-${activeSection}`}
-          className="profile-editor-panel"
+          className="profile-editor-panel m-0 min-w-0 border-0 p-0"
         >
           {activeSection === "identity" && (
             <div className="profile-editor-fields">
@@ -267,7 +278,7 @@ export function AccountProfilePanel({
                 className="ghost-input w-full resize-none rounded-xl px-4 py-3 text-sm leading-6 outline-none transition"
               />
               <div className="profile-editor-counter">{bio.length}/240</div>
-
+              <UniversityProfileFields value={university} onChange={onUniversityChange} />
             </div>
           )}
 
@@ -430,7 +441,7 @@ export function AccountProfilePanel({
               </div>
             </div>
           )}
-        </div>
+        </fieldset>
 
         <div className="profile-editor-step-actions">
           <button
@@ -475,6 +486,7 @@ export function AccountProfilePanel({
               <strong>{ownerName}</strong>
               <span className="profile-live-preview-handle">@{slug}</span>
               <p>{status || "Kısa durumun burada görünecek."}</p>
+              {university.name.trim() && <p>{university.public ? `Üniversite: ${university.name} · Kullanıcı beyanı` : "Üniversite bilgisi profil ziyaretçilerinden gizli."}</p>}
               {featuredAchievement && (
                 <span className="profile-live-preview-badge"><Award size={12} /> {featuredAchievement.title}</span>
               )}
@@ -528,6 +540,7 @@ export function AccountProfilePanel({
           <button type="button" onClick={onSave} disabled={loading || !dirty} className="primary-action h-11 w-full rounded-xl px-4 text-sm font-black">
             <Save size={16} /> <span>{loading ? "Kaydediliyor..." : "Profili kaydet"}</span>
           </button>
+          <Button type="button" variant="ghost" className="w-full" disabled={loading || !dirty} onClick={() => setDiscardOpen(true)}>Değişiklikleri geri al</Button>
         </div>
       </aside>
     </div>

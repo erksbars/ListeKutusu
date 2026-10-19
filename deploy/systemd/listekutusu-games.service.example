@@ -1,0 +1,29 @@
+[Unit]
+Description=ListeKutusu game maintenance
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=exec
+User=listekutusu
+Group=listekutusu
+WorkingDirectory=/srv/listekutusu/app
+Environment=NODE_ENV=production
+EnvironmentFile=/etc/listekutusu/app.env
+ExecStartPre=/usr/bin/node scripts/check-env.mjs --production
+ExecStart=/usr/bin/node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types scripts/game-maintenance-loop.mjs
+Restart=always
+RestartSec=5
+KillSignal=SIGTERM
+TimeoutStopSec=45
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/srv/listekutusu/data
+
+[Install]
+WantedBy=multi-user.target

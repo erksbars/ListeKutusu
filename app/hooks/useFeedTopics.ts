@@ -4,8 +4,9 @@ import { useMemo, useState } from "react";
 
 type TaggedPost = { tags: string[] };
 
-export function useFeedTopics<T extends TaggedPost>(posts: T[]) {
-  const [activeTopic, setActiveTopic] = useState<string | null>(null);
+export function useFeedTopics<T extends TaggedPost>(posts: T[], controlledTopic?: string | null) {
+  const [localTopic, setActiveTopic] = useState<string | null>(null);
+  const activeTopic = controlledTopic === undefined ? localTopic : controlledTopic;
 
   const topics = useMemo(() => {
     const counts = new Map<string, number>();

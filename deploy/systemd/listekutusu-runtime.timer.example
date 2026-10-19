@@ -1,0 +1,11 @@
+[Unit]
+Description=ListeKutusu runtime check every minute
+
+[Timer]
+OnBootSec=90
+OnUnitInactiveSec=60
+AccuracySec=5
+Unit=listekutusu-runtime.service
+
+[Install]
+WantedBy=timers.target

@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ConfirmDialog } from "../components/ConfirmDialog";
+import { useDraftNavigationGuard } from "../components/DraftNavigationProvider";
 import { Toast } from "../components/Toast";
 import { AccountAuthPanel } from "../components/AccountAuthPanel";
 import { AccountSettingsPanel } from "../components/AccountSettingsPanel";
@@ -27,6 +28,7 @@ import { useAccountListActions } from "./useAccountListActions";
 import { useAccountSecurityActions } from "./useAccountSecurityActions";
 import { DEFAULT_PROFILE_SHOWCASE, normalizeProfileShowcase, type ProfileShowcaseModule } from "@/lib/profileShowcase";
 import { normalizeProfileBanner, normalizeProfileDensity, type ProfileBanner, type ProfileDensity } from "@/lib/profileAppearance";
+import { universityDraft } from "@/lib/profileUniversity";
 type ConfirmState = {
   title: string;
   body: string;
@@ -36,12 +38,7 @@ type ConfirmState = {
 };
 
 function normalizeGenres(value: string) {
-  return value
-    .split(",")
-    .map((item) => item.trim().toLocaleLowerCase("tr-TR"))
-    .filter(Boolean)
-    .slice(0, 6)
-    .join("|");
+  return value.split(",").map(item => item.trim().toLocaleLowerCase("tr-TR")).filter(Boolean).slice(0, 6).join("|");
 }
 export default function AccountPage() {
   const router = useRouter();
@@ -53,10 +50,9 @@ export default function AccountPage() {
   const [editingPlaylistName, setEditingPlaylistName] = useState("");
   const [profileBio, setProfileBio] = useState("");
   const [profileStatus, setProfileStatus] = useState("");
+  const [profileUniversity, setProfileUniversity] = useState(universityDraft());
   const [pinnedFeedPostId, setPinnedFeedPostId] = useState("");
-  const [profileShowcaseModules, setProfileShowcaseModules] = useState<ProfileShowcaseModule[]>(
-    [...DEFAULT_PROFILE_SHOWCASE]
-  );
+  const [profileShowcaseModules, setProfileShowcaseModules] = useState<ProfileShowcaseModule[]>([...DEFAULT_PROFILE_SHOWCASE]);
   const [profileGenres, setProfileGenres] = useState("");
   const [profileTheme, setProfileTheme] = useState("aurora");
   const [profileDensity, setProfileDensity] = useState<ProfileDensity>("comfortable");
@@ -70,7 +66,6 @@ export default function AccountPage() {
   const [confirmDialog, setConfirmDialog] = useState<ConfirmState | null>(null);
   const [scoreSummary, setScoreSummary] = useState<ScoreSummary | null>(null);
   const [friendCode, setFriendCode] = useState("");
-  const skipUnsavedWarningRef = useRef(false);
 
   const {
     ownerName,
@@ -166,6 +161,7 @@ export default function AccountPage() {
     list &&
       (profileBio !== (list.bio || "") ||
         profileStatus !== (list.profileStatus || "") ||
+        profileUniversity.name !== (list.universityName || "") || profileUniversity.public !== Boolean(list.universityPublic) ||
         pinnedFeedPostId !== (list.pinnedFeedPostId || "") ||
         profileShowcaseModules.join("|") !== normalizeProfileShowcase(list.profileShowcase).join("|") ||
         normalizeGenres(profileGenres) !== normalizeGenres(savedGenres) ||
@@ -208,6 +204,7 @@ export default function AccountPage() {
       setEditingPlaylistName(data.list?.playlistName || data.list?.ownerName || "");
       setProfileBio(data.list?.bio || "");
       setProfileStatus(data.list?.profileStatus || "");
+      setProfileUniversity(universityDraft(data.list));
       setPinnedFeedPostId(data.list?.pinnedFeedPostId || "");
       setProfileShowcaseModules(normalizeProfileShowcase(data.list?.profileShowcase));
       try {
@@ -248,6 +245,7 @@ export default function AccountPage() {
     friendCode,
     profileBio,
     profileStatus,
+    profileUniversity, setProfileUniversity,
     pinnedFeedPostId,
     profileShowcaseModules,
     profileGenres,
@@ -261,42 +259,40 @@ export default function AccountPage() {
     loadMe,
     onUnauthorized: handleUnauthorized,
   });
+  const requestDraftExit = useDraftNavigationGuard({
+    dirty: hasUnsavedChanges,
+    busy: loading,
+    save: hasProfileChanges && !hasListChanges ? saveProfile : undefined,
+    discard: discardUnsavedChanges,
+  });
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const requestedMode = params.get("mode");
     const requestedTab = params.get("tab");
+    if (requestedTab === "list") { router.replace("/library?type=music"); return; }
     if (requestedTab === "settings") {
       setPanelTab("security");
     } else if (isPanelTab(requestedTab)) {
       setPanelTab(requestedTab);
     }
     loadMe(requestedMode === "create" ? "create" : "login");
-  }, [loadMe]);
-
-  useEffect(() => {
-    if (!hasUnsavedChanges) return;
-    function warnBeforeLeave(event: BeforeUnloadEvent) {
-      if (skipUnsavedWarningRef.current) return;
-      event.preventDefault();
-    }
-    window.addEventListener("beforeunload", warnBeforeLeave);
-    return () => window.removeEventListener("beforeunload", warnBeforeLeave);
-  }, [hasUnsavedChanges]);
+  }, [loadMe, router]);
 
   function applyPanelTab(value: PanelTab) {
+    if (value === "list") { router.push("/library?type=music"); return; }
     setPanelTab(value);
     const url = new URL(window.location.href);
     url.searchParams.delete("mode");
     url.searchParams.set("tab", value);
     window.history.replaceState(null, "", `${url.pathname}${url.search}`);
   }
-
   function discardUnsavedChanges() {
-    if (!list) return;
+    if (!list || loading) return;
     setEditingPlaylistName(list.playlistName || list.ownerName || "");
     setProfileBio(list.bio || "");
     setProfileStatus(list.profileStatus || "");
+    setProfileUniversity(universityDraft(list));
     setPinnedFeedPostId(list.pinnedFeedPostId || "");
     setProfileShowcaseModules(normalizeProfileShowcase(list.profileShowcase));
     setProfileGenres(savedGenres);
@@ -305,41 +301,12 @@ export default function AccountPage() {
     setProfileBanner(normalizeProfileBanner(list.profileBanner));
     setFeaturedAchievementId(list.featuredAchievementId || "");
   }
-
   function selectPanelTab(value: PanelTab) {
-    if (value === panelTab) return;
-    if (!hasUnsavedChanges) {
-      applyPanelTab(value);
-      return;
-    }
-    setConfirmDialog({
-      title: "Değişiklikler kaydedilmedi",
-      body: "Başka bir bölüme geçersen liste veya profil alanındaki kaydedilmemiş değişiklikler geri alınacak.",
-      confirmLabel: "Değişiklikleri bırak",
-      tone: "danger",
-      onConfirm: () => {
-        discardUnsavedChanges();
-        setConfirmDialog(null);
-        applyPanelTab(value);
-      },
-    });
+    if (loading || value === panelTab) return;
+    requestDraftExit(() => applyPanelTab(value));
   }
-
   function requestHome() {
-    if (!hasUnsavedChanges) {
-      router.push("/");
-      return;
-    }
-    setConfirmDialog({
-      title: "Hesap merkezinden çık",
-      body: "Liste veya profil alanındaki kaydedilmemiş değişiklikler silinecek.",
-      confirmLabel: "Kaydetmeden çık",
-      tone: "danger",
-      onConfirm: () => {
-        skipUnsavedWarningRef.current = true;
-        router.push("/");
-      },
-    });
+    requestDraftExit(() => router.push("/"));
   }
 
   function requestLogout() {
@@ -501,8 +468,8 @@ export default function AccountPage() {
                 </div>
                 <div className="mt-1 flex flex-wrap items-center justify-between gap-3">
                   <p className="account-section-description">{activePanel.description}</p>
-                  {hasUnsavedChanges && (
-                    <button type="button" onClick={discardUnsavedChanges} className="account-reset-changes">
+                  {hasUnsavedChanges && panelTab !== "profile" && (
+                    <button type="button" disabled={loading} onClick={discardUnsavedChanges} className="account-reset-changes">
                       <RotateCcw size={14} /> Değişiklikleri geri al
                     </button>
                   )}
@@ -564,6 +531,7 @@ export default function AccountPage() {
                   slug={list.slug}
                   bio={profileBio}
                   status={profileStatus}
+                  university={profileUniversity} onUniversityChange={setProfileUniversity}
                   pinnedPostId={pinnedFeedPostId}
                   showcaseModules={profileShowcaseModules}
                   posts={list.profilePosts || []}
@@ -584,7 +552,7 @@ export default function AccountPage() {
                   onDensityChange={setProfileDensity}
                   onBannerChange={setProfileBanner}
                   onFeaturedAchievementChange={setFeaturedAchievementId}
-                  onSave={saveProfile}
+                  onSave={saveProfile} onDiscard={discardUnsavedChanges}
                 />
               )}
 
@@ -615,5 +583,3 @@ export default function AccountPage() {
     </main>
   );
 }
-
-

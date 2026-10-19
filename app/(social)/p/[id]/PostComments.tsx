@@ -1,11 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { Flag, MessageCircle, Reply, Send, Trash2 } from "lucide-react";
 import { accountLoginPath } from "@/lib/navigation";
 import { FEED_COMMENT_MAX_LENGTH } from "@/lib/feedComments";
 import { Button, TextAreaField } from "@/app/components/ui";
+import { ModalPortal } from "@/app/components/ModalPortal";
+import { ConfirmDialog } from "@/app/components/ConfirmDialog";
+import { CommunityReadFeedback } from "@/app/components/CommunityReadFeedback";
+import { ContentState } from "@/app/components/ui/ContentState";
+import { useDraftNavigationGuard } from "@/app/components/DraftNavigationProvider";
+import { communityError, communityFetch, communityRequestStatus } from "@/lib/communityRequest";
+import { commentReplyTransition, removeCommentFromList } from "@/lib/commentDraft";
 
 type CommentAuthor = {
   id: string;
@@ -36,13 +43,17 @@ export function PostComments({
   postId,
   viewer,
   onMessage,
+  loginReturnTo,
 }: {
   postId: string;
   viewer: Viewer;
   onMessage: (message: string) => void;
+  loginReturnTo?: string;
 }) {
   const [comments, setComments] = useState<CommentItem[]>([]);
-  const [total, setTotal] = useState(0);
+  const loginHref = accountLoginPath(loginReturnTo ?? `/p/${postId}#comments`);
+  const [total, setTotal] = useState<number | null>(null);
+  const [readStatus, setReadStatus] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [body, setBody] = useState("");
@@ -53,35 +64,53 @@ export function PostComments({
   const [reportReason, setReportReason] = useState("spam");
   const [reportDetails, setReportDetails] = useState("");
   const [reportBusy, setReportBusy] = useState(false);
+  const [targetChange, setTargetChange] = useState<{ item: CommentItem | null } | null>(null);
+  const [removeTarget, setRemoveTarget] = useState<CommentItem | null>(null);
+  const [writeError, setWriteError] = useState(""), [removeError, setRemoveError] = useState("");
+  const request = useRef<AbortController | null>(null), input = useRef<HTMLTextAreaElement>(null);
+  const posting = useRef(false);
+  const busy = sending || Boolean(deletingId) || reportBusy;
+  const replyMissing = Boolean(replyingTo && !loading && !comments.some(comment => comment.id === replyingTo.id));
+  useDraftNavigationGuard({ dirty: Boolean(body), busy });
+
+  function changeReply(next: CommentItem | null) {
+    const transition = commentReplyTransition(replyingTo?.id ?? null, next?.id ?? null, body, busy);
+    if (transition === "blocked" || transition === "unchanged") return;
+    if (transition === "confirm") { setTargetChange({ item: next }); return; }
+    applyReply(next);
+  }
+  function applyReply(next: CommentItem | null) {
+    setReplyingTo(next); setBody(""); setWriteError(""); setTargetChange(null);
+    window.requestAnimationFrame(() => input.current?.focus());
+  }
 
   const loadComments = useCallback(async () => {
+    const controller = new AbortController(); request.current?.abort(); request.current = controller;
     setLoading(true);
-    setLoadError(null);
+    setLoadError(null); setReadStatus(null); setTotal(null); setComments([]);
     try {
-      const response = await fetch(`/api/feed/${encodeURIComponent(postId)}/comments`);
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok || !Array.isArray(data.comments)) {
-        throw new Error(data.error || "Yorumlar yüklenemedi.");
-      }
+      const data = await communityFetch<{ comments: CommentItem[]; total: number }>(`/api/feed/${encodeURIComponent(postId)}/comments`, undefined, controller.signal);
+      if (!Array.isArray(data.comments) || !Number.isInteger(data.total) || data.total < 0) throw new Error("Yorum yanıtı doğrulanamadı. Yeniden deneyebilirsin.");
+      if (controller.signal.aborted) return;
       setComments(data.comments);
-      setTotal(data.total || 0);
+      setTotal(data.total); setReadStatus(200);
     } catch (error) {
-      setLoadError(error instanceof Error ? error.message : "Yorumlar yüklenemedi.");
+      if (!controller.signal.aborted) { setLoadError(communityError(error)); setReadStatus(communityRequestStatus(error)); }
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted) setLoading(false);
     }
   }, [postId]);
 
-  useEffect(() => { void loadComments(); }, [loadComments]);
+  useEffect(() => { void loadComments(); return () => request.current?.abort(); }, [loadComments]);
 
   async function submitComment(event: FormEvent) {
     event.preventDefault();
     if (!viewer) {
-      window.location.href = accountLoginPath(`/p/${postId}`);
+      window.location.href = loginHref;
       return;
     }
-    if (sending || body.trim().length < 2) return;
-    setSending(true);
+    if (posting.current || busy || loading || loadError || replyMissing || body.trim().length < 2) return;
+    posting.current = true; setSending(true); setWriteError("");
     try {
       const response = await fetch(`/api/feed/${encodeURIComponent(postId)}/comments`, {
         method: "POST",
@@ -99,38 +128,31 @@ export function PostComments({
       } else {
         setComments((current) => [...current, data.comment]);
       }
-      setTotal((current) => current + 1);
+      setTotal((current) => current === null ? null : current + 1);
       setBody("");
       setReplyingTo(null);
       onMessage(replyingTo ? "Yanıtın yayınlandı." : "Yorumun yayınlandı.");
     } catch (error) {
-      onMessage(error instanceof Error ? error.message : "Yorum gönderilemedi.");
+      setWriteError(communityError(error));
     } finally {
-      setSending(false);
+      posting.current = false; setSending(false);
     }
   }
 
   async function removeComment(commentId: string) {
     if (deletingId) return;
-    setDeletingId(commentId);
+    setDeletingId(commentId); setRemoveError("");
     try {
       const response = await fetch(`/api/feed/comments/${encodeURIComponent(commentId)}`, { method: "DELETE" });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || "Yorum kaldırılamadı.");
-      const rootComment = comments.find((comment) => comment.id === commentId);
-      const removedCount = rootComment ? 1 + rootComment.replies.length : 1;
-      setComments((current) => current
-        .filter((comment) => comment.id !== commentId)
-        .map((comment) => ({
-          ...comment,
-          replies: comment.replies.filter((reply) => reply.id !== commentId),
-        }))
-      );
-      setTotal((current) => Math.max(0, current - removedCount));
-      if (replyingTo?.id === commentId) setReplyingTo(null);
+      const { removedCount, comments: remaining } = removeCommentFromList(comments, commentId);
+      setComments(remaining);
+      setTotal((current) => current === null ? null : Math.max(0, current - removedCount));
+      setRemoveTarget(null);
       onMessage("Yorum kaldırıldı.");
     } catch (error) {
-      onMessage(error instanceof Error ? error.message : "Yorum kaldırılamadı.");
+      setRemoveError(communityError(error));
     } finally {
       setDeletingId(null);
     }
@@ -162,9 +184,9 @@ export function PostComments({
     }
   }
 
-  function CommentRow({ item, reply = false }: { item: CommentItem; reply?: boolean }) {
+  function renderComment(item: CommentItem, reply = false) {
     return (
-      <article className={reply ? "post-comment post-comment-reply" : "post-comment"}>
+      <article key={item.id} className={reply ? "post-comment post-comment-reply" : "post-comment"}>
         <Link href={`/u/${item.author.slug}`} className="nav-avatar post-comment-avatar" aria-label={`${item.author.ownerName} profilini aç`}>
           {item.author.ownerName.slice(0, 1).toUpperCase()}
         </Link>
@@ -175,18 +197,18 @@ export function PostComments({
           </header>
           <p>{item.body}</p>
           <div className="post-comment-actions">
-            {!reply && (
-              <button type="button" onClick={() => { setReplyingTo(item); setBody(""); }}>
+            {!reply && viewer && (
+              <button type="button" disabled={busy} onClick={() => changeReply(item)}>
                 <Reply size={14} /> Yanıtla
               </button>
             )}
             {canRemove(item) && (
-              <button type="button" disabled={Boolean(deletingId)} onClick={() => void removeComment(item.id)} className="post-comment-remove">
+              <button type="button" disabled={busy} onClick={() => { setRemoveError(""); setRemoveTarget(item); }} className="post-comment-remove">
                 <Trash2 size={14} /> {deletingId === item.id ? "Kaldırılıyor" : "Kaldır"}
               </button>
             )}
             {viewer && viewer.id !== item.authorId && (
-              <button type="button" onClick={() => setReporting(item)}>
+              <button type="button" disabled={busy} onClick={() => setReporting(item)}>
                 <Flag size={14} /> Şikâyet et
               </button>
             )}
@@ -198,10 +220,12 @@ export function PostComments({
 
   return (
     <section id="comments" className="post-comments scroll-mt-24" aria-labelledby="post-comments-title">
+      <ConfirmDialog open={targetChange !== null} title="Yanıt hedefini değiştir?" body="Yeni hedefe geçersen yazdığın yorum veya yanıt temizlenecek. İptal edersen mevcut hedef ve metin korunur." confirmLabel="Taslağı bırak ve geç" onCancel={() => setTargetChange(null)} onConfirm={() => targetChange && applyReply(targetChange.item)} />
+      <ConfirmDialog open={Boolean(removeTarget)} title="Yorum kaldırılsın mı?" body={`Bu yorum${removeTarget?.replies.length ? ` ve ${removeTarget.replies.length} yanıtı` : ""} görünümden kaldırılacak.${removeError ? ` ${removeError}` : ""}`} confirmLabel="Yorumu kaldır" tone="danger" busy={Boolean(deletingId)} onCancel={() => setRemoveTarget(null)} onConfirm={() => removeTarget && void removeComment(removeTarget.id)} />
       <div className="post-comments-heading">
         <div>
           <p className="section-kicker">Topluluk</p>
-          <h2 id="post-comments-title"><MessageCircle size={20} /> Yorumlar <span>{total}</span></h2>
+          <h2 id="post-comments-title"><MessageCircle size={20} /> Yorumlar <span>{total ?? "—"}</span></h2>
         </div>
       </div>
 
@@ -209,45 +233,42 @@ export function PostComments({
         {replyingTo && (
           <div className="post-comment-replying">
             <span><strong>{replyingTo.author.ownerName}</strong> kullanıcısına yanıt veriyorsun</span>
-            <button type="button" onClick={() => { setReplyingTo(null); setBody(""); }}>Vazgeç</button>
+            <button type="button" disabled={busy} onClick={() => changeReply(null)}>Vazgeç</button>
           </div>
         )}
         <TextAreaField
+          ref={input}
           label={replyingTo ? "Yanıtın" : "Yorumun"}
           labelMeta={`${body.length}/${FEED_COMMENT_MAX_LENGTH}`}
           value={body}
           maxLength={FEED_COMMENT_MAX_LENGTH}
           rows={3}
           placeholder={viewer ? "Bu parça hakkında ne düşünüyorsun?" : "Yorum yapmak için giriş yap"}
-          disabled={!viewer || sending}
+          disabled={!viewer || busy || loading || Boolean(loadError)}
           onChange={(event) => setBody(event.target.value)}
         />
+        {writeError && <p role="alert">{writeError}</p>}
+        {replyMissing && <p role="status">Yanıtladığın yorum artık görünmüyor. Metnin korunuyor; başka hedefe geçmeden önce taslağı gözden geçir.</p>}
         <div className="post-comment-submit">
-          {!viewer && <Link href={accountLoginPath(`/p/${postId}`)}>Tartışmaya katılmak için giriş yap</Link>}
-          <Button type="submit" variant="primary" loading={sending} disabled={!viewer || body.trim().length < 2} leadingIcon={<Send size={16} />}>
+          {!viewer && <Link href={loginHref}>Tartışmaya katılmak için giriş yap</Link>}
+          <Button type="submit" variant="primary" loading={sending} disabled={!viewer || busy || loading || Boolean(loadError) || replyMissing || body.trim().length < 2} leadingIcon={<Send size={16} />}>
             {replyingTo ? "Yanıtla" : "Yorum yap"}
           </Button>
         </div>
       </form>
 
-      {loading && <div className="post-comments-state" role="status">Yorumlar yükleniyor...</div>}
-      {!loading && loadError && (
-        <div className="post-comments-state post-comments-error">
-          <p>{loadError}</p>
-          <Button size="sm" onClick={() => void loadComments()}>Tekrar dene</Button>
-        </div>
-      )}
+      <CommunityReadFeedback loading={loading} error={loadError ?? ""} status={readStatus} loadingLabel="Yorumlar yükleniyor" errorTitle="Yorumlar yüklenemedi" loginHref={loginHref} onRetry={() => void loadComments()} />
       {!loading && !loadError && comments.length === 0 && (
-        <div className="post-comments-state">Henüz yorum yok. İlk fikri sen bırakabilirsin.</div>
+        <ContentState kind="empty" title="Henüz yorum yok"><p>İlk fikri sen bırakabilirsin.</p></ContentState>
       )}
       {!loading && !loadError && comments.length > 0 && (
         <div className="post-comment-list">
           {comments.map((comment) => (
             <div key={comment.id}>
-              <CommentRow item={comment} />
+              {renderComment(comment)}
               {comment.replies.length > 0 && (
                 <div className="post-comment-replies">
-                  {comment.replies.map((reply) => <CommentRow key={reply.id} item={reply} reply />)}
+                  {comment.replies.map((reply) => renderComment(reply, true))}
                 </div>
               )}
             </div>
@@ -255,7 +276,7 @@ export function PostComments({
         </div>
       )}
       {reporting && (
-        <div className="modal-backdrop" role="presentation" onMouseDown={() => { if (!reportBusy) setReporting(null); }}>
+        <ModalPortal onEscape={() => setReporting(null)} busy={reportBusy}><div className="modal-backdrop" role="presentation" onMouseDown={() => { if (!reportBusy) setReporting(null); }}>
           <section className="confirm-card" role="dialog" aria-modal="true" aria-labelledby="comment-report-title" onMouseDown={(event) => event.stopPropagation()}>
             <p className="section-kicker">Topluluk güvenliği</p>
             <h2 id="comment-report-title" className="mt-2 text-xl font-black text-white">Yorumu şikâyet et</h2>
@@ -273,7 +294,7 @@ export function PostComments({
               <Button type="button" variant="danger" loading={reportBusy} onClick={() => void submitReport()}>Şikâyeti gönder</Button>
             </div>
           </section>
-        </div>
+        </div></ModalPortal>
       )}
     </section>
   );

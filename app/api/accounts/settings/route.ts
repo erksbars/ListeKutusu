@@ -12,6 +12,7 @@ import { normalizeProfileShowcase } from "@/lib/profileShowcase";
 import { normalizeProfileBanner, normalizeProfileDensity } from "@/lib/profileAppearance";
 import { calculateAchievements } from "@/lib/achievements";
 import { completedProfileGames } from "@/lib/profileGames";
+import { parseUniversityUpdate } from "@/lib/profileUniversity";
 
 function accountPayload(list: {
   id: string;
@@ -22,6 +23,8 @@ function accountPayload(list: {
   spotifyExternalUrl: string | null;
   bio: string | null;
   profileStatus: string | null;
+  universityName: string | null;
+  universityPublic: boolean;
   pinnedFeedPostId: string | null;
   profileShowcase: string | null;
   favoriteGenres: string | null;
@@ -39,6 +42,8 @@ function accountPayload(list: {
     spotifyExternalUrl: list.spotifyExternalUrl,
     bio: list.bio,
     profileStatus: list.profileStatus,
+    universityName: list.universityName,
+    universityPublic: list.universityPublic,
     pinnedFeedPostId: list.pinnedFeedPostId,
     profileShowcase: list.profileShowcase,
     favoriteGenres: list.favoriteGenres,
@@ -141,6 +146,8 @@ export async function PATCH(req: NextRequest) {
   }
 
   if (action === "update-profile") {
+    const university = parseUniversityUpdate(body?.university);
+    if (!university.ok) return NextResponse.json({ error: university.error }, { status: 400, headers: { "Cache-Control": "no-store" } });
     const bio = typeof body?.bio === "string" ? body.bio.trim() : "";
     const profileStatus = typeof body?.profileStatus === "string" ? body.profileStatus.trim() : "";
     const requestedPinnedPostId = typeof body?.pinnedFeedPostId === "string" ? body.pinnedFeedPostId.trim() : "";
@@ -207,6 +214,7 @@ export async function PATCH(req: NextRequest) {
       where: { id: listId },
       data: {
         bio: bio || null,
+        ...university.data,
         profileStatus: profileStatus || null,
         pinnedFeedPostId: pinnedPost?.id || null,
         profileShowcase: JSON.stringify(profileShowcase),

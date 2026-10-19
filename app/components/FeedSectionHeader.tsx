@@ -20,9 +20,9 @@ const feedScopeCopy: Record<FeedScope, {
   description: string;
 }> = {
   all: {
-    eyebrow: "Kulaktan kulağa",
+    eyebrow: "Birlikte keşfet",
     title: "Yeni keşifler",
-    description: "Topluluğun az önce bıraktığı parçalar.",
+    description: "Müzik, sohbet, inceleme ve yaklaşan etkinlikler aynı akışta.",
   },
   trending: {
     eyebrow: "Yükselen sesler",
@@ -32,7 +32,7 @@ const feedScopeCopy: Record<FeedScope, {
   following: {
     eyebrow: "Takip frekansı",
     title: "Seçtiğin insanların keşifleri",
-    description: "Takip ettiğin müzik meraklılarından yeni paylaşımlar.",
+    description: "Takip ettiğin kişilerin müzikleri ve genel akışa açtığı topluluk içerikleri.",
   },
   personalized: {
     eyebrow: "Senin frekansın",

@@ -26,6 +26,8 @@ model UserList {
   playlistName         String?
   bio                  String?
   profileStatus        String?
+  universityName       String?
+  universityPublic     Boolean          @default(false)
   pinnedFeedPostId     String?
   profileShowcase      String?
   favoriteGenres       String?
@@ -70,9 +72,308 @@ model UserList {
   feedComments         FeedComment[]
   gameSessionsOwned    GameSession[] @relation("GameSessionOwner")
   gamePlayers          GamePlayer[]
+  mediaLibrary         MediaLibraryEntry[]
+  communitiesOwned     Community[]
+  communityMemberships CommunityMember[]
+  communityPosts       CommunityPost[]
+  communityPostLikes   CommunityPostLike[]
+  communityPostSaves   CommunityPostSave[]
+  communityComments    CommunityComment[]
+  communityReports     CommunityReport[]
+  communityEvents      CommunityEvent[]
+  eventResponses       CommunityEventRsvp[]
+  eventNotificationJobs CommunityEventNotificationJob[]
+  eventNotificationQueue CommunityEventNotificationRecipient[]
+  communityAuditActions CommunityModerationLog[]
+  communityReportsReviewed CommunityReport[] @relation("CommunityReportReviewer")
+  ownershipOffersSent CommunityOwnershipOffer[] @relation("OwnershipOfferFrom")
+  ownershipOffersReceived CommunityOwnershipOffer[] @relation("OwnershipOfferTo")
+  platformCommunityCases PlatformCommunityCase[] @relation("PlatformCaseApplicant")
+  platformCaseReviews PlatformCommunityCase[] @relation("PlatformCaseReviewer")
+  platformCaseActions PlatformCommunityCaseEvent[]
 
   @@index([status, updatedAt])
   @@index([spotifyPlaylistId, status, lastExportedAt])
+}
+
+model Community {
+  id          String @id @default(cuid())
+  slug        String @unique
+  name        String
+  description String
+  category    String
+  rules       String
+  universityName String?
+  universityKey String?
+  city        String?
+  cityKey     String?
+  interest    String?
+  ownerId     String
+  status      String @default("active")
+  archivedAt  DateTime?
+  lifecycleRevision Int @default(0)
+  createdAt   DateTime @default(now())
+  owner       UserList @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  members     CommunityMember[]
+  posts       CommunityPost[]
+  reports     CommunityReport[]
+  events      CommunityEvent[]
+  moderationLogs CommunityModerationLog[]
+  ownershipOffer CommunityOwnershipOffer?
+  platformCases PlatformCommunityCase[]
+  @@index([createdAt, id])
+  @@index([interest, createdAt, id])
+}
+
+model CommunityOwnershipOffer {
+  communityId String @id
+  id          String @unique @default(cuid())
+  fromUserId  String
+  toUserId    String
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  fromUser    UserList @relation("OwnershipOfferFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser      UserList @relation("OwnershipOfferTo", fields: [toUserId], references: [id], onDelete: Cascade)
+  @@index([toUserId, expiresAt])
+}
+
+model CommunityEvent {
+  id          String @id @default(cuid())
+  communityId String
+  organizerId String
+  title       String
+  description String
+  startsAt    DateTime
+  timeZone    String @default("Europe/Istanbul")
+  city        String
+  cityKey     String @default("")
+  venue       String
+  capacity    Int?
+  status      String @default("scheduled")
+  distribution String @default("community")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  revision    Int @default(0)
+  contentVersion Int @default(0)
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  organizer   UserList @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  responses   CommunityEventRsvp[]
+  notifications Notification[]
+  notificationJobs CommunityEventNotificationJob[]
+  @@index([communityId, status, startsAt, id])
+  @@index([distribution, status, createdAt, id])
+  @@index([distribution, status, startsAt, id])
+}
+
+model CommunityEventRsvp {
+  eventId   String
+  userId    String
+  status    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  event     CommunityEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user      UserList @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@id([eventId, userId])
+  @@index([eventId, status, createdAt])
+  @@index([userId, status])
+}
+
+model CommunityEventNotificationJob {
+  id          String @id
+  eventId     String
+  actorId     String
+  version     Int
+  type        String
+  createdAt   DateTime @default(now())
+  availableAt DateTime @default(now())
+  completedAt DateTime?
+  failedAt    DateTime?
+  failures    Int @default(0)
+  revision    Int @default(0)
+  errorCode   String?
+  event       CommunityEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  actor       UserList @relation(fields: [actorId], references: [id], onDelete: Cascade)
+  recipients  CommunityEventNotificationRecipient[]
+  @@index([completedAt, failedAt, availableAt, createdAt, id])
+}
+
+model CommunityEventNotificationRecipient {
+  jobId  String
+  userId String
+  job    CommunityEventNotificationJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  user   UserList @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@id([jobId, userId])
+  @@index([userId])
+}
+
+model CommunityMember {
+  communityId String
+  userId      String
+  role        String @default("member")
+  status      String @default("active")
+  joinedAt    DateTime @default(now())
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  user        UserList @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@id([communityId, userId])
+  @@index([userId, status])
+}
+
+model CommunityPost {
+  id          String @id @default(cuid())
+  communityId String
+  authorId    String
+  title       String
+  body        String
+  type        String @default("discussion")
+  reviewKind  String?
+  subjectTitle String?
+  rating      Int?
+  spoiler     Boolean @default(false)
+  sourceUrl   String?
+  referenceProvider String?
+  status      String @default("published")
+  distribution String @default("community")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  revision    Int @default(0)
+  editedAt    DateTime?
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  author      UserList @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments    CommunityComment[]
+  likes       CommunityPostLike[]
+  saves       CommunityPostSave[]
+  @@index([communityId, status, createdAt, id])
+  @@index([distribution, status, createdAt, id])
+}
+
+model CommunityPostLike {
+  userId String
+  postId String
+  createdAt DateTime @default(now())
+  user UserList @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  @@id([userId, postId])
+  @@index([postId])
+}
+
+model CommunityPostSave {
+  userId String
+  postId String
+  createdAt DateTime @default(now())
+  user UserList @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  @@id([userId, postId])
+  @@index([postId])
+  @@index([userId, createdAt, postId])
+}
+
+model CommunityComment {
+  id        String @id @default(cuid())
+  postId    String
+  authorId  String
+  body      String
+  status    String @default("published")
+  createdAt DateTime @default(now())
+  post      CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author    UserList @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  @@index([postId, status, createdAt, id])
+}
+
+model CommunityReport {
+  id          String @id @default(cuid())
+  communityId String
+  reporterId  String
+  targetType  String
+  targetId    String
+  reason      String
+  status      String @default("pending")
+  createdAt   DateTime @default(now())
+  reviewedAt  DateTime?
+  reviewedById String?
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  reporter    UserList @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  reviewedBy  UserList? @relation("CommunityReportReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  platformAppeals PlatformCommunityCase[] @relation("PlatformCaseSourceReport")
+  @@unique([reporterId, targetType, targetId])
+  @@index([communityId, status, createdAt])
+}
+
+model CommunityModerationLog {
+  id          String @id @default(cuid())
+  communityId String
+  actorId     String?
+  action      String
+  targetType  String
+  targetId    String
+  note        String?
+  createdAt   DateTime @default(now())
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  actor       UserList? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  platformAppeals PlatformCommunityCase[] @relation("PlatformCaseSourceDecision")
+  @@index([communityId, createdAt, id])
+}
+
+model PlatformCommunityCase {
+  id          String @id @default(cuid())
+  communityId String
+  applicantId String
+  kind        String
+  subjectKey  String
+  sourceReportId String?
+  sourceDecisionId String?
+  reason      String
+  status      String @default("pending")
+  response    String?
+  version     Int @default(0)
+  createdAt   DateTime @default(now())
+  reviewedAt  DateTime?
+  reviewerId  String?
+  reviewerKind String?
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  applicant   UserList @relation("PlatformCaseApplicant", fields: [applicantId], references: [id], onDelete: Cascade)
+  reviewer    UserList? @relation("PlatformCaseReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  sourceReport CommunityReport? @relation("PlatformCaseSourceReport", fields: [sourceReportId], references: [id], onDelete: SetNull)
+  sourceDecision CommunityModerationLog? @relation("PlatformCaseSourceDecision", fields: [sourceDecisionId], references: [id], onDelete: SetNull)
+  events      PlatformCommunityCaseEvent[]
+  @@unique([applicantId, subjectKey])
+  @@index([applicantId, createdAt, id])
+  @@index([status, createdAt, id])
+}
+
+model PlatformCommunityCaseEvent {
+  id          String @id @default(cuid())
+  caseId      String
+  actorId     String?
+  actorKind   String
+  action      String
+  createdAt   DateTime @default(now())
+  application PlatformCommunityCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  actor       UserList? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  @@index([caseId, createdAt, id])
+}
+
+// Private non-music library; showcasedAt is the explicit public-showcase opt-in.
+model MediaLibraryEntry {
+  id          String   @id @default(cuid())
+  userId      String
+  catalogId   String
+  kind        String
+  provider    String
+  externalId  String
+  title       String
+  creators    String   @default("[]")
+  year        Int?
+  sourceUrl   String
+  status      String
+  showcasedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        UserList @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, catalogId])
+  @@index([userId, kind, createdAt, id])
+  @@index([userId, showcasedAt])
 }
 
 model GameSession {
@@ -353,6 +654,7 @@ model Notification {
   actorId       String?
   postId        String?
   forumThreadId String?
+  communityEventId String?
   type          String
   readAt        DateTime?
   createdAt     DateTime     @default(now())
@@ -360,6 +662,7 @@ model Notification {
   actor         UserList?    @relation("NotificationActor", fields: [actorId], references: [id], onDelete: SetNull)
   post          FeedPost?    @relation(fields: [postId], references: [id], onDelete: Cascade)
   forumThread   ForumThread? @relation(fields: [forumThreadId], references: [id], onDelete: Cascade)
+  communityEvent CommunityEvent? @relation(fields: [communityEventId], references: [id], onDelete: Cascade)
 
   @@index([userId, readAt, createdAt])
   @@index([actorId, createdAt])

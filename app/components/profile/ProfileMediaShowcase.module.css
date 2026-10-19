@@ -1,0 +1,9 @@
+.showcase { margin-bottom: var(--ui-space-6); padding: var(--ui-space-5); background: var(--ui-surface); border: 1px solid var(--ui-border); border-radius: var(--ui-radius-md); }
+.heading { display: flex; justify-content: space-between; gap: var(--ui-space-4); align-items: center; margin-bottom: var(--ui-space-3); }
+.showcase a { color: var(--ui-accent); text-decoration: underline; }
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--ui-space-3); margin-block: var(--ui-space-4); }
+.card { padding: var(--ui-space-4); display: flex; flex-direction: column; gap: var(--ui-space-3); min-width: 0; overflow-wrap: anywhere; }
+.card h3 { color: var(--ui-text-strong); font-weight: 700; }
+.card a { margin-top: auto; }
+.kind { display: flex; gap: var(--ui-space-2); align-items: center; color: var(--ui-accent); font-size: var(--ui-text-xs); }
+.meta { color: var(--ui-text-muted); font-size: var(--ui-text-sm); line-height: var(--ui-leading-normal); }

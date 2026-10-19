@@ -1,0 +1,2 @@
+ALTER TABLE "CommunityEvent" ADD COLUMN "contentVersion" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "Notification" ADD COLUMN "communityEventId" TEXT REFERENCES "CommunityEvent"("id") ON DELETE CASCADE ON UPDATE CASCADE;

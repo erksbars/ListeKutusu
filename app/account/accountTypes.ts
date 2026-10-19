@@ -13,6 +13,8 @@ export type AccountList = {
   playlistName: string | null;
   bio: string | null;
   profileStatus: string | null;
+  universityName?: string | null;
+  universityPublic?: boolean;
   pinnedFeedPostId: string | null;
   profileShowcase: string | null;
   favoriteGenres: string | null;

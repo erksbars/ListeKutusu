@@ -5,6 +5,7 @@ import { KeyboardEvent as ReactKeyboardEvent, useCallback, useEffect, useRef, us
 import { Activity, Award, Gamepad2, LogIn, MoreHorizontal, Music2, Settings2, Share2, ShieldBan, UserPlus, UserRound } from "lucide-react";
 import { Toast } from "@/app/components/Toast";
 import { ConfirmDialog } from "@/app/components/ConfirmDialog";
+import { ModalPortal } from "@/app/components/ModalPortal";
 import { AccountMenu } from "@/app/components/AccountMenu";
 import { MobileDock } from "@/app/components/MobileDock";
 import { PageTopbar } from "@/app/components/PageTopbar";
@@ -48,8 +49,6 @@ export default function ProfileClient({ slug, initialProfile, initialViewer }: P
   const [postsLoading, setPostsLoading] = useState(false);
   const [postsError, setPostsError] = useState<string | null>(null);
   const viewer = initialViewer;
-  const connectionsDialogRef = useRef<HTMLElement>(null);
-  const connectionsCloseRef = useRef<HTMLButtonElement>(null);
   const profileMenuRef = useRef<HTMLDivElement>(null);
 
   const loadMorePosts = useCallback(async () => {
@@ -135,42 +134,6 @@ export default function ProfileClient({ slug, initialProfile, initialViewer }: P
       setProfileTab(requestedTab);
     }
   }, []);
-
-  useEffect(() => {
-    if (!connectionType) return;
-    const previouslyFocused = document.activeElement as HTMLElement | null;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    connectionsCloseRef.current?.focus();
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setConnectionType(null);
-        return;
-      }
-      if (event.key !== "Tab") return;
-      const focusable = connectionsDialogRef.current?.querySelectorAll<HTMLElement>(
-        'button:not([disabled]), a[href], input:not([disabled])'
-      );
-      if (!focusable?.length) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    }
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = previousOverflow;
-      previouslyFocused?.focus();
-    };
-  }, [connectionType]);
 
   useEffect(() => {
     if (!profileMenuOpen) return;
@@ -359,9 +322,8 @@ export default function ProfileClient({ slug, initialProfile, initialViewer }: P
         onConfirm={toggleBlock}
       />
       {connectionType && (
-        <div className="modal-backdrop" role="presentation" onClick={() => setConnectionType(null)}>
+        <ModalPortal onEscape={() => setConnectionType(null)}><div className="modal-backdrop" role="presentation" onClick={() => setConnectionType(null)}>
           <section
-            ref={connectionsDialogRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="connections-dialog-title"
@@ -378,7 +340,6 @@ export default function ProfileClient({ slug, initialProfile, initialViewer }: P
                 </h2>
               </div>
               <button
-                ref={connectionsCloseRef}
                 type="button"
                 aria-label="Kapat"
                 onClick={() => setConnectionType(null)}
@@ -439,7 +400,7 @@ export default function ProfileClient({ slug, initialProfile, initialViewer }: P
               )}
             </div>
           </section>
-        </div>
+        </div></ModalPortal>
       )}
       <section className="ui-page-frame relative mx-auto">
         <PageTopbar
