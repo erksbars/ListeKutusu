@@ -27,3 +27,6 @@ next-env.d.ts
 playwright-report/
 test-results/
 tmp/
+.taste-skill/
+.playwright-cli/
+output/playwright/

@@ -4,6 +4,24 @@ Bu belge ListeKutusu'nun açık ve koyu temada aynı ürün gibi görünmesini s
 
 ## 1. Ürün ilkeleri
 
+### 23 Ekim görsel yön güncellemesi
+
+Aktif koyu masaüstü yönü Taste `true-black-flat` (seed 1848207868).
+Zemin/yüzeyler nötr #101010 / #191919 / #222222; metin beyaz ve iki gri.
+Mevcut cyan ürün rengi işaret/veri/etkileşim durumunda korunur; varsayılan
+gezinti veya her kartın dekorasyonu değildir. Navigasyon aktifliği metin
+parlaklığıyla, liste sekmeleri nötr alt çizgiyle gösterilir. Birincil masaüstü
+kontrol ters beyazdır; disabled/focus/busy davranışları korunur.
+Dinlenim kartında gölge/gradient kullanılmaz. Sistem fontu gerçek `Segoe UI`;
+indirilmeyen Variable font adları kullanılmaz. Ürün işareti `Layers3`, farklı
+medya türlerinin tek kişisel kitaplıkta buluşmasını temsil eder.
+
+Bu yönün uygulama katmanı `primitives.css` içindeki Taste masaüstü bloğudur;
+eski ekranlar ayrı dilimlerde taşınır. Profil/oyun/diğer özelliklerin eski
+gradient kurallarının tamamı bu pakette kaldırılmış değildir. Açık tema ve
+mobil ekran doğrulaması ertelenmiştir. Bu bölüm, aşağıdaki eski renkli aktif
+menü ve dinlenim kartı gölgesi önerilerinin koyu masaüstü için yerini alır.
+
 1. Arayüz içerik merkezlidir. Dekorasyon; akış, forum, profil ve liste işlerini gölgelememelidir.
 2. Ana deneyim tam ekran sosyal ürün düzenidir: sabit üst alan, solda sol hizalı navigasyon, ortada ana içerik, gerektiğinde sağda bağlamsal bilgi.
 3. Açık ve koyu tema aynı hiyerarşiyi korur. Tema değiştiğinde bileşen türü veya önem sırası değişmez.

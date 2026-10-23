@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { AudioWaveform, LogIn, MessageSquarePlus } from "lucide-react";
+import { LogIn, MessageSquarePlus } from "lucide-react";
 import { AccountMenu } from "./AccountMenu";
 import { ProfileSearch } from "./ProfileSearch";
 
@@ -30,9 +30,6 @@ export function HomeTopbar({ account, onLogout, loginHref = "/account?mode=login
   return (
     <header className="app-topbar home-topbar sticky top-0 z-30 flex min-h-16 items-center justify-between gap-3 py-3">
       <div className="flex min-w-0 items-center gap-3">
-        <div className="brand-mark" aria-hidden="true">
-          <AudioWaveform size={21} strokeWidth={2.35} />
-        </div>
         <div className="min-w-0">
           <h1 className="truncate text-lg font-bold text-white sm:text-xl">Ana akış</h1>
           <p className="truncate text-xs font-medium text-cyan-50/72">İlgi alanların, keşiflerin ve toplulukların.</p>

@@ -21,9 +21,9 @@ export function LibraryHub({ section }: { section: LibrarySection }) {
   return <main id="main-content" tabIndex={-1} className="stage-shell min-h-screen bg-app">
     <section className="ui-page-frame relative mx-auto media-library">
       <PageTopbar title="Kitaplığım" subtitle="Müzik, dizi, film ve kitap listelerini buradan yönet." icon={<Library size={20} />} actions={<ThemeToggle />} />
-      <div className="library-intro"><div><p className="library-kicker">Kişisel koleksiyon</p><h2 className="ui-section-title">Dört ayrı liste, tek kitaplık.</h2><p>Her tür kendi bölümünde. Mevcut müzik listen ve Spotify bağlantın korunur.</p></div></div>
+      <div className="library-intro"><p>Dinlediklerin, izlediklerin, okudukların.<br /><span>Bir sonraki keşfine burada yer aç.</span></p></div>
       <div className="library-types" role="group" aria-label="Kitaplık bölümleri">
-        {sections.map(({ value, label, icon: Icon }) => <Button key={value} type="button" variant={section === value ? "primary" : "secondary"} aria-pressed={section === value} leadingIcon={<Icon size={17} aria-hidden="true" />} onClick={() => router.push(`/library?type=${value}`, { scroll: false })}>{label}</Button>)}
+        {sections.map(({ value, label, icon: Icon }) => <Button key={value} type="button" className="library-type" variant="ghost" aria-pressed={section === value} leadingIcon={<Icon size={17} aria-hidden="true" />} onClick={() => router.push(`/library?type=${value}`, { scroll: false })}>{label}</Button>)}
       </div>
       {section === "music" ? <MusicLibraryPanel /> : <LibraryClient key={section} kind={section} />}
     </section>

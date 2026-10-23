@@ -1,6 +1,30 @@
 # ListeKutusu Güncel Durum
 
-Son dar doğrulama: 19 Ekim 2026
+Son dar doğrulama: 23 Ekim 2026
+
+## 23 Ekim 2026 — Taste ile ilk görsel yenileme
+
+- `true-black-flat` yönüyle nötr koyu yüzeyler, gerçek sistem fontu,
+  katmanlı ürün işareti ve sakin sol menü uygulandı. Ana akıştaki gradient,
+  parlayan kenarlar ve tekrarlanan renkli avatarlar sadeleştirildi.
+- Akış filtreleri daha kompakt; keşif beşlisi yardımcı sağ alanda. İlk
+  paylaşım keşif modülünün yüklenmesini beklemeden ilk ekranda görünür.
+  Paylaşım metni 14 px, eser adı 16 px. Filtre/dönüş/işlem mantığı korunur.
+- Kitaplıkta dört bölüm aynı alt çizgili seçim dilinde. Müzik giriş/hata
+  paneli kompakt ve sola hizalı. Sayı, veri, katalog veya yetki uydurulmadı.
+- Taste tarayıcı denetimi: 1440 ve 1280 koyu masaüstünde ana akış 0 FAIL,
+  kitaplık 0 FAIL/0 WARN. Akışta kalan below-fold uyarısı uzun, sayfalı sosyal
+  akışın tüm kayıtlarının ilk ekranda olmamasıdır; dashboard değildir.
+- Typecheck, değişen TSX ESLint, UI/a11y statik ve tema kontrastı geçti.
+  Gerçek tarayıcıda dört kitaplık seçimi, URL/aktif seçim, giriş dönüşü ve
+  inceleme filtresi kontrol edildi. Oturumlu yazma/full build/tam regresyon
+  yapılmadı. DB/seed/baseline değişmedi; mevcut 11 PNG korunur.
+- Genel tema tokenları ortak tüketicilere yansır; ekran bazlı düzenleme
+  masaüstü koyuya sınırlı. Mobil/açık tema/forum geliştirmesi askıda.
+- Devam: topluluk/etkinlik keşfi ve detayları, sonra profil/hesap; gerçek
+  dolu ve hata durumlarıyla ekran bazında aynı görsel dili genişletmek.
+  Önceki işlevsel U-03/U-04 açıkları kapanmış sayılmaz.
+- Karar ve görsel inceleme: `docs/TASTE_TASARIM_YENILEME.md`.
 
 ## 19 Ekim 2026 — GitHub portföy aktarım hazırlığı
 

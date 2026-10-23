@@ -90,10 +90,6 @@ export function FeedSectionHeader({
   return (
     <div className="feed-section-heading">
       <div className="feed-section-copy">
-        <p className="feed-section-eyebrow">
-          <span aria-hidden="true" />
-          {copy.eyebrow}
-        </p>
         <h2>{copy.title}</h2>
         <p className="feed-section-description">{copy.description}</p>
       </div>

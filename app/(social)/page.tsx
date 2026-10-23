@@ -279,7 +279,7 @@ export default function HomePage() {
                 />
 
                 {account?.onboarding && <GettingStarted initial={account.onboarding} />}
-                {mixedScope ? <div className="ui-panel mt-3 p-4"><SelectField label="Akış içerik türü" value={feedKind} onChange={event => feedLocation.update({ ...feedLocation.value, kind: event.target.value as typeof feedKind, topic: null })} hint="Müzik ve genel akışa açılan topluluk içerikleri, en yeni önce. Etkinlik katılımı aktif topluluk üyeliği gerektirir."><option value="all">Tüm içerikler</option><option value="music">Müzik</option><option value="discussion">Sohbetler</option><option value="review">İncelemeler</option><option value="event">Etkinlikler</option></SelectField></div> : <p className="mt-3 text-sm text-muted">Bu görünüm yalnız müzik paylaşımlarını kapsar. Topluluk içerikleri Yeni ve Takip akışındadır.</p>}
+                {mixedScope ? <div className="feed-kind-toolbar mt-3"><SelectField label="Akış içerik türü" value={feedKind} onChange={event => feedLocation.update({ ...feedLocation.value, kind: event.target.value as typeof feedKind, topic: null })} hint="Etkinliklere katılmak için ilgili topluluğa üye olmalısın."><option value="all">Tüm içerikler</option><option value="music">Müzik</option><option value="discussion">Sohbetler</option><option value="review">İncelemeler</option><option value="event">Etkinlikler</option></SelectField></div> : <p className="mt-3 text-sm text-muted">Bu görünüm yalnız müzik paylaşımlarını kapsar. Topluluk içerikleri Yeni ve Takip akışındadır.</p>}
 
                 <FeedComposer
                   account={account}
@@ -297,7 +297,6 @@ export default function HomePage() {
                   onTagsChange={feedComposer.setTags}
                   onSubmit={feedComposer.createPost}
                 />
-                <DiscoverySession authenticated={Boolean(account)} onMessage={setMessage} variant="feed" />
                 <div
                   id="feed-posts"
                   role="tabpanel"
@@ -382,6 +381,7 @@ export default function HomePage() {
                 </div>
               </div>
               <div className="home-context-rail grid min-w-0 gap-4">
+                <DiscoverySession authenticated={Boolean(account)} onMessage={setMessage} />
                 <HomeCommunitySummary authenticated={Boolean(account)} rank={currentRank?.rank} score={currentRank?.score} onMessage={setMessage} />
                 <LeaderboardSidebar
                 leaderboard={leaderboard}

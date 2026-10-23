@@ -28,7 +28,7 @@ export function PrimaryNavigation() {
             aria-current={active ? "page" : undefined}
             className={active ? "primary-navigation-item is-active" : "primary-navigation-item"}
           >
-            <Icon size={15} strokeWidth={2.2} aria-hidden="true" />
+            <Icon size={18} strokeWidth={1.6} aria-hidden="true" />
             <span>{label}</span>
           </Link>
         );
