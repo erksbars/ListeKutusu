@@ -5665,7 +5665,7 @@ textarea {
   }
 }
 
-/* Taste / true-black-flat: desktop reading surfaces, not a marketing hero.
+/* Taste structure with user-approved cyan/green brand accents, not a marketing hero.
    At 1440px: 224 nav + 2*24 gutters + 20 gap + 300 context + 848 feed = 1440.
    The feed is an independent scrolling stream, not a matched-height dashboard row. */
 @media (min-width: 1024px) {
@@ -5687,10 +5687,12 @@ textarea {
     background: transparent;
   }
   [data-theme="dark"] .desktop-shell-sidebar .primary-navigation-item.is-active {
-    color: var(--ui-text-strong);
+    background: var(--ui-primary-soft);
+    border-color: color-mix(in srgb, var(--ui-primary) 28%, var(--ui-border));
+    color: var(--ui-primary-hover);
     font-weight: 600;
   }
-  [data-theme="dark"] .desktop-shell-sidebar .primary-navigation-item:hover {
+  [data-theme="dark"] .desktop-shell-sidebar .primary-navigation-item:hover:not(.is-active) {
     background: var(--ui-surface);
   }
   [data-theme="dark"] .app-topbar {
@@ -5748,8 +5750,8 @@ textarea {
     grid-column: 1 / -1;
   }
   [data-theme="dark"] .feed-composer-trigger .nav-avatar {
-    background: var(--ui-surface-muted);
-    color: var(--ui-text-strong);
+    background: var(--ui-primary-soft);
+    color: var(--ui-primary-hover);
     box-shadow: none;
   }
   [data-theme="dark"] .feed-tabs {
@@ -5771,14 +5773,14 @@ textarea {
     font-weight: 400;
   }
   [data-theme="dark"] .feed-tabs .feed-tab-active {
-    border-bottom-color: var(--ui-text-strong);
-    color: var(--ui-text-strong) !important;
+    border-bottom-color: var(--ui-primary);
+    color: var(--ui-primary-hover) !important;
     font-weight: 600;
   }
   [data-theme="dark"] .feed-topic-chip-active {
-    background: var(--ui-surface-muted);
-    border-color: var(--ui-border);
-    color: var(--ui-text-strong);
+    background: var(--ui-accent-soft);
+    border-color: color-mix(in srgb, var(--ui-accent) 28%, var(--ui-border));
+    color: var(--ui-accent-hover);
   }
 
   [data-theme="dark"] .feed-post-card {
@@ -5788,6 +5790,7 @@ textarea {
     box-shadow: none;
   }
   [data-theme="dark"] .feed-post-card::before { content: none; }
+  [data-theme="dark"] .feed-community-pulse { background: var(--ui-surface); }
   [data-theme="dark"] .feed-post-card:hover {
     background: var(--ui-surface);
     border-color: var(--ui-border);
@@ -5811,22 +5814,22 @@ textarea {
     font-weight: 400;
   }
   [data-theme="dark"] .feed-post-avatar {
-    background: var(--ui-surface-muted);
-    color: var(--ui-text-strong);
-    border-color: var(--ui-border);
+    background: var(--ui-primary-soft);
+    color: var(--ui-primary-hover);
+    border-color: color-mix(in srgb, var(--ui-primary) 24%, var(--ui-border));
     box-shadow: none;
   }
   [data-theme="dark"] .feed-track-block {
     margin-inline: 0;
     border: 0;
     border-radius: var(--ui-radius-sm);
-    background: var(--ui-surface-raised);
+    background: color-mix(in srgb, var(--feed-tone) 6%, var(--ui-surface-raised));
     padding: var(--ui-space-3);
   }
   [data-theme="dark"] :is(.feed-track-icon, .feed-composer-trigger-icon, .discovery-session-icon) {
     border: 0;
     background: transparent;
-    color: var(--ui-text-muted);
+    color: var(--ui-primary);
     box-shadow: none;
   }
   [data-theme="dark"] :is(.home-context-rail .ui-panel, .home-context-rail .home-section-panel, .discovery-session) {
@@ -5835,6 +5838,8 @@ textarea {
     box-shadow: none;
   }
   [data-theme="dark"] .discovery-session::before { content: none; }
+  [data-theme="dark"] .home-context-rail .discovery-session-header h2,
+  [data-theme="dark"] .home-context-rail .discovery-session-icon { color: var(--ui-accent); }
   [data-theme="dark"] .discovery-session-header p {
     text-transform: none;
     font-weight: 400;
@@ -5901,8 +5906,8 @@ textarea {
     font-weight: 400;
   }
   [data-theme="dark"] .library-types .library-type[aria-pressed="true"] {
-    border-bottom-color: var(--ui-text-strong);
-    color: var(--ui-text-strong);
+    border-bottom-color: var(--ui-primary);
+    color: var(--ui-primary-hover);
     font-weight: 600;
   }
   [data-theme="dark"] .media-library .control-access-gate {

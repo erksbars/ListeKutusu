@@ -1,5 +1,10 @@
 # Taste tasarım yenilemesi — 23 Ekim 2026
 
+> Bu belge ilk nötr denemenin tarihsel kaydıdır. Kullanıcının renk geri
+> bildirimi sonrasında geçerli yön, mavi koyu zemin ve cyan/yeşil marka
+> vurgularıdır. Güncel karar ve yedekler: `TASARIM_SURUM_YEDEKLERI.md` ve
+> `DESIGN_SYSTEM.md`. Aşağıdaki nötr palet önerileri güncel talimat değildir.
+
 ## İlk paketin sınırı
 
 Ortak kabuk, ana akış ve kitaplık. Bu tüm uygulamanın yeniden tasarımının

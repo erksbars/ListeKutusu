@@ -6,6 +6,10 @@
 - Develop communities in phases; independent forum development is frozen, but existing forum content and routes must be preserved.
 - Preserve correct Turkish characters in all user-facing copy.
 - Use the shared design system and existing components before adding new styles.
+- Preserve the cyan/green brand identity and blue-tinted dark surfaces. UI skills
+  advise structure and accessibility; their aesthetic defaults do not override
+  user preferences. Before broad restyles, preserve the current and previous
+  source versions and review screenshots; avoid blanket palette replacement.
 - Do not work on mobile-specific layouts unless the user explicitly asks for it.
 - Treat the dark desktop experience as the active product scope. Light theme and
   mobile validation are deferred milestones.

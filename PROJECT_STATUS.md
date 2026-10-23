@@ -2,6 +2,26 @@
 
 Son dar doğrulama: 23 Ekim 2026
 
+## 23 Ekim 2026 — sürüm yedekleri ve marka renginin kontrollü dönüşü
+
+- Kullanıcı nötr tasarımın fazla renksiz kaldığını belirtti. Yeni yerleşim,
+  tipografi ve kitaplık yapısı korunarak mavi tonlu koyu yüzeyler, cyan
+  birincil işlemler/seçimler ve sınırlı yeşil vurgular geri getirildi.
+  Yeni özellik/API/yerleşim veya mobil çalışma eklenmedi.
+- Eski renkli kaynak `design/colorful-before-taste-2026-10-23` (acbfb53),
+  nötr kaynak `design/neutral-before-color-restore-2026-10-23` (e8ca339)
+  etiketleriyle korundu. Yerel Git bundle tam geçmiş olarak doğrulandı;
+  commit dışındaki 11 PNG'nin kopyası dosya hash'leriyle doğrulandı.
+  Bu kaynak/görsel yedeğidir; DB/.env ve oturum yedeği değildir.
+- Yedek dizini: `../work/design-backups/2026-10-23-before-color-restore/`.
+  Ayrıntı ve sınırlar: `docs/TASARIM_SURUM_YEDEKLERI.md`.
+- AGENTS ve tasarım sistemi: skill tercihleri kullanıcı marka tercihinin
+  önüne geçmez; geniş değişim öncesi sürüm koruma ve görsel karşılaştırma.
+- Kontrast, UI/a11y statik denetimi ve diff kontrolü geçti. 1440 koyu
+  masaüstü görsel denetiminde akış/kitaplık 0 FAIL; akışta marka tint'leri
+  ve uzun akış için 2 WARN, kitaplıkta 0 WARN. Görseller açılıp incelendi.
+  Bu CSS paketi için full build, yeni oturumlu yazma ve mobil matris yok.
+
 ## 23 Ekim 2026 — Taste ile ilk görsel yenileme
 
 - `true-black-flat` yönüyle nötr koyu yüzeyler, gerçek sistem fontu,

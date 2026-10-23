@@ -2,13 +2,13 @@
 [data-theme="dark"] {
   color-scheme: dark;
 
-  --ui-bg: #101010;
-  --ui-bg-subtle: #141414;
-  --ui-surface: #191919;
-  --ui-surface-raised: #222222;
-  --ui-surface-muted: #292929;
-  --ui-surface-hover: #303030;
-  --ui-surface-translucent: #191919;
+  --ui-bg: #0b1019;
+  --ui-bg-subtle: #101722;
+  --ui-surface: #141d2a;
+  --ui-surface-raised: #1b2736;
+  --ui-surface-muted: #223144;
+  --ui-surface-hover: #26394b;
+  --ui-surface-translucent: #141d2a;
   --ui-surface-tint-xs: rgba(255, 255, 255, 0.035);
   --ui-surface-tint-sm: rgba(255, 255, 255, 0.05);
   --ui-surface-tint-md: rgba(255, 255, 255, 0.065);
@@ -16,18 +16,18 @@
   --ui-surface-tint-xl: rgba(255, 255, 255, 0.1);
   --ui-surface-tint-strong: rgba(255, 255, 255, 0.14);
   --ui-overlay: rgba(2, 6, 12, 0.72);
-  --ui-topbar: #101010;
-  --ui-page-bg: #101010;
+  --ui-topbar: #0b1019;
+  --ui-page-bg: #0b1019;
   --ui-grid-line: rgba(132, 204, 255, 0.028);
 
   --ui-text: #eeeeee;
   --ui-text-strong: #ffffff;
-  --ui-text-muted: #b4b4b4;
-  --ui-text-subtle: #a0a0a0;
+  --ui-text-muted: #b4c0cf;
+  --ui-text-subtle: #a0afc0;
   --ui-text-inverse: #071019;
-  --ui-action-bg: #eeeeee;
-  --ui-action-hover: #ffffff;
-  --ui-action-text: #101010;
+  --ui-action-bg: #48c7e8;
+  --ui-action-hover: #76daf2;
+  --ui-action-text: #071019;
 
   --ui-primary: #48c7e8;
   --ui-primary-hover: #76daf2;
@@ -47,9 +47,9 @@
   --ui-danger-soft: rgba(241, 115, 127, 0.12);
   --brand-spotify: #1db954;
 
-  --ui-border: #333333;
-  --ui-border-strong: #555555;
-  --ui-divider: #292929;
+  --ui-border: #2b3e50;
+  --ui-border-strong: #49677c;
+  --ui-divider: #233344;
   --ui-focus: #7de4f6;
   --ui-focus-soft: rgba(125, 228, 246, 0.3);
   --ui-disabled-bg: #242e3a;
