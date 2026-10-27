@@ -3,6 +3,15 @@
 Bu dosya yalnız açık işleri tutar. Tamamlanan işlerin özeti `PROJECT_STATUS.md`
 dosyasındadır.
 
+27 Ekim aktif durum: genel tasarım çalışması kullanıcı yönlendirmesine
+kadar askıda; yalnız istenen sol menü geri dönüşü yapıldı. İşlevsel U-04
+devamında topluluk/etkinlik detayından filtreli kaynak karta dönüş, kaynak
+bağlamının yerel gezinmede temizlenmesi ve giriş hedefi tamamlandı.
+Bu dönüş yalnız yeniden yüklenen listede bulunan kartları kapsar.
+Sıradaki: çok sayfalı akış konumu; ardından oturumlu yorum kabulü ve
+U-03 geçmiş/girişte taslak devamı. Aşağıdaki tasarım yüzdeleri geçmiş
+aşamanın tahminidir; güncel tüm ürün/yayın yüzdesi değildir.
+
 ## Topluluklar — aktif öncelik
 
 Tasarım öncesi yerel teknik kapanış: şifreli yedek/doğrulama, yeni ortamda
@@ -157,8 +166,9 @@ Altıncı dilimde karma kart hiyerarşisi ve yorum okuma/taslak/silme onayı gel
 Son 3 browser + 2 mantık testi geçti; oturumlu yorumun tam browser kabulü açık.
 Yedinci dilimde filtre URL sözleşmesi, müzik detayından kaynak karta dönüş
 ve girişte aynı yol eklendi; 5 browser + 3 saf test geçti. Güncel kanıt 17.
-bölümde. Sıradaki U-04 topluluk/etkinlik dönüşü, çok sayfalı konum ve oturumlu
-yorum kabulü. U-03 geçmiş/girişte taslak, U-02 yönetim/oyun ve geniş kabul açık.
+bölümde. Topluluk/etkinlik kaynak dönüşü 27 Ekim'de eklendi; sıradaki U-04
+çok sayfalı konum ve oturumlu yorum kabulü. U-03 geçmiş/girişte taslak,
+U-02 yönetim/oyun ve geniş kabul açık.
 
 1. Ana akış ve Keşfet'in ilk görünür içeriğini server-first veri sınırına taşı;
    etkileşimli filtre ve aksiyonları küçük client bileşenlerinde bırak.

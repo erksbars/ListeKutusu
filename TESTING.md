@@ -1,5 +1,18 @@
 # ListeKutusu Doğrulama Politikası
 
+27 Ekim kaynak dönüş dilimi: `node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test tests/feed-navigation.test.mjs tests/community-navigation.test.mjs`
+ile 10 saf test geçti. TypeScript, değişen kaynak ESLint, UI/a11y statik
+kapıları ve diff kontrolü geçti. Playwright CLI / Edge 1280 koyu masaüstünde
+sentetik istemci API cevaplarıyla inceleme bağlantısı/browser Geri ve etkinlik
+bağlantısından filtreli, görünür/odaklı karta dönüş; yorum sayfasında kaynak ve
+giriş hedefi; etkinlik yenilemesi; yerel listede kaynak temizliği ve popstate;
+3 dış/başka yol/yanlış kart kaynağının reddi kontrol edildi. İstemci API
+yazmaları engellendi, kontrol sonunda 0 yazma ve 0 pageerror vardı.
+CLI geçici fixture/kontrol dosyaları ve incelenen görüntü `output/playwright/`
+altında Git dışında tutulur. Bu bir Playwright test-runner matrisi değildir.
+DB/seed/oturum/baseline yazılmadı; CSS/tasarım değişmedi. Çok sayfalı kaynağın
+ilk listede olmaması, oturumlu yorum yazmaları ve tam build/regresyon açık.
+
 17 Ekim yedinci tasarım dilimi: `npx playwright test tests/browser/feed-return.spec.ts tests/browser/feed-card-interactions.spec.ts tests/browser/post-comment-states.spec.ts --project=desktop --reporter=line`
 ile 5 senaryo geçti. URL kapsam/tür/konu, yenileme, uyuşmayan filtre temizliği,
 giriş hedefi; mevcut public müzik detayından geri linki/browser back ile

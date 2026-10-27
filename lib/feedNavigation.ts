@@ -1,3 +1,5 @@
+import { communityNavigationFromParams } from "./communityNavigation.ts";
+
 const scopes = ["all", "trending", "following", "personalized", "saved"] as const;
 const kinds = ["all", "music", "discussion", "review", "event"] as const;
 export type FeedLocation = { scope: typeof scopes[number]; kind: typeof kinds[number]; topic: string | null };
@@ -38,4 +40,27 @@ export function feedPostPath(id: string, returnTo: string, comments = false) {
   const anchor = /^[a-zA-Z0-9_-]{1,160}$/u.test(id) ? `#post-${id}` : "";
   const from = feedReturnPath(returnTo).split("#")[0] + anchor;
   return `/p/${encodeURIComponent(id)}?from=${encodeURIComponent(from)}${comments ? "#comments" : ""}`;
+}
+
+export function communityFeedAnchor(kind: "post" | "event", id: string) {
+  return /^[a-zA-Z0-9_-]{1,100}$/u.test(id) ? `#post-community-${kind}-${id}` : "";
+}
+
+export function communityFeedPath(slug: string, kind: "post" | "event", id: string, returnTo: string) {
+  const params = new URLSearchParams(kind === "event" ? { section: "events", event: id } : { post: id });
+  const anchor = communityFeedAnchor(kind, id);
+  if (anchor) params.set("from", feedReturnPath(returnTo).split("#")[0] + anchor);
+  return `/communities/${encodeURIComponent(slug)}?${params}`;
+}
+
+/** A feed source belongs only to the selected detail, never another post or tab. */
+export function communityFeedReturn(params: URLSearchParams) {
+  const raw = params.get("from");
+  if (!raw) return null;
+  const navigation = communityNavigationFromParams(params);
+  const kind = navigation.section === "events" ? "event" : "post";
+  const id = kind === "event" ? navigation.eventId : navigation.postId;
+  if (!id) return null;
+  const source = feedReturnPath(raw);
+  return source.endsWith(communityFeedAnchor(kind, id)) ? source : null;
 }

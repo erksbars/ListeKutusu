@@ -1,12 +1,13 @@
 "use client";
 import Link from "next/link";
+import { accountLoginPath } from "@/lib/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { CommunityPostReactionState } from "@/lib/communityTypes";
 import { CommunityPostReactions } from "../(social)/communities/CommunityPostReactions";
 import { communityError, communityFetch } from "../(social)/communities/communityFetch";
 import styles from "./CommunityGeneralFeed.module.css";
 
-export function CommunityCardActions({ initial, slug, postId, viewerId, surface, onUnsave, onUnavailable }: { initial: CommunityPostReactionState; slug: string; postId: string; viewerId: string | null; surface: "feed" | "saved"; onUnsave?: () => void; onUnavailable: () => void }) {
+export function CommunityCardActions({ initial, slug, postId, viewerId, surface, onUnsave, onUnavailable, loginReturnTo = "/" }: { initial: CommunityPostReactionState; slug: string; postId: string; viewerId: string | null; surface: "feed" | "saved"; onUnsave?: () => void; onUnavailable: () => void; loginReturnTo?: string }) {
   const [state, setState] = useState(initial), [busy, setBusy] = useState(false), [error, setError] = useState("");
   const [unavailable, setUnavailable] = useState(false), pending = useRef(false), generation = useRef(0);
   useEffect(() => { const version = ++generation.current; setState(initial); setUnavailable(false); setError(""); return () => { generation.current = version + 1; }; }, [initial, viewerId]);
@@ -25,6 +26,6 @@ export function CommunityCardActions({ initial, slug, postId, viewerId, surface,
   return <>
     {unavailable ? <p role="status">Bu paylaşım artık bu görünümde bulunmuyor. Listeyi yenileyebilirsin.</p> : <CommunityPostReactions className={styles.reactions} state={state} authenticated={Boolean(viewerId)} disabled={busy} change={(action, active) => void change(action, active)} />}
     {error && <p role="alert">{error}</p>}
-    {!viewerId ? <Link href="/account?mode=login&next=%2F">Etkileşim için giriş yap ↗</Link> : !state.canSave && !state.viewerSaved && !unavailable && <p>Yeni etkileşim için açık topluluk ve aktif üyelik gerekir.</p>}
+    {!viewerId ? <Link href={accountLoginPath(loginReturnTo)}>Etkileşim için giriş yap ↗</Link> : !state.canSave && !state.viewerSaved && !unavailable && <p>Yeni etkileşim için açık topluluk ve aktif üyelik gerekir.</p>}
   </>;
 }

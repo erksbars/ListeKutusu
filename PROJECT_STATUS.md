@@ -2,6 +2,34 @@
 
 Son dar doğrulama: 27 Ekim 2026
 
+## 27 Ekim 2026 — topluluk/etkinlik detayından kaynak akışa dönüş
+
+- Genel akıştaki topluluk sohbeti/incelemesi ve etkinlik kartları kaynak
+  filtrelerini ve türle ayrılmış kart işaretini taşır. Detay üst çubuğunun
+  Ana akışa dön bağlantısı, yeniden yüklenen listede bulunan kartı görünür
+  ve tarih bağlantısını odaklı getirir. Normal link tıklamasında tarayıcı
+  Geri için kaynak giriş işaretlenir; modified click kaynak girişi değiştirmez.
+- Kaynak yalnız izinli root filtreleri ve seçili detayla eşleşen işarettir.
+  Dış adres/başka yol/başka kart reddedilir, ek sorgu alanları taşınmaz.
+  Topluluk içi liste/başka hedef/bölüme geçiş kaynak bağlamını temizler;
+  yorum sayfası korur, popstate bağlamı URL'den yeniden kurar. Next history
+  metadatası push/replace sırasında korunur.
+- Giriş bağlantısı topluluk detayını/etkinlik ve yorum sayfasını, geçerli
+  kaynak dönüşünü korur. Genel karttaki giriş de kaynak kartı korur.
+  Taslak taşıma veya otomatik üyelik/yorum/RSVP yapılmaz.
+- 10 saf gezinme testi, TypeScript, değişen TSX/TS ESLint, UI/a11y statik
+  kapıları ve diff kontrolü geçti. Playwright CLI / Edge 1280 koyu masaüstü:
+  incelemede bağlantı ve browser Geri ile görünür/odaklı karta dönüş;
+  yorum sayfasında kaynak/giriş; etkinlik dönüşü ve yenileme; yerel listeye
+  çıkışta temizleme/Geri ile geri gelme; 3 geçersiz kaynak kontrol edildi.
+  Sentetik istemci API yanıtları kullanıldı; 0 yazma ve 0 pageerror görüldü.
+  Kaynak karta dönüş görüntüsü açılıp incelendi. DB/seed/baseline değişmedi.
+- Tasarım, renk ve CSS değişmedi; genel tasarım çalışması askıda. Geniş
+  build/tam browser matrisi ve oturumlu yazma kabulü yapılmadı.
+- Açık sonraki paket: ilk yüklenen listede bulunmayan çok sayfalı kaynak
+  konumu. Sınırsız otomatik sayfalama/özel içerik cache'i eklenmedi.
+  U-03 geçmiş/girişte taslak, oturumlu yorum ve kalan U-02 hâlâ açık.
+
 ## 27 Ekim 2026 — yalnız sol menü eski görünüme döndü
 
 - Kullanıcı isteğiyle Taste öncesi `acbfb53` sürümünün metin logosu,

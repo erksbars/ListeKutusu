@@ -20,16 +20,20 @@ import { CommunityDiscoveryEditor } from "./CommunityDiscoveryEditor";
 import { CommunityManagementPanel } from "./CommunityManagementPanel";
 import { CommunityOwnershipPanel } from "./CommunityOwnershipPanel";
 import { useCommunityNavigation } from "./useCommunityNavigation";
-import type { CommunityNavigation } from "@/lib/communityNavigation";
+import { communityNavigationParams, type CommunityNavigation } from "@/lib/communityNavigation";
+import { accountLoginPath } from "@/lib/navigation";
 import { CommunityReviewEditor } from "./CommunityReviewEditor";
 import { CommunityContentFilters } from "./CommunityContentFilters";
 import { CommunityPostReactions } from "./CommunityPostReactions";
 import { useCommunityRead } from "./useCommunityRead";
 
-export function CommunityClient({ slug, initialNavigation }: { slug: string; initialNavigation: CommunityNavigation }) {
+export function CommunityClient({ slug, initialNavigation, initialFeedReturnTo = null }: { slug: string; initialNavigation: CommunityNavigation; initialFeedReturnTo?: string | null }) {
   const api = `/api/communities/${encodeURIComponent(slug)}`;
   const [data, setData] = useState<CommunityDetail | null>(null);
-  const { navigation, navigate } = useCommunityNavigation(initialNavigation);
+  const { navigation, navigate, feedReturnTo } = useCommunityNavigation(initialNavigation, initialFeedReturnTo);
+  const loginParams = communityNavigationParams(new URLSearchParams(), navigation);
+  if (feedReturnTo) loginParams.set("from", feedReturnTo);
+  const loginHref = accountLoginPath(`/communities/${encodeURIComponent(slug)}${loginParams.size ? `?${loginParams}` : ""}`);
   const { postId, page, section, commentPage, postType, reviewKind, savedOnly } = navigation;
   const listApi = `${api}?${new URLSearchParams({ page: String(page), postType, reviewKind, ...(savedOnly ? { saved: "1" } : {}) })}`;
   const [loadedListApi, setLoadedListApi] = useState("");
@@ -94,15 +98,15 @@ export function CommunityClient({ slug, initialNavigation }: { slug: string; ini
     });
   }
   return <main id="main-content" className="stage-shell min-h-screen bg-app"><section className="ui-page-frame community-page relative mx-auto">
-    <PageTopbar title={data?.community.name ?? "Topluluk"} subtitle="Birlikte konuş, keşfet ve bağlantı kur." icon={<Users size={22} />} backHref="/communities" actions={data?.viewerId ? <NotificationCenter /> : undefined} />
+    <PageTopbar title={data?.community.name ?? "Topluluk"} subtitle="Birlikte konuş, keşfet ve bağlantı kur." icon={<Users size={22} />} backHref={feedReturnTo ?? "/communities"} backLabel={feedReturnTo ? "Ana akışa dön" : "Geri"} actions={data?.viewerId ? <NotificationCenter /> : undefined} />
     <Toast message={message} onClose={() => setMessage(null)} />
     <ConfirmDialog open={Boolean(discardReview && editingReview && post)} title="İnceleme taslağından vazgeç?" body="Kaydetmediğin inceleme değişiklikleri silinecek. Yayındaki inceleme değişmeyecek." confirmLabel="Değişiklikleri sil ve çık" cancelLabel="Düzenlemeye devam et" busy={busy} onCancel={() => setDiscardReview(null)} onConfirm={() => { const target = discardReview; setDiscardReview(null); setEditingReview(false); setReviewDirty(false); if (target === "list") openPost(null); }} />
     <ConfirmDialog open={Boolean(confirm && (!confirm.body.postId || confirm.body.postId === post?.post.id))} title={confirm?.title ?? ""} body="Bu işlem topluluğa uygulanacak. Devam etmek istiyor musun?" confirmLabel="Onayla" tone="danger" busy={busy} onCancel={() => setConfirm(null)} onConfirm={() => confirm && (!confirm.body.postId || confirm.body.postId === post?.post.id) && void mutate(confirm.body, "İşlem tamamlandı.", () => { if (confirm.body.action === "remove-post") openPost(null); })} />
-    {loadError && <div className="community-error" role="alert"><p>{loadError}</p>{savedOnly && <Link href={`/account?mode=login&next=${encodeURIComponent(`/communities/${slug}?saved=1`)}`}>Kaydettiklerin için giriş yap ↗</Link>}<Button type="button" onClick={() => setRevision(value => value + 1)}>Yeniden dene</Button></div>}
+    {loadError && <div className="community-error" role="alert"><p>{loadError}</p>{savedOnly && <Link href={loginHref}>Kaydettiklerin için giriş yap ↗</Link>}<Button type="button" onClick={() => setRevision(value => value + 1)}>Yeniden dene</Button></div>}
     {loading && <p role="status">Topluluk yükleniyor…</p>}
     {actionError && <p className="community-error" role="alert">{actionError}</p>}
     {data && <><div className="community-intro"><p className="section-kicker">{COMMUNITY_CATEGORIES[data.community.category as keyof typeof COMMUNITY_CATEGORIES]} · Herkese açık</p><p>{data.community.description}</p><div className="community-actions"><span>{data.community.memberCount} üye</span>
-      {!data.viewerId ? <Link href={`/account?mode=login&next=${encodeURIComponent(`/communities/${slug}`)}`}>Katılmak için giriş yap ↗</Link> : data.membership?.status === "banned" ? <span>Bu topluluğa katılımın kapatılmış.</span> : !member ? !archived && <Button type="button" variant="primary" loading={busy} disabled={loading} onClick={() => void mutate({ action: "join" }, "Topluluğa katıldın.")}>Topluluğa katıl</Button> : data.membership?.role === "owner" ? <span>Topluluğun sahibisin</span> : <Button type="button" disabled={loading || busy} onClick={() => setConfirm({ title: "Topluluktan ayrıl?", body: { action: "leave" } })}>Topluluktan ayrıl</Button>}
+      {!data.viewerId ? <Link href={loginHref}>Katılmak için giriş yap ↗</Link> : data.membership?.status === "banned" ? <span>Bu topluluğa katılımın kapatılmış.</span> : !member ? !archived && <Button type="button" variant="primary" loading={busy} disabled={loading} onClick={() => void mutate({ action: "join" }, "Topluluğa katıldın.")}>Topluluğa katıl</Button> : data.membership?.role === "owner" ? <span>Topluluğun sahibisin</span> : <Button type="button" disabled={loading || busy} onClick={() => setConfirm({ title: "Topluluktan ayrıl?", body: { action: "leave" } })}>Topluluktan ayrıl</Button>}
     </div><CommunityDiscoveryLabelsView values={data.community} /></div>
     {archived && <p role="status">Bu topluluk arşivde. İçerikler okunabilir; yeni katılım, paylaşım ve etkinlik işlemleri kapalıdır.</p>}
     <div className="community-actions" role="group" aria-label="Topluluk bölümleri"><Button type="button" variant={section === "posts" ? "primary" : "secondary"} aria-pressed={section === "posts"} disabled={busy} onClick={() => navigate({ section: "posts" })}>Sohbet ve incelemeler</Button><Button type="button" variant={section === "events" ? "primary" : "secondary"} aria-pressed={section === "events"} disabled={busy} onClick={() => navigate({ section: "events" })}>Etkinlikler</Button></div>

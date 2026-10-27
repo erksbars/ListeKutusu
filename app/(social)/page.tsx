@@ -309,7 +309,7 @@ export default function HomePage() {
                   {feedLoadError && <ContentState kind="error" title="Akış yüklenemedi" actions={<Button type="button" onClick={() => void loadFeed(feedScope)}>Akışı yeniden dene</Button>}><p>{feedLoadError}</p></ContentState>}
                   {!feedPageLoading &&
                     visibleTimeline.map((item, index) => {
-                      if (item.kind !== "music") return <CommunityFeedCard key={`${item.kind}:${item.id}`} item={item} viewerId={account?.id ?? null} />;
+                      if (item.kind !== "music") return <CommunityFeedCard key={`${item.kind}:${item.id}`} item={item} viewerId={account?.id ?? null} returnTo={feedLocation.path} />;
                       const post = item.post;
                       return <div className="contents" key={`music:${post.id}`}>
                       <FeedPostCard
