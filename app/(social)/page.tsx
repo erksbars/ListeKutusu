@@ -7,6 +7,7 @@ import { ConfirmDialog } from "@/app/components/ConfirmDialog";
 import { FeedComposer } from "@/app/components/FeedComposer";
 import { FeedEmptyState } from "@/app/components/FeedEmptyState";
 import { FeedLoadSentinel } from "@/app/components/FeedLoadSentinel";
+import { FeedReturnNotice } from "@/app/components/FeedReturnNotice";
 import { FeedSkeletons } from "@/app/components/FeedSkeletons";
 import { LeaderboardSidebar } from "@/app/components/LeaderboardSidebar";
 import { FeedPostCard } from "@/app/components/FeedPostCard";
@@ -16,6 +17,7 @@ import { SelectField } from "@/app/components/ui/Field";
 import { Button } from "@/app/components/ui/Button";
 import { ContentState } from "@/app/components/ui/ContentState";
 import { useHomeFeed } from "@/app/hooks/useHomeFeed";
+import { useFeedRestoration } from "@/app/hooks/useFeedRestoration";
 import { compareTimelineItems } from "@/lib/feedTimelineOrder";
 import { HomeCommunitySummary } from "@/app/components/HomeCommunitySummary";
 import { MobileDock } from "@/app/components/MobileDock";
@@ -33,7 +35,7 @@ import { useFeedTopics } from "@/app/hooks/useFeedTopics";
 import { useInfiniteScroll } from "@/app/hooks/useInfiniteScroll";
 import { clearAccountSessionCache, loadAccountSession } from "@/lib/clientAccountSession";
 import { useFeedAnchor, useFeedLocation } from "@/app/hooks/useFeedLocation";
-import { feedLocationPath } from "@/lib/feedNavigation";
+import { communityFeedAnchor, feedLocationPath } from "@/lib/feedNavigation";
 import { accountLoginPath } from "@/lib/navigation";
 
 type Account = {
@@ -98,7 +100,7 @@ export default function HomePage() {
   const feedLocation = useFeedLocation();
   const { scope: feedScope, kind: feedKind, topic: activeFeedTopic } = feedLocation.value;
   const mixedScope = feedScope === "all" || feedScope === "following";
-  const { feedPosts, setFeedPosts, communityItems, feedNextCursor, feedPageLoading, feedLoadingMore, feedLoadMoreError, feedLoadError, feedEmptyReason, loadFeed } = useHomeFeed({ scope: feedScope, filter: feedKind, viewerId: account?.id ?? null, enabled: feedLocation.ready });
+  const { feedPosts, setFeedPosts, communityItems, feedNextCursor, feedPageLoading, feedLoadingMore, feedLoadMoreError, feedLoadError, feedEmptyReason, loadFeed, feedContextReady, feedReadVersion } = useHomeFeed({ scope: feedScope, filter: feedKind, viewerId: account?.id ?? null, enabled: feedLocation.ready });
 
   const currentRank = useMemo(() => {
     if (!account || !leaderboard) return null;
@@ -112,7 +114,17 @@ export default function HomePage() {
     if (!mixedScope) return music;
     return [...(feedKind === "all" || feedKind === "music" ? music : []), ...communityItems].sort(compareTimelineItems);
   }, [visibleFeedPosts, mixedScope, feedKind, communityItems]);
-  useFeedAnchor(feedPageLoading || !feedLocation.ready, visibleTimeline.map(item => `${item.kind}:${item.id}`).join(","));
+  const returnSearch = useFeedRestoration({
+    target: feedLocation.anchor,
+    context: JSON.stringify([feedLocation.path, account?.id ?? null, feedReadVersion]),
+    ready: feedLocation.ready && feedContextReady && !feedLoadError,
+    found: visibleTimeline.some(item => (item.kind === "music" ? `#post-${item.id}` : communityFeedAnchor(item.kind, item.id)) === feedLocation.anchor),
+    loading: feedPageLoading || feedLoadingMore,
+    error: feedLoadMoreError,
+    cursor: feedNextCursor,
+    loadMore: cursor => loadFeed(feedScope, { append: true, cursor }),
+  });
+  useFeedAnchor(feedPageLoading || feedLoadingMore || !feedContextReady || !feedLocation.ready, visibleTimeline.map(item => `${item.kind}:${item.id}`).join(","));
 
   const feedComposer = useFeedComposer({
     authenticated: Boolean(account),
@@ -123,7 +135,7 @@ export default function HomePage() {
   });
 
   const feedLoadMoreRef = useInfiniteScroll({
-    enabled: Boolean(feedNextCursor) && !feedLoadMoreError && !feedPageLoading,
+    enabled: Boolean(feedNextCursor) && !feedLoadMoreError && !feedPageLoading && !returnSearch.blockInfiniteScroll,
     loading: feedLoadingMore || feedPageLoading,
     onLoadMore: () => loadFeed(feedScope, { append: true, cursor: feedNextCursor }),
   });
@@ -297,6 +309,7 @@ export default function HomePage() {
                   onTagsChange={feedComposer.setTags}
                   onSubmit={feedComposer.createPost}
                 />
+                <FeedReturnNotice phase={returnSearch.phase} continueSearch={returnSearch.continueSearch} refresh={() => void loadFeed(feedScope)} dismiss={feedLocation.clearAnchor} />
                 <div
                   id="feed-posts"
                   role="tabpanel"
@@ -370,7 +383,7 @@ export default function HomePage() {
                       onCompose={openFeedComposer}
                     />
                   )}
-                  {!feedPageLoading && feedNextCursor && (
+                  {!feedPageLoading && feedNextCursor && !returnSearch.blockInfiniteScroll && (
                     <FeedLoadSentinel
                       sentinelRef={feedLoadMoreRef}
                       loading={feedLoadingMore}

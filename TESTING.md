@@ -1,5 +1,16 @@
 # ListeKutusu Doğrulama Politikası
 
+27 Ekim çok sayfalı kaynak dönüşü: `node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test tests/feed-restoration.test.mjs tests/feed-navigation.test.mjs tests/community-navigation.test.mjs`
+ile 14 saf test geçti. TypeScript, odaklı ESLint, UI/a11y statik kapıları
+ve diff kontrolü geçti. Playwright CLI / Edge 1280 koyu masaüstünde sentetik
+yanıtlarla derin kaynak, 3 ek sayfa sınırı/manuel devam, liste sonu,
+yinelenen/geçersiz cursor, 500 sonrası tekrar, vazgeçince 40 kartın korunması,
+geciken sayfada filtre değişimi ve üçüncü sayfadaki müzik kaynağı doğrulandı.
+Son kontrollerde 0 istemci API yazması ve 0 pageerror vardı. Geçici fixture
+ve incelenen görüntüler `output/playwright/` altında Git dışında kalır.
+Gerçek oturumlu yorum yazması, tam build/browser matrisi yapılmadı;
+DB/seed/oturum/baseline ve CSS değişmedi.
+
 27 Ekim kaynak dönüş dilimi: `node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test tests/feed-navigation.test.mjs tests/community-navigation.test.mjs`
 ile 10 saf test geçti. TypeScript, değişen kaynak ESLint, UI/a11y statik
 kapıları ve diff kontrolü geçti. Playwright CLI / Edge 1280 koyu masaüstünde

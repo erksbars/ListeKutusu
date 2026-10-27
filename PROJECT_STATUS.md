@@ -2,6 +2,25 @@
 
 Son dar doğrulama: 27 Ekim 2026
 
+## 27 Ekim 2026 — çok sayfalı kaynak karta sınırlı dönüş
+
+- Detaydan dönülen müzik/topluluk/etkinlik kartı ilk sayfada yoksa en fazla
+  3 ek sayfa otomatik aranır. Bulunan kart görünür ve odaklı getirilir.
+  Sınırda kullanıcı 3 sayfalık yeni arama başlatabilir; aramayı bırakmak
+  yalnız kaynak işaretini kaldırır, yüklenen kartları ve filtreleri korur.
+- Liste sonu, yinelenen/geçersiz cursor ve istek hatası ayrı durumlarla
+  durur. Hata sonrası yeniden deneme yüklenen kartları kaybetmez. Kaynak
+  aranırken normal sonsuz kaydırma bekler; filtre/hesap/yenileme bağlamı
+  değişince eski arama yeni listeye karışmaz. İçerik cache'i eklenmedi.
+- 14 saf test, TypeScript, odaklı ESLint, UI/a11y statik kapıları geçti.
+  Playwright CLI / Edge koyu masaüstünde derin kaynak, otomatik sınır ve
+  manuel devam, liste sonu, cursor döngüsü/geçersizliği, hata/tekrar,
+  vazgeçme, geciken sayfada filtre değişimi ve müzik kaynağı doğrulandı.
+  Sentetik API yanıtlarıyla 0 yazma ve 0 pageerror; görüntüler incelendi.
+- Tasarım/CSS, DB/seed ve mevcut PNG baseline'ları değiştirilmedi.
+  Tam build/matris çalıştırılmadı. Sıradaki paket oturumlu yorum kabulü;
+  U-03 geçmiş/girişte taslak devamı ve kalan U-02 açık.
+
 ## 27 Ekim 2026 — topluluk/etkinlik detayından kaynak akışa dönüş
 
 - Genel akıştaki topluluk sohbeti/incelemesi ve etkinlik kartları kaynak

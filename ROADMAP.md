@@ -7,9 +7,10 @@ dosyasındadır.
 kadar askıda; yalnız istenen sol menü geri dönüşü yapıldı. İşlevsel U-04
 devamında topluluk/etkinlik detayından filtreli kaynak karta dönüş, kaynak
 bağlamının yerel gezinmede temizlenmesi ve giriş hedefi tamamlandı.
-Bu dönüş yalnız yeniden yüklenen listede bulunan kartları kapsar.
-Sıradaki: çok sayfalı akış konumu; ardından oturumlu yorum kabulü ve
-U-03 geçmiş/girişte taslak devamı. Aşağıdaki tasarım yüzdeleri geçmiş
+Çok sayfalı kaynak dönüşü de tamamlandı: en fazla 3 ek otomatik sayfa,
+manuel devam/vazgeçme, liste sonu/cursor/hata ve bağlam değişimi korunur.
+Sıradaki: oturumlu yorum kabulü ve U-03 geçmiş/girişte taslak devamı.
+Aşağıdaki tasarım yüzdeleri geçmiş
 aşamanın tahminidir; güncel tüm ürün/yayın yüzdesi değildir.
 
 ## Topluluklar — aktif öncelik
