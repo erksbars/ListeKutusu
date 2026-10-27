@@ -1,6 +1,21 @@
 # ListeKutusu Güncel Durum
 
-Son dar doğrulama: 23 Ekim 2026
+Son dar doğrulama: 27 Ekim 2026
+
+## 27 Ekim 2026 — yalnız sol menü eski görünüme döndü
+
+- Kullanıcı isteğiyle Taste öncesi `acbfb53` sürümünün metin logosu,
+  15 px / 2,2 stroke ikonları ve mevcut eski navigasyon CSS'i geri geldi.
+  Yeni sidebar override'ları kaldırıldı; iki TSX kaynağı eski sürümle eşleşir.
+  Diğer ekran düzenleri ve renk tokenları değiştirilmedi.
+- Typecheck, iki TSX ESLint ve diff kontrolü geçti. 1440 koyu masaüstünde
+  logo 22 px, simgesiz; tek ana menü, aktif kitaplık ve yatay taşma 0
+  doğrulandı; ekran görüntüsü incelendi. Tam test matrisi çalıştırılmadı.
+- Görsel kontrol sırasında ikinci Next süreci port 3001'e düştü; kapatıldı.
+  3000'deki manifest hatası, bu projeye ait geliştirme sunucusunun tek süreç
+  yeniden başlatılmasıyla giderildi; `/library` 200 döndü. DB/seed yok.
+- Genel tasarım çalışması hâlâ askıda; yalnız kullanıcının yönlendirdiği
+  bu menü düzeltmesi uygulandı. Önceki yedekler ve 11 kirli PNG korunur.
 
 ## 23 Ekim 2026 — sürüm yedekleri ve marka renginin kontrollü dönüşü
 

@@ -5669,32 +5669,8 @@ textarea {
    At 1440px: 224 nav + 2*24 gutters + 20 gap + 300 context + 848 feed = 1440.
    The feed is an independent scrolling stream, not a matched-height dashboard row. */
 @media (min-width: 1024px) {
-  [data-theme="dark"] .desktop-shell-brand {
-    display: flex;
-    align-items: center;
-    gap: var(--ui-space-2);
-    font-size: var(--ui-text-lg);
-    font-weight: 600;
-  }
-
-  [data-theme="dark"] .desktop-shell-brand svg { color: var(--ui-primary); }
   [data-theme="dark"] .skip-link { box-shadow: none; }
   [data-theme="dark"] .home-grid-unified { margin-top: var(--ui-space-6); }
-  [data-theme="dark"] .desktop-shell-sidebar .primary-navigation-item {
-    gap: var(--ui-space-3);
-    font-weight: 400;
-    border-color: transparent;
-    background: transparent;
-  }
-  [data-theme="dark"] .desktop-shell-sidebar .primary-navigation-item.is-active {
-    background: var(--ui-primary-soft);
-    border-color: color-mix(in srgb, var(--ui-primary) 28%, var(--ui-border));
-    color: var(--ui-primary-hover);
-    font-weight: 600;
-  }
-  [data-theme="dark"] .desktop-shell-sidebar .primary-navigation-item:hover:not(.is-active) {
-    background: var(--ui-surface);
-  }
   [data-theme="dark"] .app-topbar {
     background: var(--ui-bg);
     box-shadow: none;

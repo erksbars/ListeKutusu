@@ -1,13 +1,13 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { Bookmark, CalendarDays, CircleHelp, Layers3, Settings2 } from "lucide-react";
+import { Bookmark, CalendarDays, CircleHelp, Settings2 } from "lucide-react";
 import { PrimaryNavigation } from "./PrimaryNavigation";
 import { DraftNavigationProvider } from "./DraftNavigationProvider";
 
 export function AppShell({ children }: { children: ReactNode }) {
   return <DraftNavigationProvider><div className="desktop-shell">
     <aside className="desktop-shell-sidebar" aria-label="Uygulama menüsü" data-testid="app-shell-navigation">
-      <Link href="/" className="desktop-shell-brand"><Layers3 size={23} strokeWidth={1.6} aria-hidden="true" /><span>ListeKutusu</span></Link>
+      <Link href="/" className="desktop-shell-brand">ListeKutusu</Link>
       <PrimaryNavigation />
       <nav className="desktop-shell-personal" aria-label="Kişisel alan">
         <p>Kişisel alan</p>

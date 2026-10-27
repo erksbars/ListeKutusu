@@ -14,8 +14,9 @@ Cyan ana işlem, seçili menü ve sekmede; yeşil keşif/konu vurgularında kull
 Birincil masaüstü kontrol cyan'dır; disabled/focus/busy davranışları korunur.
 Kartların tamamı renkli zemine veya parlak kontura dönüştürülmez.
 Dinlenim kartında gölge/gradient kullanılmaz. Sistem fontu gerçek `Segoe UI`;
-indirilmeyen Variable font adları kullanılmaz. Ürün işareti `Layers3`, farklı
-medya türlerinin tek kişisel kitaplıkta buluşmasını temsil eder.
+indirilmeyen Variable font adları kullanılmaz. 27 Ekim kullanıcı talebiyle sol
+menü, Taste öncesi metin logosu ve navigasyon ölçülerine döndürülmüştür;
+`Layers3` işareti kaldırılmıştır. Diğer ekranların tasarımı değiştirilmez.
 
 Bu yönün uygulama katmanı `primitives.css` içindeki marka renkli Taste masaüstü bloğudur;
 eski ekranlar ayrı dilimlerde taşınır. Profil/oyun/diğer özelliklerin eski
