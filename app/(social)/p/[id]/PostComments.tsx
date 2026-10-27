@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { Flag, MessageCircle, Reply, Send, Trash2 } from "lucide-react";
 import { accountLoginPath } from "@/lib/navigation";
@@ -13,22 +14,8 @@ import { ContentState } from "@/app/components/ui/ContentState";
 import { useDraftNavigationGuard } from "@/app/components/DraftNavigationProvider";
 import { communityError, communityFetch, communityRequestStatus } from "@/lib/communityRequest";
 import { commentReplyTransition, removeCommentFromList } from "@/lib/commentDraft";
-
-type CommentAuthor = {
-  id: string;
-  ownerName: string;
-  slug: string;
-  profileTheme: string;
-};
-
-type CommentItem = {
-  id: string;
-  authorId: string;
-  body: string;
-  createdAt: string;
-  author: CommentAuthor;
-  replies: CommentItem[];
-};
+import { isFeedComment, parseFeedCommentList, type FeedCommentItem as CommentItem } from "@/lib/feedCommentPayload";
+import { COMMENT_HANDOFF_KEY, parseCommentHandoff } from "@/lib/commentHandoff";
 
 type Viewer = { id: string; role: string } | null;
 
@@ -50,6 +37,7 @@ export function PostComments({
   onMessage: (message: string) => void;
   loginReturnTo?: string;
 }) {
+  const router = useRouter();
   const [comments, setComments] = useState<CommentItem[]>([]);
   const loginHref = accountLoginPath(loginReturnTo ?? `/p/${postId}#comments`);
   const [total, setTotal] = useState<number | null>(null);
@@ -57,7 +45,7 @@ export function PostComments({
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [body, setBody] = useState("");
-  const [replyingTo, setReplyingTo] = useState<CommentItem | null>(null);
+  const [replyingTo, setReplyingTo] = useState<{ id: string; author: { ownerName: string } } | null>(null);
   const [sending, setSending] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [reporting, setReporting] = useState<CommentItem | null>(null);
@@ -67,11 +55,34 @@ export function PostComments({
   const [targetChange, setTargetChange] = useState<{ item: CommentItem | null } | null>(null);
   const [removeTarget, setRemoveTarget] = useState<CommentItem | null>(null);
   const [writeError, setWriteError] = useState(""), [removeError, setRemoveError] = useState("");
+  const [loginRequired, setLoginRequired] = useState(false);
   const request = useRef<AbortController | null>(null), input = useRef<HTMLTextAreaElement>(null);
-  const posting = useRef(false);
+  const posting = useRef(false), removing = useRef(false);
   const busy = sending || Boolean(deletingId) || reportBusy;
   const replyMissing = Boolean(replyingTo && !loading && !comments.some(comment => comment.id === replyingTo.id));
   useDraftNavigationGuard({ dirty: Boolean(body), busy });
+
+  useEffect(() => {
+    if (!viewer) return;
+    try {
+      const raw = sessionStorage.getItem(COMMENT_HANDOFF_KEY);
+      sessionStorage.removeItem(COMMENT_HANDOFF_KEY);
+      const draft = parseCommentHandoff(raw, viewer.id, postId);
+      if (!draft) return;
+      setBody(draft.body);
+      setReplyingTo(draft.reply ? { id: draft.reply.id, author: { ownerName: draft.reply.ownerName } } : null);
+      onMessage("Yorum taslağın geri getirildi. Kontrol edip kendin gönderebilirsin.");
+    } catch { /* Storage may be disabled; keep the current editor usable. */ }
+  }, [viewer, postId, onMessage]);
+
+  function continueToLogin() {
+    if (!viewer || busy) return;
+    try {
+      sessionStorage.setItem(COMMENT_HANDOFF_KEY, JSON.stringify({ viewerId: viewer.id, postId, body, createdAt: Date.now(),
+        reply: replyingTo ? { id: replyingTo.id, ownerName: replyingTo.author.ownerName } : null }));
+      router.push(loginHref);
+    } catch { setWriteError("Tarayıcı taslağı saklayamadı. Metnini kopyalayıp giriş yapabilirsin; taslağın burada korunuyor."); }
+  }
 
   function changeReply(next: CommentItem | null) {
     const transition = commentReplyTransition(replyingTo?.id ?? null, next?.id ?? null, body, busy);
@@ -90,10 +101,11 @@ export function PostComments({
     setLoadError(null); setReadStatus(null); setTotal(null); setComments([]);
     try {
       const data = await communityFetch<{ comments: CommentItem[]; total: number }>(`/api/feed/${encodeURIComponent(postId)}/comments`, undefined, controller.signal);
-      if (!Array.isArray(data.comments) || !Number.isInteger(data.total) || data.total < 0) throw new Error("Yorum yanıtı doğrulanamadı. Yeniden deneyebilirsin.");
+      const parsed = parseFeedCommentList(data, postId);
+      if (!parsed) throw new Error("Yorum yanıtı doğrulanamadı. Yeniden deneyebilirsin.");
       if (controller.signal.aborted) return;
-      setComments(data.comments);
-      setTotal(data.total); setReadStatus(200);
+      setComments(parsed.comments);
+      setTotal(parsed.total); setReadStatus(200);
     } catch (error) {
       if (!controller.signal.aborted) { setLoadError(communityError(error)); setReadStatus(communityRequestStatus(error)); }
     } finally {
@@ -110,7 +122,7 @@ export function PostComments({
       return;
     }
     if (posting.current || busy || loading || loadError || replyMissing || body.trim().length < 2) return;
-    posting.current = true; setSending(true); setWriteError("");
+    posting.current = true; setSending(true); setWriteError(""); setLoginRequired(false);
     try {
       const response = await fetch(`/api/feed/${encodeURIComponent(postId)}/comments`, {
         method: "POST",
@@ -118,7 +130,13 @@ export function PostComments({
         body: JSON.stringify({ body, parentId: replyingTo?.id || null }),
       });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok || !data.comment) throw new Error(data.error || "Yorum gönderilemedi.");
+      if (response.status === 401) setLoginRequired(true);
+      if (!response.ok) throw new Error(typeof data?.error === "string" ? data.error : "Yorum gönderilemedi.");
+      if (!isFeedComment(data?.comment, true) || data.comment.authorId !== viewer.id
+        || data.comment.postId !== postId || data.comment.parentId !== (replyingTo?.id ?? null)
+        || comments.some(item => item.id === data.comment.id || item.replies.some(reply => reply.id === data.comment.id))) {
+        throw new Error("Yorum yanıtı doğrulanamadı. Taslağın korunuyor; tekrar göndermeden önce yorumları yenileyerek kontrol et.");
+      }
       if (replyingTo) {
         setComments((current) => current.map((comment) =>
           comment.id === replyingTo.id
@@ -140,12 +158,14 @@ export function PostComments({
   }
 
   async function removeComment(commentId: string) {
-    if (deletingId) return;
+    if (removing.current || busy) return;
+    removing.current = true;
     setDeletingId(commentId); setRemoveError("");
     try {
       const response = await fetch(`/api/feed/comments/${encodeURIComponent(commentId)}`, { method: "DELETE" });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data.error || "Yorum kaldırılamadı.");
+      if (!response.ok) throw new Error(typeof data?.error === "string" ? data.error : "Yorum kaldırılamadı.");
+      if (data?.removed !== true || data.postId !== postId) throw new Error("Silme yanıtı doğrulanamadı. Yorumları yenileyerek kontrol et.");
       const { removedCount, comments: remaining } = removeCommentFromList(comments, commentId);
       setComments(remaining);
       setTotal((current) => current === null ? null : Math.max(0, current - removedCount));
@@ -154,7 +174,7 @@ export function PostComments({
     } catch (error) {
       setRemoveError(communityError(error));
     } finally {
-      setDeletingId(null);
+      removing.current = false; setDeletingId(null);
     }
   }
 
@@ -248,6 +268,8 @@ export function PostComments({
           onChange={(event) => setBody(event.target.value)}
         />
         {writeError && <p role="alert">{writeError}</p>}
+        {(writeError || removeError) && <Button type="button" disabled={busy || loading} onClick={() => { setWriteError(""); setRemoveError(""); void loadComments(); }}>Yorumları yenile</Button>}
+        {loginRequired && <Button type="button" disabled={busy} onClick={continueToLogin}>Taslağı koruyarak giriş yap</Button>}
         {replyMissing && <p role="status">Yanıtladığın yorum artık görünmüyor. Metnin korunuyor; başka hedefe geçmeden önce taslağı gözden geçir.</p>}
         <div className="post-comment-submit">
           {!viewer && <Link href={loginHref}>Tartışmaya katılmak için giriş yap</Link>}

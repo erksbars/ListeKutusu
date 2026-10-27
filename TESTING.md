@@ -1,5 +1,19 @@
 # ListeKutusu Doğrulama Politikası
 
+27 Ekim müzik yorum yazma/giriş taslağı dilimi:
+`node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test tests/comment-payload.test.mjs tests/comment-draft.test.mjs tests/feed-comments.test.mjs`
+ile 9 test geçti. TypeScript, odaklı ESLint, UI/a11y statik kapıları ve diff
+kontrolü geçti. CLI / Edge 1280 koyu masaüstünde mevcut public paylaşımın RSC
+viewer alanı ve yorum API'leri istemcide sentetik yanıtlarla karşılandı;
+gerçek oturum oluşturulmadı. Ana/alt yorum gönderme, hedef iptal/onay,
+alt/ana yorum silme sayımları, geçersiz başarı/500 ile taslak ve liste
+koruması, 401 açık giriş aktarımı/kaynak URL, browser Geri ile tek tüketimli
+taslak dönüşü, kayıp hedefte gönderim engeli ve iç linkten çıkış iptali geçti.
+0 gerçek API yazması ve 0 pageerror; hata durumlarının beklenen console HTTP
+hataları vardır. Geçici CLI dosyaları/görüntüler Git dışındaki output altındadır.
+Gerçek giriş+sunucu yazma kabulü veya genel geçmiş koruması tamamlanmış sayılmaz.
+DB/seed/oturum/baseline/CSS değişmedi; tam build/matris çalıştırılmadı.
+
 27 Ekim çok sayfalı kaynak dönüşü: `node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test tests/feed-restoration.test.mjs tests/feed-navigation.test.mjs tests/community-navigation.test.mjs`
 ile 14 saf test geçti. TypeScript, odaklı ESLint, UI/a11y statik kapıları
 ve diff kontrolü geçti. Playwright CLI / Edge 1280 koyu masaüstünde sentetik

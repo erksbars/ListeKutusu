@@ -29,6 +29,13 @@ sistemi değildir.
 
 ## Sosyal ve liste akışları
 
+- Müzik paylaşımı yorumları, GET'in bir seviyelik Prisma reply kayıtlarını
+  istemcide normalize eder; okuma ve mutation yanıtları görünüm/sayaç/taslak
+  değiştirilmeden doğrulanır. 401'de yalnız açık kullanıcı işlemiyle tek
+  yorum taslağı sessionStorage'a aktarılır: aynı hesap/paylaşım, 15 dakika
+  geçerlilik, tek tüketim. Sekme kapanınca temizlenen bu alan kalıcı taslak
+  arşivi değildir; süre dolumu okurken denetlenir. Giriş dönüşü otomatik
+  göndermez, kayıp yanıt hedefini ana yoruma dönüştürmez.
 - Akış, forum ve keşfet sorguları sunucu tarafı servis fonksiyonları üzerinden çalışır.
 - Her kullanıcının tek kişisel listesi bulunur.
 - Kitaplık müzik/dizi/film/kitap bölümlerinin ortak yönetim yüzeyidir. Müzik

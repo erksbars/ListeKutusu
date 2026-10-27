@@ -9,7 +9,9 @@ devamında topluluk/etkinlik detayından filtreli kaynak karta dönüş, kaynak
 bağlamının yerel gezinmede temizlenmesi ve giriş hedefi tamamlandı.
 Çok sayfalı kaynak dönüşü de tamamlandı: en fazla 3 ek otomatik sayfa,
 manuel devam/vazgeçme, liste sonu/cursor/hata ve bağlam değişimi korunur.
-Sıradaki: oturumlu yorum kabulü ve U-03 geçmiş/girişte taslak devamı.
+Müzik yorumu istemci kabulü ve 401 sonrası açık, hesaba bağlı kısa süreli
+giriş taslağı aktarımı tamamlandı. Gerçek oturumla yazma kabulü ayrıdır.
+Sıradaki: U-03 diğer formlarda aynı belge geri/ileri ve yerel çıkışlar.
 Aşağıdaki tasarım yüzdeleri geçmiş
 aşamanın tahminidir; güncel tüm ürün/yayın yüzdesi değildir.
 
@@ -168,8 +170,9 @@ Son 3 browser + 2 mantık testi geçti; oturumlu yorumun tam browser kabulü aç
 Yedinci dilimde filtre URL sözleşmesi, müzik detayından kaynak karta dönüş
 ve girişte aynı yol eklendi; 5 browser + 3 saf test geçti. Güncel kanıt 17.
 bölümde. Topluluk/etkinlik kaynak dönüşü 27 Ekim'de eklendi; sıradaki U-04
-çok sayfalı konum ve oturumlu yorum kabulü. U-03 geçmiş/girişte taslak,
-U-02 yönetim/oyun ve geniş kabul açık.
+çok sayfalı konum da tamamlandı. Müzik yorumunun sentetik viewer ile istemci
+kabulü ve 401 giriş taslağı aktarımı eklendi; gerçek oturumla uçtan uca
+yazma kabulü, diğer U-03 geçmiş/yerel çıkışlar, U-02 yönetim/oyun açık.
 
 1. Ana akış ve Keşfet'in ilk görünür içeriğini server-first veri sınırına taşı;
    etkileşimli filtre ve aksiyonları küçük client bileşenlerinde bırak.

@@ -2,6 +2,27 @@
 
 Son dar doğrulama: 27 Ekim 2026
 
+## 27 Ekim 2026 — müzik paylaşımı yorumları ve girişte taslak aktarımı
+
+- Yorum okuma/gönderme/silme yanıtları görünüm güncellenmeden doğrulanır.
+  API'nin iç içe replies alanı olmayan alt yorumları normalize edilir;
+  alt yorum silme penceresi de güvenle açılır. Hatalı başarı/500 metni ve
+  sayaçları bozmaz; hatadan sonra yorumları yenilemek taslağı korur.
+- 401 sonrası açık Taslağı koruyarak giriş yap işlemi, tek yorum taslağını
+  sekmenin sessionStorage alanına taşır. Aynı hesap/paylaşım, 15 dakika
+  geçerlilik ve tek tüketim sınırı vardır; yanıt hedefi ve kaynak dönüş URL'si
+  korunur. Hedef kaybolduysa gönderim engellenir. Otomatik yayınlama yoktur.
+  Bu genel/kalıcı taslak deposu veya tüm formlara geçmiş koruması değildir.
+- 9 saf test, TypeScript, odaklı ESLint, UI/a11y statik kapıları geçti.
+  Playwright CLI / Edge 1280 koyu masaüstünde sentetik viewer/RSC ve API
+  yanıtlarıyla gönderme/yanıt, hedef değişimi iptal/onay, alt/ana yorum silme,
+  geçersiz başarı/500/401, girişe geçiş ve aynı hesap görünümüne dönüş,
+  kayıp hedef, otomatik gönderim olmaması ve çıkıştan vazgeçme doğrulandı.
+  Gerçek hesap/oturum açılmadı; 0 gerçek yazma, 0 pageerror. Görüntü incelendi.
+- Tasarım/CSS, DB/seed ve önceki PNG'ler aynı. Gerçek oturumla uçtan uca
+  yazma kabulü ve tam build/matris yapılmadı. Sıradaki U-03 işi diğer
+  formlarda aynı belge geri/ileri ve yerel düğme/filtre çıkışlarıdır.
+
 ## 27 Ekim 2026 — çok sayfalı kaynak karta sınırlı dönüş
 
 - Detaydan dönülen müzik/topluluk/etkinlik kartı ilk sayfada yoksa en fazla
