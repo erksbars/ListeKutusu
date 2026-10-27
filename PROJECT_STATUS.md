@@ -2,6 +2,26 @@
 
 Son dar doğrulama: 27 Ekim 2026
 
+## 27 Ekim 2026 — topluluk yerel geçişlerinde taslak koruması
+
+- Yorum, inceleme düzenleme, etkinlik düzenleme ve etkinlik bildirimi
+  taslakları bölüm/hedef değişiminde ortak çıkış onayına bağlandı.
+  Vazgeçmek URL/metni korur; çıkış onayı yalnız kaybolacak taslağı temizler.
+  İncelemeden listeye çıkış tek onayla tamamlanır. Yorum sayfalaması metni
+  korur; başarısız kayıttan sonra düzenleyiciyi kapatıp yenileme de onaylıdır.
+- Mount kalan paylaşım/etkinlik oluşturma formları yerel bölüm, filtre ve
+  detay geçişlerinde korunur. Bunlar diğer taslağı bırakırken temizlenmez;
+  başka sayfaya çıkışta ortak korumaya katılır. Süren yazma işlemi her iki
+  geçiş türünü de kilitler. Hesap/keşif URL işlemleri history metadatasını korur.
+- 8 saf gezinme testi, TypeScript, odaklı ESLint, UI/a11y kapıları geçti.
+  CLI / Edge koyu masaüstünde sentetik üyelik/API ile oluşturma taslakları,
+  yorum sayfası, inceleme/etkinlik düzenleme, bildirim, iç link çıkışı,
+  iptal/onay ve hatalı kayıt sonrası yenileme doğrulandı. Bir PATCH istemcide
+  503 ile karşılandı; 0 gerçek yazma, 0 pageerror. Görüntü incelendi.
+- Tasarım/CSS, DB/seed ve önceki PNG'ler korunur; tam build/matris yok.
+  Genel tarayıcı geri/ileri ile kaybolan düzenleyici/yorum taslağı koruması,
+  diğer form aileleri ve gerçek oturumlu uçtan uca kabul hâlâ açık.
+
 ## 27 Ekim 2026 — müzik paylaşımı yorumları ve girişte taslak aktarımı
 
 - Yorum okuma/gönderme/silme yanıtları görünüm güncellenmeden doğrulanır.

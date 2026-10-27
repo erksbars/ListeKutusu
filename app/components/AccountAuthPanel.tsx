@@ -62,7 +62,7 @@ export function AccountAuthPanel({
     onModeChange(nextMode);
     const url = new URL(window.location.href);
     url.searchParams.set("mode", nextMode);
-    window.history.replaceState(null, "", `${url.pathname}${url.search}`);
+    window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}`);
   }
 
   return (

@@ -28,7 +28,7 @@ export function CommunityComposer({ disabled, publish }: { disabled: boolean; pu
   const review = type === "review";
   const missingSelection = review && ((libraryMode && !reference) || (catalogMode && !catalogSelection));
   const dirty = Boolean(title || body || subject || source || spoiler || reference || catalogSelection || distribution !== "community" || (review && rating !== "8"));
-  useDraftNavigationGuard({ dirty, busy: dirty && disabled });
+  useDraftNavigationGuard({ dirty, busy: dirty && disabled, discard: reset, preserveOnLocalNavigation: true });
   function reset() { setTitle(""); setBody(""); setSubject(""); setSource(""); setSpoiler(false); setReference(null); setCatalogSelection(null); setDistribution("community"); setRating("8"); }
   return <form className="ui-panel community-stack" onSubmit={event => {
     event.preventDefault();

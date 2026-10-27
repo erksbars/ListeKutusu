@@ -2,13 +2,13 @@
 
 import { createContext, useCallback, useContext, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { draftExitTarget } from "@/lib/draftNavigation";
+import { draftExitScope, draftExitTarget } from "@/lib/draftNavigation";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { Toast } from "./Toast";
 
-type Draft = { dirty: boolean; busy?: boolean; save?: () => Promise<boolean>; discard?: () => void };
-type PendingExit = { proceed: () => void };
-type DraftRegistry = { register: (id: string, value: Draft) => () => void; request: (proceed: () => void) => void };
+type Draft = { dirty: boolean; busy?: boolean; save?: () => Promise<boolean>; discard?: () => void; preserveOnLocalNavigation?: boolean };
+type PendingExit = { proceed: () => void; local: boolean };
+type DraftRegistry = { register: (id: string, value: Draft) => () => void; request: (proceed: () => void, local?: boolean) => void };
 const DraftContext = createContext<DraftRegistry | null>(null);
 
 export function DraftNavigationProvider({ children }: { children: ReactNode }) {
@@ -23,17 +23,18 @@ export function DraftNavigationProvider({ children }: { children: ReactNode }) {
     drafts.current.set(id, value);
     return () => { drafts.current.delete(id); };
   }, []);
-  const current = useCallback(() => {
+  const current = useCallback((local = false) => {
     const values = [...drafts.current.values()];
-    return { dirty: values.some(value => value.dirty), busy: values.some(value => value.busy) };
+    const scope = draftExitScope(values, local);
+    return { dirty: scope.dirty.length > 0, busy: scope.busy };
   }, []);
-  const request = useCallback((proceed: () => void) => {
-    const state = current();
+  const request = useCallback((proceed: () => void, local = false) => {
+    const state = current(local);
     if (state.busy || savingRef.current) {
       setNotice("İşlem sürüyor. Tamamlanınca yeniden deneyebilirsin.");
     } else if (state.dirty) {
       setSaveError(null);
-      setTarget({ proceed });
+      setTarget({ proceed, local });
     } else proceed();
   }, [current]);
   const registry = useMemo(() => ({ register, request }), [register, request]);
@@ -68,12 +69,12 @@ export function DraftNavigationProvider({ children }: { children: ReactNode }) {
     };
   }, [current, request, router]);
 
-  const dirtyDrafts = [...drafts.current.values()].filter(draft => draft.dirty);
+  const dirtyDrafts = draftExitScope([...drafts.current.values()], target?.local).dirty;
   // A single explicit edit can be saved; never sequentially auto-publish other forms.
   const canSave = dirtyDrafts.length === 1 && Boolean(dirtyDrafts[0].save);
   async function saveAndContinue() {
     if (!target || savingRef.current || current().busy) return;
-    const entries = [...drafts.current.values()].filter(draft => draft.dirty);
+    const entries = draftExitScope([...drafts.current.values()], target.local).dirty;
     if (entries.length !== 1 || !entries[0].save) return;
     savingRef.current = true;
     setSaving(true);
@@ -96,16 +97,21 @@ export function DraftNavigationProvider({ children }: { children: ReactNode }) {
     <Toast message={notice} tone="info" onClose={() => setNotice(null)} />
     <ConfirmDialog open={Boolean(target)} title="Değişiklikler kaydedilmedi" body={saveError ?? "Devam edersen kaydedilmemiş değişikliklerin kaybolacak. Kaydetmeden çıkmak taslaklarını yayınlamaz veya kaydetmez."} busy={saving} onSave={canSave ? () => { void saveAndContinue(); } : undefined} confirmLabel="Kaydetmeden çık" onCancel={() => { if (!savingRef.current) setTarget(null); }} onConfirm={() => {
       if (current().busy || savingRef.current || !target) return;
-      for (const draft of drafts.current.values()) if (draft.dirty) draft.discard?.();
+      for (const draft of draftExitScope([...drafts.current.values()], target.local).dirty) draft.discard?.();
       setTarget(null);
       target.proceed();
     }} />
   </DraftContext.Provider>;
 }
 
-export function useDraftNavigationGuard({ dirty, busy = false, save, discard }: Draft) {
+export function useDraftNavigationGuard({ dirty, busy = false, save, discard, preserveOnLocalNavigation = false }: Draft) {
   const registry = useContext(DraftContext), id = useId();
-  const state = useMemo(() => ({ dirty, busy, save, discard }), [dirty, busy, save, discard]);
+  const state = useMemo(() => ({ dirty, busy, save, discard, preserveOnLocalNavigation }), [dirty, busy, save, discard, preserveOnLocalNavigation]);
   useEffect(() => registry?.register(id, state), [id, registry, state]);
   return registry?.request ?? ((proceed: () => void) => { if (!dirty && !busy) proceed(); });
+}
+
+export function useDraftNavigationRequest(local = false) {
+  const registry = useContext(DraftContext);
+  return (proceed: () => void) => registry ? registry.request(proceed, local) : proceed();
 }

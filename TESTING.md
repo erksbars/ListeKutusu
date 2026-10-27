@@ -1,5 +1,18 @@
 # ListeKutusu Doğrulama Politikası
 
+27 Ekim topluluk yerel taslak çıkışları:
+`node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test tests/draft-navigation.test.mjs tests/community-navigation.test.mjs`
+ile 8 test geçti. TypeScript, değişen kaynak ESLint, UI/a11y statik kapıları
+ve diff kontrolü geçti. CLI / Edge 1280 koyu masaüstünde sentetik üyelik/API
+ile oluşturma formlarının filtre/bölüm/detayda korunması, yorum sayfalaması,
+yorum/inceleme/etkinlik düzenleme/bildirim çıkışında iptal/onay, inceleme
+listesine tek onayla çıkış ve iç linkten global çıkış doğrulandı. Etkinlik
+kaydının sentetik PATCH 503 yanıtından sonra kapat/yenile işleminin iptal ve
+onayı geçti; ilgisiz oluşturma taslağı korunur. 0 gerçek API yazması,
+0 pageerror; ekran görüntüsü incelendi. Geçici CLI dosyaları Git dışındadır.
+Genel browser geri/ileri koruması, gerçek oturumla yazma ve tam matris/build
+bu kabulün kapsamında değildir. DB/seed/baseline/CSS değişmedi.
+
 27 Ekim müzik yorum yazma/giriş taslağı dilimi:
 `node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test tests/comment-payload.test.mjs tests/comment-draft.test.mjs tests/feed-comments.test.mjs`
 ile 9 test geçti. TypeScript, odaklı ESLint, UI/a11y statik kapıları ve diff

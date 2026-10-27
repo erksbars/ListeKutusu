@@ -30,7 +30,10 @@ export function CommunityEventsPanel({ slug, canCreate, active, navigation, navi
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [createDirty, setCreateDirty] = useState(false);
-  useDraftNavigationGuard({ dirty: canCreate && createDirty, busy });
+  const createForm = useRef<HTMLFormElement>(null);
+  const requestPageExit = useDraftNavigationGuard({ dirty: canCreate && createDirty, busy,
+    discard: () => { createForm.current?.reset(); setCreateDirty(false); }, preserveOnLocalNavigation: true });
+  const requestDraftExit = (proceed: () => void) => requestPageExit(proceed, true);
   const busyRef = useRef(false);
   const [confirm, setConfirm] = useState<"cancel" | "remove" | null>(null);
   useEffect(() => { setEditing(false); setConfirm(null); setWriteError(""); }, [selectedId]);
@@ -63,8 +66,8 @@ export function CommunityEventsPanel({ slug, canCreate, active, navigation, navi
         {detail.canReport && !editing && <CommunityEventReport key={detail.event.id} busy={busy} submit={(reason, done) => void write(`${api}/${selectedId}`, { action: "report", reason }, done)} />}
         {detail.reportStatus && <p role="status">{detail.reportStatus === "pending" ? "Bu etkinlik için bildirimin topluluk yönetiminin incelemesini bekliyor." : "Bu etkinlik için bildirimin topluluk yönetimi tarafından incelendi."}</p>}
         {detail.canManage && <section className="community-stack" aria-label="Etkinlik katılımcıları"><h4>Katılacağını belirtenler</h4><p>İlk 200 profil; engelleme filtreleri uygulanır. Katılım tercihidir, gerçekleşmiş katılım kaydı değildir.</p>{!detail.participants.length && <p>Görünür katılımcı yok.</p>}{detail.participants.map(person => <Link key={person.id} href={`/u/${person.slug}`}>{person.ownerName}</Link>)}</section>}
-        {detail.canManage && !editing && <div className="community-actions">{detail.event.status === "scheduled" && new Date(detail.event.startsAt) > new Date() && <><Button type="button" disabled={busy} onClick={() => { setEditing(true); setWriteError(""); }}>Etkinliği düzenle</Button><Button type="button" disabled={busy} onClick={() => setConfirm("cancel")}>Etkinliği iptal et</Button></>}<Button type="button" disabled={busy} onClick={() => setConfirm("remove")}>Etkinliği kaldır</Button></div>}
-        {editing && detail.canManage && <><CommunityEventEditor key={`${detail.event.id}:${detail.event.contentVersion}`} event={detail.event} busy={busy} onCancel={() => { setEditing(false); setWriteError(""); }} onSave={payload => void write(`${api}/${selectedId}`, payload, () => setEditing(false), "PATCH")} />{writeError && <Button type="button" disabled={busy} onClick={() => { setEditing(false); setWriteError(""); setRevision(value => value + 1); }}>Formu kapatıp güncel etkinliği yükle</Button>}</>}
+        {detail.canManage && !editing && <div className="community-actions">{detail.event.status === "scheduled" && new Date(detail.event.startsAt) > new Date() && <><Button type="button" disabled={busy} onClick={() => requestDraftExit(() => { setEditing(true); setWriteError(""); })}>Etkinliği düzenle</Button><Button type="button" disabled={busy} onClick={() => setConfirm("cancel")}>Etkinliği iptal et</Button></>}<Button type="button" disabled={busy} onClick={() => setConfirm("remove")}>Etkinliği kaldır</Button></div>}
+        {editing && detail.canManage && <><CommunityEventEditor key={`${detail.event.id}:${detail.event.contentVersion}`} event={detail.event} busy={busy} onCancel={() => { setEditing(false); setWriteError(""); }} onSave={payload => void write(`${api}/${selectedId}`, payload, () => setEditing(false), "PATCH")} />{writeError && <Button type="button" disabled={busy} onClick={() => requestDraftExit(() => { setEditing(false); setWriteError(""); setRevision(value => value + 1); })}>Formu kapatıp güncel etkinliği yükle</Button>}</>}
       </article>}
     </> : <>
       <SelectField label="Etkinlik filtresi" value={filter} disabled={busy} onChange={event => navigate({ eventFilter: event.target.value as CommunityNavigation["eventFilter"], eventPage: 1 })}><option value="upcoming">Yaklaşan</option><option value="past">Başlangıcı geçmiş</option><option value="cancelled">İptal edilen</option></SelectField>
@@ -73,7 +76,7 @@ export function CommunityEventsPanel({ slug, canCreate, active, navigation, navi
       {data?.events.map(event => <article className="ui-card community-stack" key={event.id}><h3>{event.title}</h3><EventFacts event={event} /><Button type="button" disabled={busy || loading} onClick={() => { navigate({ eventId: event.id }); setMessage(""); }}>Etkinlik detayını aç</Button></article>)}
       {data && <div className="community-actions"><Button type="button" disabled={page === 1 || busy || loading} onClick={() => navigate({ eventPage: page - 1 })}>Önceki etkinlikler</Button><span>Sayfa {data.page}</span><Button type="button" disabled={!data.hasMore || page >= 100 || busy || loading} onClick={() => navigate({ eventPage: page + 1 })}>Sonraki etkinlikler</Button></div>}
     </>}
-    {canCreate && <form hidden={Boolean(selectedId)} className="ui-panel community-stack" onChange={event => {
+    {canCreate && <form ref={createForm} hidden={Boolean(selectedId)} className="ui-panel community-stack" onChange={event => {
       const fields = new FormData(event.currentTarget);
       setCreateDirty([...fields.entries()].some(([name, value]) => name === "distribution" ? value !== "community" : String(value).length > 0));
     }} onSubmit={event => {

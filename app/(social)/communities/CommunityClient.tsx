@@ -26,6 +26,7 @@ import { CommunityReviewEditor } from "./CommunityReviewEditor";
 import { CommunityContentFilters } from "./CommunityContentFilters";
 import { CommunityPostReactions } from "./CommunityPostReactions";
 import { useCommunityRead } from "./useCommunityRead";
+import { useDraftNavigationGuard } from "@/app/components/DraftNavigationProvider";
 
 export function CommunityClient({ slug, initialNavigation, initialFeedReturnTo = null }: { slug: string; initialNavigation: CommunityNavigation; initialFeedReturnTo?: string | null }) {
   const api = `/api/communities/${encodeURIComponent(slug)}`;
@@ -55,6 +56,9 @@ export function CommunityClient({ slug, initialNavigation, initialFeedReturnTo =
   const [reportTarget, setReportTarget] = useState<Record<string, unknown> | null>(null);
   const [reason, setReason] = useState("");
   const [confirm, setConfirm] = useState<{ title: string; body: Record<string, unknown> } | null>(null);
+  const requestPageExit = useDraftNavigationGuard({ dirty: Boolean(comment || (reportTarget && reason)), busy,
+    discard: () => { setComment(""); setReason(""); setReportTarget(null); } });
+  const requestDraftExit = (proceed: () => void) => requestPageExit(proceed, true);
   const member = data?.membership?.status === "active";
   const archived = data?.community.status === "archived";
   const canWrite = Boolean(member && !archived && !loading && !busy);
@@ -70,11 +74,11 @@ export function CommunityClient({ slug, initialNavigation, initialFeedReturnTo =
     return () => controller.abort();
   }, [listApi, revision]);
   useEffect(() => { setRevealedPostId(null); setComment(""); setReportTarget(null); setConfirm(null); setActionError(""); setEditingReview(false); setReviewDirty(false); setDiscardReview(null); }, [postId]);
-  function openPost(id: string | null) { navigate({ section: "posts", postId: id, commentPage: 1 }); }
+  function openPost(id: string | null, confirmed = false) { navigate({ section: "posts", postId: id, commentPage: 1 }, false, confirmed); }
   function closeReview(target: "editor" | "list") {
+    if (target === "list") { requestDraftExit(() => { setEditingReview(false); setReviewDirty(false); openPost(null, true); }); return; }
     if (editingReview && reviewDirty) { setDiscardReview(target); return; }
     setEditingReview(false); setReviewDirty(false);
-    if (target === "list") openPost(null);
   }
   async function mutate(payload: Record<string, unknown>, success: string, after?: () => void) {
     if (busyRef.current) return;
@@ -120,7 +124,7 @@ export function CommunityClient({ slug, initialNavigation, initialFeedReturnTo =
           <Link href={`/communities/${encodeURIComponent(slug)}?post=${encodeURIComponent(post.post.id)}`}>Paylaşım bağlantısı ↗</Link>
           <CommunityPostReactions state={post.post} authenticated={Boolean(data.viewerId)} disabled={busy || loading || postLoading || editingReview} change={(action, active) => react(post.post.id, action, active)} />
           {post.post.type === "review" && post.post.author.id === data.viewerId && member && !archived && !editingReview && <Button type="button" disabled={!canWrite || postLoading} onClick={() => { setEditingReview(true); setActionError(""); }}>İncelemeyi düzenle</Button>}
-          {editingReview && member && !archived && post.post.author.id === data.viewerId && <><CommunityReviewEditor key={post.post.id} post={post.post} disabled={!canWrite || postLoading} dirtyChanged={setReviewDirty} requestCancel={() => closeReview("editor")} cancel={() => { setEditingReview(false); setReviewDirty(false); }} save={(payload, done) => void mutate(payload, "İnceleme güncellendi.", () => { done(); setRevealedPostId(null); })} />{actionError && <Button type="button" disabled={busy} onClick={() => { setEditingReview(false); setRevision(value => value + 1); }}>Taslağı kapatıp güncel incelemeyi yükle</Button>}</>}
+          {editingReview && member && !archived && post.post.author.id === data.viewerId && <><CommunityReviewEditor key={post.post.id} post={post.post} disabled={!canWrite || postLoading} dirtyChanged={setReviewDirty} requestCancel={() => closeReview("editor")} cancel={() => { setEditingReview(false); setReviewDirty(false); }} save={(payload, done) => void mutate(payload, "İnceleme güncellendi.", () => { done(); setRevealedPostId(null); })} />{actionError && <Button type="button" disabled={busy} onClick={() => requestDraftExit(() => { setEditingReview(false); setRevision(value => value + 1); })}>Taslağı kapatıp güncel incelemeyi yükle</Button>}</>}
           {member && (post.post.author.id === data.viewerId || data.canModerate) && <CommunityDistributionField value={post.post.distribution} disabled={!canWrite || postLoading || editingReview} onChange={distribution => void mutate({ action: "set-distribution", postId, distribution }, "Akış tercihi güncellendi.")} />}
           {contentActions(post.post.author, post.post.id)}</article>
           {canReadBody && <><h3>Yorumlar</h3>{!post.comments.length && <p>İlk yorumu sen yazabilirsin.</p>}{post.comments.map(item => <article key={item.id} className="ui-card community-stack"><Link href={`/u/${item.author.slug}`}>{item.author.ownerName}</Link><p className="community-body">{item.body}</p>{contentActions(item.author, post.post.id, item.id)}</article>)}

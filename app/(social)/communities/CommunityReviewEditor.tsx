@@ -9,7 +9,7 @@ export function CommunityReviewEditor({ post, disabled, save, cancel, requestCan
   const [title, setTitle] = useState(post.title), [body, setBody] = useState(post.body);
   const [rating, setRating] = useState(String(post.rating)), [spoiler, setSpoiler] = useState(post.spoiler);
   const dirty = title !== post.title || body !== post.body || rating !== String(post.rating) || spoiler !== post.spoiler;
-  useDraftNavigationGuard({ dirty, busy: dirty && disabled });
+  useDraftNavigationGuard({ dirty, busy: dirty && disabled, discard: () => { setTitle(post.title); setBody(post.body); setRating(String(post.rating)); setSpoiler(post.spoiler); } });
   useEffect(() => dirtyChanged?.(dirty), [dirty, dirtyChanged]);
   return <form className="ui-panel community-stack" aria-label="İnceleme düzenleme" onSubmit={event => { event.preventDefault(); save({ action: "edit-review", postId: post.id, expectedRevision: post.revision, title, body, rating: Number(rating), spoiler }, cancel); }}>
     <h3>İncelemeni düzenle</h3><p>Eser ve kaynak bilgisi değişmez. Yeni metin, puan ve spoiler tercihi herkese açık incelemeye uygulanır. Başlığa spoiler yazma. Yenileme veya sayfadan ayrılma taslağı siler.</p>

@@ -285,7 +285,7 @@ export default function AccountPage() {
     const url = new URL(window.location.href);
     url.searchParams.delete("mode");
     url.searchParams.set("tab", value);
-    window.history.replaceState(null, "", `${url.pathname}${url.search}`);
+    window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}`);
   }
   function discardUnsavedChanges() {
     if (!list || loading) return;

@@ -3,14 +3,15 @@ import type { CommunityEventDetail } from "@/lib/communityTypes";
 import { Button } from "@/app/components/ui/Button";
 import { TextAreaField, TextField } from "@/app/components/ui/Field";
 import { CommunityDistributionField } from "@/app/components/CommunityDistributionField";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useDraftNavigationGuard } from "@/app/components/DraftNavigationProvider";
 
 function localTime(iso: string) { return new Date(new Date(iso).getTime() + 3 * 3_600_000).toISOString().slice(0, 16); }
 export function CommunityEventEditor({ event, busy, onSave, onCancel }: { event: CommunityEventDetail["event"]; busy: boolean; onSave: (payload: Record<string, unknown>) => void; onCancel: () => void }) {
   const [dirty, setDirty] = useState(false);
-  useDraftNavigationGuard({ dirty, busy });
-  return <form className="ui-panel community-stack" aria-label="Etkinlik düzenleme" onChange={e => {
+  const form = useRef<HTMLFormElement>(null);
+  const requestExit = useDraftNavigationGuard({ dirty, busy, discard: () => { form.current?.reset(); setDirty(false); } });
+  return <form ref={form} className="ui-panel community-stack" aria-label="Etkinlik düzenleme" onChange={e => {
     const fields = new FormData(e.currentTarget);
     const initial = { title: event.title, description: event.description, localStart: localTime(event.startsAt), city: event.city, venue: event.venue, capacity: String(event.capacity ?? ""), distribution: event.distribution };
     setDirty(Object.entries(initial).some(([key, value]) => String(fields.get(key) ?? "") !== value) || fields.has("publicLocationConfirmed"));
@@ -28,7 +29,7 @@ export function CommunityEventEditor({ event, busy, onSave, onCancel }: { event:
       <TextField label="Katılımcı kapasitesi (isteğe bağlı)" name="capacity" type="number" defaultValue={event.capacity ?? ""} min={2} max={200} step={1} />
       <label className="community-check"><input type="checkbox" name="publicLocationConfirmed" required />Güncel etkinlik ve mekân bilgilerinin herkese açık olduğunu biliyorum.</label>
       <CommunityDistributionField defaultValue={event.distribution} />
-      <div className="community-actions"><Button type="submit" variant="primary" loading={busy}>Değişiklikleri kaydet</Button><Button type="button" onClick={onCancel}>Düzenlemeden vazgeç</Button></div>
+      <div className="community-actions"><Button type="submit" variant="primary" loading={busy}>Değişiklikleri kaydet</Button><Button type="button" onClick={() => requestExit(onCancel, true)}>Düzenlemeden vazgeç</Button></div>
     </fieldset>
   </form>;
 }

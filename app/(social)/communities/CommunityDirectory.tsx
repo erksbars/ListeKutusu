@@ -28,7 +28,7 @@ export function CommunityDirectory({ initialFilters = EMPTY_DISCOVERY_FILTERS }:
   function applyFilters(value: DiscoveryFilters) {
     setFilter(value); setDraft(value);
     const query = discoveryParams(value).toString();
-    window.history.pushState({}, "", `/communities${query ? `?${query}` : ""}`);
+    window.history.pushState(window.history.state, "", `/communities${query ? `?${query}` : ""}`);
   }
   useEffect(() => {
     const sync = () => { const value = discoveryFiltersFromParams(new URLSearchParams(window.location.search)); setFilter(current => JSON.stringify(current) === JSON.stringify(value) ? current : value); setDraft(value); };

@@ -11,7 +11,9 @@ bağlamının yerel gezinmede temizlenmesi ve giriş hedefi tamamlandı.
 manuel devam/vazgeçme, liste sonu/cursor/hata ve bağlam değişimi korunur.
 Müzik yorumu istemci kabulü ve 401 sonrası açık, hesaba bağlı kısa süreli
 giriş taslağı aktarımı tamamlandı. Gerçek oturumla yazma kabulü ayrıdır.
-Sıradaki: U-03 diğer formlarda aynı belge geri/ileri ve yerel çıkışlar.
+Topluluk yorum/düzenleyici/bildirim yerel çıkışları ortak onaya bağlandı;
+mount kalan oluşturma taslakları bölüm/filtre/detayda korunur.
+Sıradaki: U-03 tarayıcı geri/ileri ve kalan form ailelerinin çıkışları.
 Aşağıdaki tasarım yüzdeleri geçmiş
 aşamanın tahminidir; güncel tüm ürün/yayın yüzdesi değildir.
 

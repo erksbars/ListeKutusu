@@ -209,6 +209,13 @@ sistemi değildir.
   gizlenir, yazılanlar aynı sayfa içi gezinmede korunur. Kalıcı taslak deposu,
   reload/başka sayfadan dönüş veya yetki/okuma hatası sonrası taslak kurtarma
   garantisi değildir. Spoiler açma tercihi URL'ye/kalıcı depoya yazılmaz.
+- Yerel topluluk komutları ortak taslak kaydından çıkış onayı ister.
+  `preserveOnLocalNavigation` yalnız mount kalacağı bilinen oluşturma
+  formları içindir; bu formlar yerel onayda kaydet/sil kapsamına girmez,
+  global çıkışta girer. Busy kayıtlar kapsamdan bağımsız geçişi kilitler.
+  Yorum sayfası değişimi aynı editörü korur; mutation sonrası replace ve
+  zaten onaylanmış liste çıkışı ikinci onay açmaz. Native popstate hâlâ
+  URL'yi eşler; genel geri/ileri taslak engeli tamamlanmış değildir.
 - useCommunityRead paylaşım detayı ve etkinlik liste/detayında sonucu URL+
   yenileme nesliyle damgalar. Render yalnız mevcut anahtarın data/error'ını
   kullanır; filtre/sayfa/hedef değişimindeki ilk render bile eski başlık,
