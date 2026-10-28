@@ -1,5 +1,21 @@
 # ListeKutusu Doğrulama Politikası
 
+28 Ekim ortak arama/akış kabulü:
+`node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test tests/social-search.test.mjs`
+ile 5 test geçti: URL/normalizasyon, sorgu sınırı, öneri kaynakları,
+engel/gizleme/dağıtım/spoiler DTO sözleşmesi ve sınırlı sayfalama.
+TypeScript, ilgili ESLint, UI/a11y statik denetimleri ve diff kontrolü geçti.
+CLI/Edge 1280 koyu masaüstünde birleşik öneriler ve Enter, klavye/Escape,
+tür/sayfa/yenileme/geri, hızlı sorgu değişimi, boş/hata/tekrar, eski Keşfet
+sorgusu yönlendirmesi ve global aramada topluluk oluşturma taslağı
+iptal/devam koruması geçti. Akış türü URL/yenilemesi ve müzik kapsamı da
+kontrol edildi. Dolu sonuç/hata/form oturumu istemci API taklididir;
+gerçek Mooncake araması ve 5 geçersiz parametre isteği salt okunur API ile
+geçti. 0 pageerror, 0 gerçek yazma. Görüntüler incelendi, Git dışındadır.
+Sabit üst arama için sayfa başlığı kaydırma payı düzeltildi; arama sonucu
+URL'si doğrudan istemciden okunarak hızlı geri/yeni sorgu eskimesi giderildi.
+Tam production build/matris, mobil/açık tema çalıştırılmadı.
+
 28 Ekim izole gerçek oturum kabulü:
 `npm run test:drafts:serve` kaynakları/DB'yi ayırdı; CLI / Edge koyu masaüstü
 kontrollerinde API route mock'u kullanılmadı. Gerçek HTTP-only giriş, kök/

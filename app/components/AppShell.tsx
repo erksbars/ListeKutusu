@@ -1,5 +1,7 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
+import { GlobalSearch } from "./GlobalSearch";
+import styles from "./SocialSearch.module.css";
 import { Bookmark, CalendarDays, CircleHelp, Settings2 } from "lucide-react";
 import { PrimaryNavigation } from "./PrimaryNavigation";
 import { DraftNavigationProvider } from "./DraftNavigationProvider";
@@ -18,6 +20,6 @@ export function AppShell({ children }: { children: ReactNode }) {
       </nav>
       <Link href="/legal" className="desktop-shell-help"><CircleHelp size={18} aria-hidden="true" />Kullanım ve gizlilik</Link>
     </aside>
-    <div className="desktop-shell-content">{children}</div>
+    <div className={`desktop-shell-content ${styles.content}`}><Suspense fallback={<div aria-label="Arama yükleniyor" style={{ minHeight: 72 }} />}><GlobalSearch /></Suspense>{children}</div>
   </div></DraftNavigationProvider>;
 }

@@ -1,5 +1,18 @@
 # ListeKutusu Mimari Özeti
 
+## Ortak sosyal arama
+
+`GlobalSearch` AppShell içinde tek arama alanıdır; Spotify `/api/search`
+parça seçimine aittir ve değişmez. `/search` URL'sindeki q/type/page hem
+başlığı hem istemci okumasını belirler. İstekler iptal edilebilir, eski
+sorgu sonuçları gösterilmez; programatik çıkış ortak taslak korumasını kullanır.
+`GET /api/social-search` private/no-store; q en fazla 100 karakter,
+en az 2 karakter, sayfa 1–50. Öneri modu yalnız kimlik kaynaklarıdır.
+Tam okuma açık kullanıcı/topluluk, yayımlanmış müzik/genel topluluk paylaşımı
+ve genel yaklaşan etkinlik DTO'larını birleştirir; ham Prisma nesnesi dönmez.
+Her kaynak ayrı sınırlı sayfalanır, paylaşımlar sayfa içinde tarihle birleşir;
+kaynaklar arası tüm sayfalara yayılan tarih/alaka sıralaması vaat edilmez.
+
 ## Uygulama katmanları
 
 - `scripts/serve-draft-acceptance.mjs` gerçek oturumlu dar kabulü yalnız

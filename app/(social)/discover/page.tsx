@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { searchPath } from "@/lib/socialSearchTypes";
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import {
   Compass,
@@ -14,7 +16,6 @@ import {
   Search,
   UserRound,
   UsersRound,
-  X,
 } from "lucide-react";
 import { Toast } from "@/app/components/Toast";
 import { MobileDock } from "@/app/components/MobileDock";
@@ -108,6 +109,7 @@ export default function DiscoverPage() {
   const { goToLogin, logoutToHome } = useSessionNavigation();
   const [data, setData] = useState<DiscoverData | null>(null);
   const [account, setAccount] = useState<Account>(null);
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [searchScope, setSearchScope] = useState<SearchScope>("all");
@@ -153,6 +155,7 @@ export default function DiscoverPage() {
       const params = new URLSearchParams(window.location.search);
       const nextQuery = params.get("q")?.trim() || "";
       const nextScope = params.get("type") as SearchScope | null;
+      if (nextQuery) { router.replace(searchPath(nextQuery, nextScope === "people" || nextScope === "lists" ? "people" : "all")); return; }
       setQuery(nextQuery);
       setSearchScope(searchScopes.some((scope) => scope.id === nextScope) ? nextScope! : "all");
     };
@@ -160,7 +163,7 @@ export default function DiscoverPage() {
     setUrlStateReady(true);
     window.addEventListener("popstate", applyUrlState);
     return () => window.removeEventListener("popstate", applyUrlState);
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     if (!urlStateReady) return;
@@ -170,7 +173,7 @@ export default function DiscoverPage() {
     else url.searchParams.delete("q");
     if (normalizedQuery && searchScope !== "all") url.searchParams.set("type", searchScope);
     else url.searchParams.delete("type");
-    window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+    window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
   }, [query, searchScope, urlStateReady]);
 
   const visibleTracks = useMemo(() => {
@@ -410,33 +413,7 @@ export default function DiscoverPage() {
                   : "Yükselen şarkıları, konuşulan türleri ve topluluğun aktif küratörlerini tek yerde tara."}
               </p>
             </div>
-            <label className="discover-search">
-              <Search size={17} aria-hidden="true" />
-              <span className="sr-only">Toplulukta şarkı, sanatçı, kullanıcı veya liste ara</span>
-              <input
-                value={query}
-                onChange={(event) => {
-                  setQuery(event.target.value);
-                  if (event.target.value.trim()) setActiveTag(null);
-                }}
-                placeholder="Şarkı, kullanıcı veya liste ara..."
-                autoComplete="off"
-              />
-              {searchActive && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setQuery("");
-                    setSearchScope("all");
-                  }}
-                  className="discover-search-clear"
-                  aria-label="Aramayı temizle"
-                  title="Aramayı temizle"
-                >
-                  <X size={15} />
-                </button>
-              )}
-            </label>
+            <Link href="/search" className="secondary-action inline-flex items-center gap-2 rounded-xl px-4 py-3"><Search size={17} aria-hidden="true" />Her şeyde ara</Link>
           </div>
         </section>
 

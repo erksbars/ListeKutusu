@@ -1,5 +1,29 @@
 # ListeKutusu Güncel Durum
 
+## 28 Ekim 2026 — ortak arama ve görünür akış türleri
+
+- Kullanıcının yeni yönlendirmesiyle yalnız arama/akış düzeni ele alındı.
+  Sol menü ve koyu mavi/cyan/yeşil kimlik korundu; önceki kaynak
+  `design/before-unified-search-2026-10-28` etiketiyle saklandı.
+- Kalıcı üst arama; birlikte kullanıcı/topluluk önerileri, klavye seçimi ve
+  Enter ile `/search`. Paylaşımlar, topluluklar ve kullanıcılar aynı sonuç
+  alanında tür bağlantılarıyla daraltılır. Topluluk dizininin ayrı isim
+  kutusu kaldırıldı; konum/ilgi filtreleri durur. Keşfet müzik taramasıdır;
+  eski sorgulu Keşfet bağlantıları ortak aramaya gider.
+- `/api/social-search` yalnız açık DTO okur. Engeller, müzik gizleme,
+  aktif hesap/topluluk, genel dağıtım ve spoiler sınırları uygulanır.
+  Etkinlik adresi/katılımcıları, eposta ve özel profil alanları dönmez.
+  İsimler alfabetik; paylaşım kaynakları ayrı sınırlı sayfalanıp yalnız
+  o sayfa içinde tarihle birleştirilir. Tam metin/alaka sırası değildir.
+- Yeni/Takip akışının içerik türleri görünür düğmelere taşındı; URL,
+  yenileme ve geri dönüş korunur. Diğer sıralamalar hâlâ müzik kapsamındadır.
+- 5 odaklı birim testi, TypeScript, ilgili ESLint, UI/a11y statik kapıları
+  ve CLI/Edge 1280 koyu masaüstü kabulü geçti. Birleşik dolu sonuçlar,
+  hata/tekrar ve form oturumu istemci taklididir; Mooncake araması ve
+  bozuk API parametreleri gerçek salt-okuma istekleriyle doğrulandı.
+  0 pageerror; gerçek DB yazma/seed/reset yok. Mooncake/listesi korundu.
+  Production build, geniş matris, mobil/açık tema bu pakette çalıştırılmadı.
+
 Son dar doğrulama: 28 Ekim 2026
 
 ## 28 Ekim 2026 — izole gerçek oturumlu dar kabul tamamlandı

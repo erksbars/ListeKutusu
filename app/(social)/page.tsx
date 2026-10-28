@@ -13,7 +13,7 @@ import { LeaderboardSidebar } from "@/app/components/LeaderboardSidebar";
 import { FeedPostCard } from "@/app/components/FeedPostCard";
 import { FeedCommunityPulse } from "@/app/components/FeedCommunityPulse";
 import { CommunityFeedCard } from "@/app/components/CommunityFeedCard";
-import { SelectField } from "@/app/components/ui/Field";
+import { FeedContentTabs } from "@/app/components/FeedContentTabs";
 import { Button } from "@/app/components/ui/Button";
 import { ContentState } from "@/app/components/ui/ContentState";
 import { useHomeFeed } from "@/app/hooks/useHomeFeed";
@@ -291,7 +291,7 @@ export default function HomePage() {
                 />
 
                 {account?.onboarding && <GettingStarted initial={account.onboarding} />}
-                {mixedScope ? <div className="feed-kind-toolbar mt-3"><SelectField label="Akış içerik türü" value={feedKind} onChange={event => feedLocation.update({ ...feedLocation.value, kind: event.target.value as typeof feedKind, topic: null })} hint="Etkinliklere katılmak için ilgili topluluğa üye olmalısın."><option value="all">Tüm içerikler</option><option value="music">Müzik</option><option value="discussion">Sohbetler</option><option value="review">İncelemeler</option><option value="event">Etkinlikler</option></SelectField></div> : <p className="mt-3 text-sm text-muted">Bu görünüm yalnız müzik paylaşımlarını kapsar. Topluluk içerikleri Yeni ve Takip akışındadır.</p>}
+                {mixedScope ? <FeedContentTabs value={feedKind} onChange={kind => feedLocation.update({ ...feedLocation.value, kind, topic: null })} /> : <p className="mt-3 text-sm text-muted">Bu görünüm yalnız müzik paylaşımlarını kapsar. Topluluk içerikleri Yeni ve Takip akışındadır.</p>}
 
                 <FeedComposer
                   account={account}

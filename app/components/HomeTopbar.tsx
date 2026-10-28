@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { LogIn, MessageSquarePlus } from "lucide-react";
 import { AccountMenu } from "./AccountMenu";
-import { ProfileSearch } from "./ProfileSearch";
 
 type HomeTopbarAccount = {
   ownerName: string;
@@ -36,7 +35,6 @@ export function HomeTopbar({ account, onLogout, loginHref = "/account?mode=login
         </div>
       </div>
       <div className="flex min-w-0 items-center justify-end gap-2">
-        <ProfileSearch />
         {account ? (
           <>
             <button

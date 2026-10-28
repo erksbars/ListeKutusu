@@ -3,6 +3,12 @@
 Bu dosya yalnız açık işleri tutar. Tamamlanan işlerin özeti `PROJECT_STATUS.md`
 dosyasındadır.
 
+28 Ekim arama/akış yönlendirmesi tamamlandı: tek üst arama ve birleşik
+sonuç sayfası, tür sekmeleri, ortak öneriler ve görünür akış içerik türleri.
+Genel tasarım askısı yalnız bu açık kullanıcı talebi kapsamında açıldı.
+İleri arama (tam metin/alaka sırası, topluluk içinde kapsam), diğer müzik
+sıralamalarını topluluklara genişletme ayrı geliştirme dilimleridir.
+
 28 Ekim aktif durum: genel tasarım çalışması kullanıcı yönlendirmesine
 kadar askıda; yalnız istenen sol menü geri dönüşü yapıldı. İşlevsel U-04
 devamında topluluk/etkinlik detayından filtreli kaynak karta dönüş, kaynak
