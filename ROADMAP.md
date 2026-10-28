@@ -14,8 +14,10 @@ giriş taslağı aktarımı tamamlandı. Gerçek oturumla yazma kabulü ayrıdı
 Topluluk yorum/düzenleyici/bildirim yerel çıkışları ortak onaya bağlandı;
 mount kalan oluşturma taslakları bölüm/filtre/detayda korunur.
 Navigation API destekli aynı belge geri/ileri koruması, hızlı tekrar ve
-çoklu atlama kabulü eklendi. Sıradaki: U-03 kaydet-ve-devam/geçmiş birleşimi
-ve kalan form aileleri; gerçek oturumla yazma kabulü ayrıca açık.
+çoklu atlama kabulü eklendi. Profil kaydet-ve-devam/geçmiş birleşimi de
+sentetik hesapla doğrulandı; yanıt doğrulaması ve temiz baseline düzeltildi.
+Sıradaki: kalan oluşturma/yönetim form ailelerinin çıkışları;
+gerçek oturumla yazma kabulü ayrıca açık.
 Aşağıdaki tasarım yüzdeleri geçmiş
 aşamanın tahminidir; güncel tüm ürün/yayın yüzdesi değildir.
 

@@ -7,6 +7,7 @@ import type { AccountList, Suggestion } from "./accountTypes";
 import type { ProfileShowcaseModule } from "@/lib/profileShowcase";
 import type { ProfileBanner, ProfileDensity } from "@/lib/profileAppearance";
 import { changedUniversity, universityDraft, type UniversityDraft } from "@/lib/profileUniversity";
+import { parseSavedProfile, type SavedProfile } from "@/lib/profileSave";
 
 type AccountListActionsOptions = {
   list: AccountList | null;
@@ -30,6 +31,7 @@ type AccountListActionsOptions = {
   setMessage: Dispatch<SetStateAction<string | null>>;
   loadMe: () => Promise<void>;
   onUnauthorized: () => void;
+  onProfileSaved?: (profile: SavedProfile) => void;
 };
 
 export function useAccountListActions({
@@ -53,6 +55,7 @@ export function useAccountListActions({
   setMessage,
   loadMe,
   onUnauthorized,
+  onProfileSaved,
 }: AccountListActionsOptions) {
   const router = useRouter();
   const profileSaving = useRef(false);
@@ -239,7 +242,7 @@ export function useAccountListActions({
   }
 
   async function saveProfile() {
-    if (loading || profileSaving.current) return false;
+    if (!list || loading || profileSaving.current) return false;
     profileSaving.current = true;
     const favoriteGenres = profileGenres
       .split(",")
@@ -272,9 +275,12 @@ export function useAccountListActions({
         setMessage("Oturum süren dolmuş. Profil kaydedilmedi; taslağın bu sayfada korunuyor.");
         return false;
       }
-      if (!res.ok || !data.list) throw new Error(data.error || "Profil kaydedilemedi.");
-      setList((current) => (current ? { ...current, ...data.list } : current));
-      setProfileUniversity?.(universityDraft(data.list));
+      if (!res.ok) throw new Error(typeof data?.error === "string" ? data.error : "Profil kaydedilemedi.");
+      const saved = parseSavedProfile(data?.list, list.id);
+      if (!saved) throw new Error("Profil kayıt yanıtı doğrulanamadı. Taslağın ve seçtiğin hedef korunuyor.");
+      setList((current) => (current?.id === saved.id ? { ...current, ...saved } : current));
+      setProfileUniversity?.(universityDraft(saved));
+      onProfileSaved?.(saved);
       setMessage("Profil görünümü güncellendi.");
       return true;
     } catch (profileError) {

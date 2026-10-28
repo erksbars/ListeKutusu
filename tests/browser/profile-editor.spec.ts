@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 test("save and continue retains the destination across errors and locks duplicate saves", async ({ page }) => {
-  let account = { id: "save-exit", ownerName: "Taslak", slug: "save-exit", playlistName: "Liste", suggestions: [], bio: "", profileStatus: "Eski durum", favoriteGenres: "[]", profileShowcase: '["featured","identity","recent","forum"]', profilePosts: [], profileAchievements: [] };
+  let account = { id: "save-exit", ownerName: "Taslak", slug: "save-exit", playlistName: "Liste", suggestions: [], bio: "", profileStatus: "Eski durum", universityName: null, universityPublic: false, favoriteGenres: "[]", profileShowcase: '["featured","identity","recent","forum"]', profilePosts: [], profileAchievements: [] };
   let requests = 0;
   let release!: () => void;
   const gate = new Promise<void>(resolve => { release = resolve; });
@@ -62,7 +62,7 @@ test("save and continue retains the destination across errors and locks duplicat
 
 test("profile draft discard, failed save recovery and pending edit lock", async ({ page }, testInfo) => {
   test.setTimeout(90_000);
-  let account = { id: "editor-test", ownerName: "Profil Denemesi", slug: "editor-test", playlistName: "Seçkim", suggestions: [], bio: "Kayıtlı açıklama", profileStatus: "Kayıtlı durum", favoriteGenres: '["Rock"]', profileTheme: "aurora", profileDensity: "comfortable", profileBanner: "line", profileShowcase: '["featured","identity","recent","forum"]', profilePosts: [], profileAchievements: [], featuredAchievementId: "", pinnedFeedPostId: "" };
+  let account = { id: "editor-test", ownerName: "Profil Denemesi", slug: "editor-test", playlistName: "Seçkim", suggestions: [], bio: "Kayıtlı açıklama", profileStatus: "Kayıtlı durum", universityName: null, universityPublic: false, favoriteGenres: '["Rock"]', profileTheme: "aurora", profileDensity: "comfortable", profileBanner: "line", profileShowcase: '["featured","identity","recent","forum"]', profilePosts: [], profileAchievements: [], featuredAchievementId: "", pinnedFeedPostId: "" };
   let requests = 0;
   let releaseSave!: () => void;
   const saveGate = new Promise<void>(resolve => { releaseSave = resolve; });

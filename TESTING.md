@@ -1,5 +1,19 @@
 # ListeKutusu Doğrulama Politikası
 
+28 Ekim profil kaydet-ve-devam/geçmiş dilimi:
+`node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test tests/profile-save.test.mjs tests/draft-history.test.mjs tests/draft-navigation.test.mjs tests/community-navigation.test.mjs`
+ile 19 test geçti. TypeScript, ilgili ESLint ve UI/a11y statik kapıları geçti.
+CLI / Edge 1280 koyu masaüstünde sentetik hesap ve API yanıtlarıyla geçmiş
+hedefinde 401, bağlantı hatası, eksik ve yanlış hesap başarı yanıtı, hedef/
+metin/history state korunması, geciken kayıtta Escape/geri kilidi, özgün
+geri/ileri hedefine kaydet-ve-devam ve yeni history kaydı oluşmaması geçti.
+Yerel Güvenlik bölümüne kaydet-ve-devam sonrası sunucunun kırptığı metin
+reload olmadan editörde görüldü; dirty işareti kalktı. 0 gerçek yazma ve
+0 pageerror; görüntü incelendi. CLI kontrol dosyaları Git dışında tutulur.
+Mevcut profile-editor fixture'larının eksik üniversite alanları tamamlandı;
+test-runner matrisi çalıştırılmadı. DB/seed/baseline/CSS aynı; gerçek oturumla
+uçtan uca yazma, diğer form aileleri ve tam build/matris açık.
+
 28 Ekim geçmiş taslak koruması:
 `node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test tests/draft-history.test.mjs tests/draft-navigation.test.mjs tests/community-navigation.test.mjs`
 ile 15 test geçti. TypeScript, odaklı ESLint, UI/a11y statik kapıları ve diff

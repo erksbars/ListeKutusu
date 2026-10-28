@@ -22,6 +22,10 @@ sistemi değildir.
 
 ## Kimlik ve yetki
 
+- Profil kaydetme yanıtı istemcide hesap ID'si ve profil alanlarıyla
+  doğrulanır. Yalnız bu alanlar baseline'a alınır; başarıda editör kabul
+  edilen sunucu değerleriyle eşitlenir. Kaydet-ve-devam yalnız doğrulanan
+  başarıda seçili yerel/geçmiş hedefine gider; hata taslağı/hedefi korur.
 - Kullanıcı hesabı e-posta ve parola ile açılır.
 - Oturumlar sunucu tarafında saklanan, özetlenmiş token'larla yönetilir.
 - Üye, moderatör ve yönetici yetkileri sunucu rotalarında kontrol edilir.

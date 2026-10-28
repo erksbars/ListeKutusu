@@ -2,6 +2,26 @@
 
 Son dar doğrulama: 28 Ekim 2026
 
+## 28 Ekim 2026 — profil kaydet-ve-devam ile geçmiş kabulü
+
+- Profil kaydı yalnız aynı hesabın tam ve geçerli profil yanıtıyla başarılı
+  sayılır. Eksik/yanlış hesap/bozuk koleksiyon/görünüm değerleri mevcut
+  taslağı ve seçilmiş çıkış hedefini korur. Profil cevabından yalnız profil
+  alanları alınır; ilgisiz hesap/rol alanları baseline'a karıştırılmaz.
+- Başarıda editör sunucunun kabul ettiği bio/durum, türler, vitrin ve görünüm
+  değerlerine eşitlenir. Sunucu kırpması sonrası formun yanlışlıkla dirty
+  kalması giderildi; yerel bölüm geçişi de temiz baseline ile tamamlanır.
+- 19 saf test, TypeScript, odaklı ESLint, UI/a11y kapıları geçti. CLI / Edge
+  koyu masaüstünde geri hedefinde 401/bağlantı/eksik/yanlış hesap yanıtı,
+  yeniden deneme, bekleyen kayıtta Escape/geri kilidi, özgün geri/ileri
+  hedefine başarı ve history uzunluğu/state korunması geçti. Yerel güvenlik
+  bölümüne kaydet-ve-devam ve reload olmadan normalize metin kabulü de geçti.
+  Sentetik hesap/API; 0 gerçek yazma ve 0 pageerror, görüntü incelendi.
+- Mevcut browser fixture'larının üniversite alanları gerçek yanıt şekline
+  tamamlandı; test-runner/tam matris/build çalıştırılmadı. Tasarım/CSS,
+  DB/seed ve önceki PNG'ler aynı. Kalan oluşturma/yönetim form ailelerinin
+  çıkış kontrolleri ve gerçek oturumlu uçtan uca yazma hâlâ açık.
+
 ## 28 Ekim 2026 — aynı belge geri/ileri taslak koruması
 
 - Ortak taslak kaydı, Navigation API destekleyen tarayıcıda native geçmiş

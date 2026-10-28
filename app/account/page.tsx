@@ -258,6 +258,14 @@ export default function AccountPage() {
     setMessage,
     loadMe,
     onUnauthorized: handleUnauthorized,
+    onProfileSaved: saved => {
+      setProfileBio(saved.bio ?? ""); setProfileStatus(saved.profileStatus ?? "");
+      setPinnedFeedPostId(saved.pinnedFeedPostId ?? "");
+      setFeaturedAchievementId(saved.featuredAchievementId ?? "");
+      setProfileShowcaseModules(normalizeProfileShowcase(saved.profileShowcase));
+      setProfileGenres((JSON.parse(saved.favoriteGenres ?? "[]") as string[]).join(", "));
+      setProfileTheme(saved.profileTheme); setProfileDensity(saved.profileDensity); setProfileBanner(saved.profileBanner);
+    },
   });
   const requestDraftExit = useDraftNavigationGuard({
     dirty: hasUnsavedChanges,
