@@ -1,5 +1,18 @@
 # ListeKutusu Doğrulama Politikası
 
+28 Ekim geçmiş taslak koruması:
+`node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test tests/draft-history.test.mjs tests/draft-navigation.test.mjs tests/community-navigation.test.mjs`
+ile 15 test geçti. TypeScript, odaklı ESLint, UI/a11y statik kapıları ve diff
+kontrolü geçti. CLI / Edge 1280 koyu masaüstünde sentetik üyelik/API ile
+geri/ileri iptal/onay, history key/state/uzunluğu, aynı sayfada oluşturma
+taslağı, silinen yorumun geri gelmemesi, sayfalar arası geçiş, güvenli hash,
+çoklu kayıt atlama ve hızlı çift geri geçti. Bekleyen kayıt sırasında geri
+basma taslağı korudu; istek sentetik 503 ile tamamlandı. 0 gerçek API yazması,
+0 pageerror; görüntü incelendi. CLI dosyaları/output Git dışında kalır.
+Native gerçek belge çıkışı, eski tarayıcı fallback'i ve kaydet-ve-devam ile
+geçmişin birleşik kabulü browser matrisinde doğrulanmadı. Gerçek hesap/DB/
+seed/baseline/CSS değişmedi; tam build çalıştırılmadı.
+
 27 Ekim topluluk yerel taslak çıkışları:
 `node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test tests/draft-navigation.test.mjs tests/community-navigation.test.mjs`
 ile 8 test geçti. TypeScript, değişen kaynak ESLint, UI/a11y statik kapıları

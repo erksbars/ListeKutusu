@@ -3,7 +3,7 @@
 Bu dosya yalnız açık işleri tutar. Tamamlanan işlerin özeti `PROJECT_STATUS.md`
 dosyasındadır.
 
-27 Ekim aktif durum: genel tasarım çalışması kullanıcı yönlendirmesine
+28 Ekim aktif durum: genel tasarım çalışması kullanıcı yönlendirmesine
 kadar askıda; yalnız istenen sol menü geri dönüşü yapıldı. İşlevsel U-04
 devamında topluluk/etkinlik detayından filtreli kaynak karta dönüş, kaynak
 bağlamının yerel gezinmede temizlenmesi ve giriş hedefi tamamlandı.
@@ -13,7 +13,9 @@ Müzik yorumu istemci kabulü ve 401 sonrası açık, hesaba bağlı kısa süre
 giriş taslağı aktarımı tamamlandı. Gerçek oturumla yazma kabulü ayrıdır.
 Topluluk yorum/düzenleyici/bildirim yerel çıkışları ortak onaya bağlandı;
 mount kalan oluşturma taslakları bölüm/filtre/detayda korunur.
-Sıradaki: U-03 tarayıcı geri/ileri ve kalan form ailelerinin çıkışları.
+Navigation API destekli aynı belge geri/ileri koruması, hızlı tekrar ve
+çoklu atlama kabulü eklendi. Sıradaki: U-03 kaydet-ve-devam/geçmiş birleşimi
+ve kalan form aileleri; gerçek oturumla yazma kabulü ayrıca açık.
 Aşağıdaki tasarım yüzdeleri geçmiş
 aşamanın tahminidir; güncel tüm ürün/yayın yüzdesi değildir.
 

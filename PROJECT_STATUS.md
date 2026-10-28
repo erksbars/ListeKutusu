@@ -1,6 +1,29 @@
 # ListeKutusu Güncel Durum
 
-Son dar doğrulama: 27 Ekim 2026
+Son dar doğrulama: 28 Ekim 2026
+
+## 28 Ekim 2026 — aynı belge geri/ileri taslak koruması
+
+- Ortak taslak kaydı, Navigation API destekleyen tarayıcıda native geçmiş
+  geçişini popstate tüketicilerinden önce ele alır. Kaybolacak taslak veya
+  süren işlem varsa mevcut geçmiş kaydına döner; ortak onaydan sonra özgün
+  hedefe gider. Vazgeçmek URL/metni korur; yeni history kaydı/state alanı,
+  push/replace patch'i veya taslak cache'i eklenmedi.
+- Topluluk içi mount kalan oluşturma formları korunur; yorum sayfası ve
+  yalnız hash değişimi kesilmez. Global sayfa çıkışı tüm ilgili taslakları
+  kapsar. Hızlı ikinci traversal'ın sıradaki dönüşü geçersiz kılması giderildi;
+  birden fazla kayıt atlama ve busy durumda geri basma da konumu korur.
+- 15 saf test, TypeScript, odaklı ESLint, UI/a11y statik kapıları geçti.
+  CLI / Edge 1280 koyu masaüstünde geri/ileri iptal/onay, history key/state/
+  uzunluğu, terk edilen yorumun dönmemesi, oluşturma taslağı, sayfalar arası
+  geçiş, hash, çoklu atlama ve hızlı tekrar geçti. Geciktirilmiş sentetik
+  kayıt 503 ile karşılandı; 0 gerçek yazma ve 0 pageerror. Görüntü incelendi.
+- API desteği olmayan tarayıcılarda aynı belge guard'ı kurulmaz; mevcut
+  link/yerel geçiş ve beforeunload koruması sürer. Gerçek belge değişimi
+  native unload uyarısına bırakılır. Kaydet-ve-devam ile geçmişin birleşik
+  browser kabulü, kalan form aileleri ve gerçek oturumlu yazma açık.
+- Tasarım/CSS, DB/seed ve eski PNG'ler aynı; tam build/matris çalıştırılmadı.
+  Önceki oturumda kapanan geliştirme sunucusu 3000'de yeniden başlatıldı.
 
 ## 27 Ekim 2026 — topluluk yerel geçişlerinde taslak koruması
 

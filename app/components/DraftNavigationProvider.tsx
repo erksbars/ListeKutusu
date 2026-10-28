@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { draftExitScope, draftExitTarget } from "@/lib/draftNavigation";
+import { installDraftHistoryGuard, type DraftHistoryNavigation } from "@/lib/draftHistory";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { Toast } from "./Toast";
 
@@ -38,6 +39,15 @@ export function DraftNavigationProvider({ children }: { children: ReactNode }) {
     } else proceed();
   }, [current]);
   const registry = useMemo(() => ({ register, request }), [register, request]);
+
+  useEffect(() => {
+    const navigation = (window as Window & { navigation?: DraftHistoryNavigation }).navigation;
+    if (!navigation?.currentEntry || typeof navigation.entries !== "function") return;
+    return installDraftHistoryGuard(window, navigation, local => {
+      const state = current(local);
+      return state.dirty || state.busy || savingRef.current;
+    }, request);
+  }, [current, request]);
 
   useEffect(() => {
     function intercept(event: MouseEvent) {

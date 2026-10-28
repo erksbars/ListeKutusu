@@ -215,7 +215,12 @@ sistemi değildir.
   global çıkışta girer. Busy kayıtlar kapsamdan bağımsız geçişi kilitler.
   Yorum sayfası değişimi aynı editörü korur; mutation sonrası replace ve
   zaten onaylanmış liste çıkışı ikinci onay açmaz. Native popstate hâlâ
-  URL'yi eşler; genel geri/ileri taslak engeli tamamlanmış değildir.
+  URL'yi eşler. Navigation API destekli aynı belge geçmişinde ortak guard,
+  capture popstate ile taslağı tüketicilere geçmeden mevcut entry'ye döner,
+  onaylanmış hedefi özgün index/key ile tekrar oynatır. History state veya
+  metotlarını patch etmez; hash/yorum sayfası güvenli geçiştir. Hızlı tekrar
+  dönüşü geçersiz kılarsa delta yeniden hesaplanır. API yoksa kurulum atlanır;
+  gerçek belge çıkışında mevcut beforeunload uyarısı kullanılır.
 - useCommunityRead paylaşım detayı ve etkinlik liste/detayında sonucu URL+
   yenileme nesliyle damgalar. Render yalnız mevcut anahtarın data/error'ını
   kullanır; filtre/sayfa/hedef değişimindeki ilk render bile eski başlık,

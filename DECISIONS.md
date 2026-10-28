@@ -581,3 +581,15 @@ patch edilmez. Yüklenen listede bulunan karta görünür/odaklı dönülür; es
 özel post snapshot'ı saklanmaz, rastgele derin sayfalar otomatik çekilmez.
 Giriş aynı yolu korur fakat taslak aktarmaz veya işlem göndermez. Bu, bütün
 detay aileleri/derin sayfalama/U-03 geçmiş taslak koruması kabulü değildir.
+
+## D-034: Taslak geçmiş koruması kayıt eklemeden mevcut entry'leri kullanır
+
+28 Ekim: Navigation API mevcutsa entry key/index bilgisi yalnız okunur.
+Aynı belge geri/ileri işleminde kaybolacak taslak, popstate tüketicilerinden
+önce mevcut entry'ye döndürülür; ortak onay, özgün hedefe native go ile gider.
+Push/replace metotları patch edilmez; sentinel history kaydı veya özel taslak
+cache'i eklenmez. Güvenli hash/yorum sayfası ve mount kalan yerel oluşturma
+formları kesilmez. Busy işlem geçişi geri çevirir; hızlı ikinci traversal
+restoration'ı geçersiz kılarsa güncel delta yeniden hesaplanır. API yoksa
+bu guard kurulmaz; link/yerel çıkış ve native beforeunload davranışı sürer.
+Eski tarayıcı/gerçek belge geçişi ve kaydet-ve-devam birleşik kabulü ayrıdır.
