@@ -4,8 +4,9 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { communityInput, communityPostInput } from "../lib/communities.ts";
 import { demoUsers, demoCommunities, demoMembers, demoPosts, demoComments } from "./community-demo-data.mjs";
+import { seedDemoFeed, demoMusicPosts, demoMusicComments, demoEvents, demoResponses } from "./community-demo-feed.mjs";
 
-export const demoCounts = { users: demoUsers.length, communities: demoCommunities.length, memberships: demoMembers.length, posts: demoPosts.length, reviews: demoPosts.filter(post => post.type === "review").length, comments: demoComments.length };
+export const demoCounts = { users: demoUsers.length, communities: demoCommunities.length, memberships: demoMembers.length, posts: demoPosts.length, reviews: demoPosts.filter(post => post.type === "review").length, comments: demoComments.length, musicPosts: demoMusicPosts.length, musicComments: demoMusicComments.length, events: demoEvents.length, responses: demoResponses.length };
 export function assertLocalDemoEnvironment(env) {
   const hostname = new URL(env.APP_URL || "http://127.0.0.1:3000").hostname;
   if (env.NODE_ENV === "production" || !["127.0.0.1", "localhost", "[::1]"].includes(hostname) || !env.DATABASE_URL?.startsWith("file:")) throw new Error("Demo verisi yalnız yerel SQLite geliştirme ortamına eklenebilir.");
@@ -37,6 +38,7 @@ export async function seedCommunityDemo(db, now = new Date()) {
       if (existing && (existing.postId !== comment.postId || existing.authorId !== comment.authorId)) throw new Error("Demo yorum kimliği çakışıyor; hiçbir veri değiştirilmedi.");
       await tx.communityComment.upsert({ where: { id: comment.id }, create: { ...comment, createdAt: ago(hoursAgo) }, update: {} });
     }
+    await seedDemoFeed(tx, now);
     return demoCounts;
   }, { timeout: 30_000 });
 }

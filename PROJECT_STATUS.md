@@ -1,5 +1,24 @@
 # ListeKutusu Güncel Durum
 
+## 28 Ekim 2026 — karma akış için yerel demo içerik
+
+- Kullanıcının isteğiyle yerel demo veri eklendi: 8 girişe kapalı kurgusal
+  profil, 8 topluluk, 40 üyelik, 32 topluluk paylaşımı (16 inceleme),
+  64 topluluk yorumu, 10 şarkı paylaşımı, 20 müzik yorumu, 30 beğeni,
+  6 gelecek etkinlik ve 24 katılım/ilgi yanıtı. Paylaşımların 24'ü genel,
+  8'i topluluğa özel; tüm etkinlikler genel dağıtımlıdır. Tarihler türleri
+  karma akışta iç içe gösterecek biçimdedir. Demo etiketleri ve kurgusal
+  mekânlar kullanılır; gerçek buluşma veya gönderilen bildirim yoktur.
+- `npm run demo:seed` genişletildi; yalnız yerel SQLite, önce doğrulanan
+  yedek, tek transaction, kimlik çakışmasında rollback, boş upsert update.
+  Yeniden çalıştırma kopyalamaz ve düzenlenen/kaldırılan kaydı geri almaz.
+  Mevcut gerçek hesap/listeler/kitaplık önce-sonra hash ile aynı doğrulandı;
+  normal DB bütünlük kontrolü ok. DB/yedek Git dışında kalır.
+- 5 odaklı SQLite testi ve ilgili ESLint geçti. Gerçek API/CLI Edge koyu
+  masaüstünde ilk karma sayfada dört tür, tür filtreleri, etkinlik detayı,
+  demo kullanıcı/topluluk araması doğrulandı; 0 pageerror. Görüntü incelendi.
+  Editör keşif kaynağı ayrıca yapılandırılmadı; önceki 503 durumu sürer.
+
 ## 28 Ekim 2026 — ortak arama ve görünür akış türleri
 
 - Kullanıcının yeni yönlendirmesiyle yalnız arama/akış düzeni ele alındı.

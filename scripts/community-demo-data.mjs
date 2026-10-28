@@ -46,7 +46,7 @@ const topics = [
     ["book", "Dönüşüm", 8, true, "Ailenin değişen tavrı", "Karakterin durumundan çok çevresinin ona yaklaşımındaki değişim dikkatimi çekti. Son bölümlerdeki mesafe anlatının en rahatsız edici yanlarından biri."]],
   ["semt", "Örnek Semt Sohbetleri", "local", "Kurgusal yerel topluluk. Yer, kişiler ve buluşma fikirleri demo amaçlıdır; gerçek etkinlik yoktur.",
     ["Semt topluluğunda ne paylaşmak isterdiniz?", "Demo sohbet: kitap önerileri, oyun fikirleri ve kültür sohbetleri aynı toplulukta toplanabilir. Kesin konum veya kişisel adres paylaşmadan nasıl keşif yapılabilir?"],
-    ["Kutu oyunu masası için başlangıç fikirleri", "Demo sohbet: küçük bir grupta kolay öğrenilen oyunlardan başlamak güzel olabilir. Henüz etkinlik modülü yoktur; burada gerçek mekân veya tarih duyurulmuyor."],
+    ["Kutu oyunu masası için başlangıç fikirleri", "Demo sohbet: küçük bir grupta kolay öğrenilen oyunlardan başlamak güzel olabilir. Etkinlik kartlarında kapasiteyi ve oyuncu deneyimini belirtmek masaya katılmayı kolaylaştırır."],
     ["boardgame", "Ticket to Ride", 8, false, "İlk masaya uygun bir oyun", "Oyuncular hedeflerini kolay anlayabiliyor. Harita üzerinde alternatif yollar düşünmek ve başkasının planını izlemek oyunu canlı tutuyor."],
     ["music", "Kind of Blue", 9, false, "Sakin bir dinleme deneyimi", "Enstrümanların birbirine alan bırakması dinlemeyi rahatlatıyor. Her parçaya ayrı odaklanınca küçük geçişler daha belirgin hale geliyor."]],
 ];
@@ -68,7 +68,7 @@ export const demoPosts = topics.flatMap((topic, index) => topic.slice(4).map((it
     title: review ? item[4] : item[0], body: review ? item[5] : item[1],
     type: review ? "review" : "discussion", reviewKind: review ? item[0] : null,
     subjectTitle: review ? item[1] : null, rating: review ? item[2] : null, spoiler: review ? item[3] : false,
-    sourceUrl: null, hoursAgo: 8 + index * 8 + offset * 2,
+    sourceUrl: null, distribution: offset === 1 ? "community" : "general", hoursAgo: .5 + index * 4 + offset * .8,
   };
 }));
 export const demoComments = demoPosts.flatMap((post, index) => [

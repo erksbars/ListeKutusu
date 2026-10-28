@@ -7,6 +7,7 @@ import { PrismaClient } from "@prisma/client";
 import { seedCommunityDemo, demoCounts, assertLocalDemoEnvironment } from "../scripts/seed-community-demo.mjs";
 import { demoUsers, demoCommunities, demoMembers, demoPosts } from "../scripts/community-demo-data.mjs";
 import { createCommunities } from "../lib/communities.ts";
+import { demoMusicPosts, demoEvents, demoResponses } from "../scripts/community-demo-feed.mjs";
 
 test("demo seed üretim ve uzak ortama yazmayı engeller", () => {
   const local = { DATABASE_URL: "file:./test.db", APP_URL: "http://127.0.0.1:3000" };
@@ -36,6 +37,13 @@ test("demo seed SQLite koruma, çakışma rollback ve tekrar çalıştırma", as
       assert.equal(await db.userList.count(), 9); assert.equal(await db.community.count(), 9);
       assert.equal(await db.communityPost.count(), 32); assert.equal(await db.communityComment.count(), 64);
       assert.equal(await db.communityMember.count(), 40);
+      assert.equal(await db.feedPost.count(), 10); assert.equal(await db.feedComment.count(), 20);
+      assert.equal(await db.feedLike.count(), 30); assert.equal(await db.communityEvent.count(), 6);
+      assert.equal(await db.communityEventRsvp.count(), 24);
+      assert.equal(await db.communityPost.count({ where: { distribution: "general" } }), 24);
+      const events = await db.communityEvent.findMany();
+      assert.ok(events.every(event => event.startsAt > new Date() && event.distribution === "general" && event.title.endsWith("(Demo)")));
+      for (const response of demoResponses) assert.ok(demoMembers.some(member => member.communityId === demoEvents.find(event => event.id === response.eventId).communityId && member.userId === response.userId));
       const users = await db.userList.findMany({ where: { id: { in: demoUsers.map(user => user.id) } } });
       assert.ok(users.every(user => user.passwordHash === null && user.role === "member" && user.ownerName.startsWith("Demo ·")));
       const service = createCommunities(db);
@@ -50,12 +58,18 @@ test("demo seed SQLite koruma, çakışma rollback ve tekrar çalıştırma", as
     await t.test("ikinci çalıştırma kayıt çoğaltmaz, kullanıcı değişikliklerini geri almaz", async () => {
       await db.userList.update({ where: { id: demoUsers[0].id }, data: { bio: "Demo üzerinde kendi düzenlemem" } });
       await db.communityPost.update({ where: { id: demoPosts[0].id }, data: { status: "removed" } });
+      await db.feedPost.update({ where: { id: demoMusicPosts[0].id }, data: { note: "Korunacak müzik düzenlemesi" } });
+      await db.communityEvent.update({ where: { id: demoEvents[0].id }, data: { status: "cancelled" } });
       const member = demoMembers.find(item => item.role === "member");
       await db.communityMember.update({ where: { communityId_userId: { communityId: member.communityId, userId: member.userId } }, data: { status: "banned" } });
       await seedCommunityDemo(db);
       assert.equal(await db.communityPost.count(), 32); assert.equal(await db.communityComment.count(), 64); assert.equal(await db.userList.count(), 9);
       assert.equal((await db.userList.findUnique({ where: { id: demoUsers[0].id } })).bio, "Demo üzerinde kendi düzenlemem");
       assert.equal((await db.communityPost.findUnique({ where: { id: demoPosts[0].id } })).status, "removed");
+      assert.equal(await db.feedPost.count(), 10); assert.equal(await db.feedComment.count(), 20);
+      assert.equal(await db.feedLike.count(), 30); assert.equal(await db.communityEvent.count(), 6); assert.equal(await db.communityEventRsvp.count(), 24);
+      assert.equal((await db.feedPost.findUnique({ where: { id: demoMusicPosts[0].id } })).note, "Korunacak müzik düzenlemesi");
+      assert.equal((await db.communityEvent.findUnique({ where: { id: demoEvents[0].id } })).status, "cancelled");
       assert.equal((await db.communityMember.findUnique({ where: { communityId_userId: { communityId: member.communityId, userId: member.userId } } })).status, "banned");
       assert.deepEqual(await db.userList.findUnique({ where: { id: original.id } }), original);
       assert.equal((await db.community.findUnique({ where: { id: community.id } })).description, community.description);

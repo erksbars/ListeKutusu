@@ -1,5 +1,17 @@
 # ListeKutusu Doğrulama Politikası
 
+28 Ekim karma demo veri kabulü:
+`node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test tests/community-demo.test.mjs`
+ile 5 test geçti: yerel ortam kapısı, geçici SQLite migration, kimlik
+çakışması/rollback, üyelik ve etkinlik yanıtı tutarlılığı, 10 müzik/6 etkinlik
+ve tekrar çalıştırmada sayıların/değişikliklerin korunması. İlgili ESLint
+geçti. `npm run demo:seed` öncesi doğrulanan SQLite yedeği alır; normal
+DB'ye ekleme kullanıcı isteğiyle yapıldı. Gerçek hesap/listeler/kitaplık
+hash'i önce-sonra aynı ve PRAGMA quick_check ok. CLI/Edge 1280 koyu
+masaüstünde gerçek API ile karma ilk sayfada dört tür, dört filtre,
+etkinlik detayı ve ortak demo araması geçti; 0 pageerror. Görüntüler Git
+dışındadır. Yeni uygulama özelliği veya geniş matris/build testi değildir.
+
 28 Ekim ortak arama/akış kabulü:
 `node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test tests/social-search.test.mjs`
 ile 5 test geçti: URL/normalizasyon, sorgu sınırı, öneri kaynakları,
