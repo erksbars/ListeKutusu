@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createServer } from "node:http";
 import { assertRehearsalDirectory } from "./http-rehearsal-isolation.mjs";
+import { trackRehearsalConnections, closeRehearsalHttpServer } from "./rehearsal-http-close.mjs";
 
 const root = fileURLToPath(new URL("../../", import.meta.url)), directory = process.cwd();
 await assertRehearsalDirectory(directory, root);
@@ -12,6 +13,7 @@ if (role === "server") {
   const { default: next } = await import("next");
   let app, stopping = false;
   const server = createServer((req, res) => app.getRequestHandler()(req, res));
+  const sockets = trackRehearsalConnections(server);
   await new Promise((resolve, reject) => { server.once("error", reject); server.listen(0, "127.0.0.1", resolve); });
   const port = server.address().port;
   process.env.APP_URL = `http://127.0.0.1:${port}`;
@@ -21,7 +23,7 @@ if (role === "server") {
   const stop = async () => {
     if (stopping) return;
     stopping = true;
-    await new Promise(resolve => { server.close(resolve); server.closeAllConnections(); });
+    await closeRehearsalHttpServer(server, sockets);
     await app.close(); process.exit(0);
   };
   process.on("message", message => { if (message === "stop") void stop(); });

@@ -2,6 +2,12 @@
 
 ## Uygulama katmanları
 
+- `scripts/serve-draft-acceptance.mjs` gerçek oturumlu dar kabulü yalnız
+  kaynak whitelist kopyası ve yeni geçici DB üzerinde çalıştırır. Kalıtılan
+  uygulama sırları/hedef URL yoktur; rastgele loopback portu ve tek çalışma
+  kilidi vardır. Kontrol dosyası finish/abort alır; son koşullar doğrulanır,
+  test sunucusunun upgrade soketleri dahil bağlantıları kapatılır ve sınırı
+  doğrulanan geçici klasör temizlenir. Normal DB/.next hedeflenmez.
 - `app/`: Next.js App Router sayfaları, route handler'lar ve rota kapsamlı stiller.
 - `app/(social)/`: ana akış, Keşfet, forum, profil, paylaşım ve oyun rotaları;
   URL'leri değiştirmeyen ortak layout masaüstü bölüm navigasyonunu kalıcı tutar.

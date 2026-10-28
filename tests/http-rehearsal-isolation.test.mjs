@@ -66,3 +66,11 @@ test("kurtarma CLI kullanıcı DB veya URL hedefi almaz", () => {
     assert.match(result.stderr, /kabul etmez/); assert.equal(result.stderr.includes("private-sentinel"), false);
   }
 });
+
+test("taslak kabul CLI canlı hedef veya kontrol komutuna ek argüman kabul etmez", () => {
+  for (const args of [["scripts/serve-draft-acceptance.mjs", "--url=https://private-sentinel.example"], ["scripts/control-draft-acceptance.mjs", "finish", "--database=private-sentinel"]]) {
+    const result = spawnSync(process.execPath, ["--disable-warning=ExperimentalWarning", "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON", "--experimental-strip-types", ...args], { encoding: "utf8", windowsHide: true });
+    assert.equal(result.status, 1);
+    assert.equal((result.stdout + result.stderr).includes("private-sentinel"), false);
+  }
+});

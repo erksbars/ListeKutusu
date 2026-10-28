@@ -1,5 +1,20 @@
 # ListeKutusu Doğrulama Politikası
 
+28 Ekim izole gerçek oturum kabulü:
+`npm run test:drafts:serve` kaynakları/DB'yi ayırdı; CLI / Edge koyu masaüstü
+kontrollerinde API route mock'u kullanılmadı. Gerçek HTTP-only giriş, kök/
+alt yorum yazma-yenileme-silme, gerçek 401 sonrası aynı hesapla taslak dönüşü
+ve manuel yayın, profil geçmiş iptali/kaydet-ve-devam ve normalize baseline,
+topluluk oluşturma/keşif, ikinci oturumdan üyelik/bildirim, owner kararı/audit
+ve ikinci karar notunun korunması geçti. Profil/yorum/topluluk/karar DB son
+koşulları doğrulandı; 0 pageerror, görüntüler incelendi. Beklenen 401 console
+HTTP hataları vardır. Tarayıcı çıktıları Git dışında; runtime ve test DB temizlendi.
+`node --disable-warning=ExperimentalWarning --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test tests/http-rehearsal-isolation.test.mjs tests/rehearsal-http-close.test.mjs`
+ile 7 test geçti; yeni kaynak ESLint/node syntax kontrolleri geçti. İptal,
+eşzamanlı başlatma reddi ve açık upgrade bağlantısıyla kapanış doğrulandı.
+Normal DB/.env/3000/baseline korunur. Production/tam matris/oyunlar/mobil/
+açık tema/staging yük testi değildir. Tekrar: `docs/IZOLE_TASLAK_KABULU.md`.
+
 28 Ekim topluluk oluşturma/yönetim taslak dilimi:
 `node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test tests/form-draft.test.mjs tests/draft-history.test.mjs tests/draft-navigation.test.mjs tests/community-navigation.test.mjs`
 ile 17 test geçti. TypeScript, ilgili ESLint, UI/a11y statik kapıları ve diff

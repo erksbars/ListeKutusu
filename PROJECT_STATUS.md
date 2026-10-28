@@ -2,6 +2,29 @@
 
 Son dar doğrulama: 28 Ekim 2026
 
+## 28 Ekim 2026 — izole gerçek oturumlu dar kabul tamamlandı
+
+- `test:drafts:serve/finish/abort` eklendi: kaynak whitelist kopyası, yepyeni
+  migration uygulanmış DB, ayrı rastgele port ve devralınmayan sırlar.
+  Canlı URL/DB argümanı yok; runtime kilidi ikinci çalışmayı reddeder.
+  HTTP upgrade bağlantıları da yalnız kendi test sunucusu kapanırken kapatılır.
+- CLI / Edge koyu masaüstünde API taklidi olmadan gerçek kayıt/giriş ve
+  HTTP-only session, ana/alt yorum yazma-yenileme-silme, gerçek 401 sonrası
+  giriş taslağı ve otomatik yayın olmaması geçti. Profil geçmiş iptali ve
+  kaydet-ve-devam, normalize değer ve temiz baseline gerçek API ile geçti.
+- Topluluk oluşturma/owner üyeliği/keşif kaydı; ikinci gerçek oturumla
+  katılma, iki paylaşımı bildirme, owner kararı ve audit kaydı doğrulandı.
+  Başka karar notu yenilemede korundu. Son profil/yorum/topluluk/karar
+  koşulları DB'den doğrulandı; 0 pageerror. Görüntü incelendi.
+- 7 izolasyon/kapanış testi ve yeni kaynak ESLint geçti. Açık geliştirme
+  bağlantılarının kapanışı geciktirmesi giderildi; tarayıcı açıkken normal
+  kapanış ve geçici klasör temizliği geçti. İptal ve eşzamanlı başlatma
+  reddi de kontrol edildi. Normal 3000 sunucusu sağlıklı; mevcut DB/.env,
+  tasarım ve eski PNG'ler aynı. Test oturumları ve geçici DB'ler kaldırıldı.
+- Bu dar akış/yorum/profil/topluluk taslak kabulü kapandı. Production build,
+  staging/yük/operasyon, tüm oyun/etkinlik aileleri ve mobil/açık tema bu
+  kabul değildir. Tekrar adımları: `docs/IZOLE_TASLAK_KABULU.md`.
+
 ## 28 Ekim 2026 — topluluk oluşturma ve yönetim taslakları
 
 - Topluluk oluşturma, keşif bilgileri ve sahiplik hedefi ortak taslak/işlem

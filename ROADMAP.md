@@ -18,8 +18,11 @@ Navigation API destekli aynı belge geri/ileri koruması, hızlı tekrar ve
 sentetik hesapla doğrulandı; yanıt doğrulaması ve temiz baseline düzeltildi.
 Topluluk oluşturma/keşif/sahiplik ve yönetim notlarının çıkışları tamamlandı;
 geçici yenileme diğer notları silmez, yetki kaybı özel kayıtları temizler.
-Sıradaki: gerçek veriye dokunmayan izole ortamda oturumlu uçtan uca kabul.
-Tam yayın/build/matris ve diğer U-02 işlerinin kapıları ayrıca açık.
+İzole gerçek oturumlu dar kabul de tamamlandı: giriş/401 taslak, yorum,
+profil geçmiş-kaydet-devam, topluluk oluşturma ve yönetim kararı geçti.
+Bu akış/taslak paketinin dar kabulü kapalıdır. Sıradaki ayrı teknik kapsam,
+U-02 ve yayın kapılarının yeniden önceliklendirilmesidir; genel tasarım
+askıda kalır. Tam yayın/build/matris ve staging/operasyon kapıları açıktır.
 Aşağıdaki tasarım yüzdeleri geçmiş
 aşamanın tahminidir; güncel tüm ürün/yayın yüzdesi değildir.
 
