@@ -11,6 +11,8 @@ import { communityFetch, communityError } from "./communityFetch";
 import { COMMUNITY_INTERESTS, EMPTY_DISCOVERY_FILTERS, discoveryFiltersFromParams, discoveryParams, type DiscoveryFilters, type DiscoveredEvent } from "@/lib/communityDiscoveryTypes";
 import { CommunityDiscoveryFields, CommunityDiscoveryLabelsView } from "./CommunityDiscoveryFields";
 import { CommunityOwnershipInbox } from "./CommunityOwnershipInbox";
+import { useDraftNavigationGuard } from "@/app/components/DraftNavigationProvider";
+import { formDraftChanged } from "@/lib/formDraft";
 
 type Directory = { communities?: CommunityCard[]; events?: DiscoveredEvent[]; page: number; hasMore: boolean; authenticated: boolean; total: number };
 export function CommunityDirectory({ initialFilters = EMPTY_DISCOVERY_FILTERS }: { initialFilters?: DiscoveryFilters }) {
@@ -25,6 +27,10 @@ export function CommunityDirectory({ initialFilters = EMPTY_DISCOVERY_FILTERS }:
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const savingRef = useRef(false);
+  const createForm = useRef<HTMLFormElement>(null);
+  const [createDirty, setCreateDirty] = useState(false);
+  useDraftNavigationGuard({ dirty: authenticated && createDirty, busy: saving,
+    discard: () => { createForm.current?.reset(); setCreateDirty(false); }, preserveOnLocalNavigation: true });
   function applyFilters(value: DiscoveryFilters) {
     setFilter(value); setDraft(value);
     const query = discoveryParams(value).toString();
@@ -73,11 +79,11 @@ export function CommunityDirectory({ initialFilters = EMPTY_DISCOVERY_FILTERS }:
           <div className="community-actions"><Button type="button" disabled={filter.page === 1} onClick={() => applyFilters({ ...filter, page: filter.page - 1 })}>Önceki</Button><span>Sayfa {data.page}</span><Button type="button" disabled={!data.hasMore || filter.page >= 100} onClick={() => applyFilters({ ...filter, page: filter.page + 1 })}>Sonraki</Button></div></>}
       </section>
       <aside className="ui-panel community-stack"><h2 className="ui-section-title">Topluluğunu kur</h2><p>Bir ilgi alanı, kampüs veya şehir etrafında sohbet başlat. Oluşturduğun topluluğun kurucusu olursun.</p>
-        {authenticated ? <form className="community-stack" onSubmit={async event => {
+        {authenticated ? <form ref={createForm} className="community-stack" aria-label="Topluluk oluşturma" onChange={event => setCreateDirty(formDraftChanged(new FormData(event.currentTarget), { name: "", category: "interest", universityName: "", city: "", interest: "", description: "", rules: "" }))} onSubmit={async event => {
           event.preventDefault(); if (savingRef.current) return;
           const fields = new FormData(event.currentTarget);
           savingRef.current = true; setSaving(true); setCreateError("");
-          try { const result = await communityFetch<{ slug: string }>("/api/communities", Object.fromEntries(fields.entries())); router.push(`/communities/${result.slug}`); }
+          try { const result = await communityFetch<{ slug: string }>("/api/communities", Object.fromEntries(fields.entries())); if (typeof result?.slug !== "string" || !/^[a-zA-Z0-9_-]{1,100}$/u.test(result.slug)) throw new Error("Topluluk yanıtı doğrulanamadı. Formun korunuyor; yeniden oluşturmadan önce topluluklarını kontrol et."); setCreateDirty(false); router.push(`/communities/${result.slug}`); }
           catch (error) { setCreateError(communityError(error)); }
           finally { savingRef.current = false; setSaving(false); }
         }}><fieldset disabled={saving} className="community-fieldset community-stack">

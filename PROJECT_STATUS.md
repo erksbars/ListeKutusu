@@ -2,6 +2,27 @@
 
 Son dar doğrulama: 28 Ekim 2026
 
+## 28 Ekim 2026 — topluluk oluşturma ve yönetim taslakları
+
+- Topluluk oluşturma, keşif bilgileri ve sahiplik hedefi ortak taslak/işlem
+  kaydına bağlandı. Global çıkış ve native geçmiş onayı metni korur;
+  mount kalan yerel formlar gereksiz temizlenmez. Oluşturma yanıtındaki
+  slug doğrulanmadan yönlendirilmez. Keşif formu yalnız başarılı kayıtta temizlenir.
+- Yönetim panelini kapatma, görünüm/filtre/sayfa değişimi ve üye işleminden
+  vazgeçme ortak onaylıdır. Karar notları yenilemede mount kalır; bir kararı
+  kaydetmek diğer notu silmez. Geçici okuma hatası/tekrar metni korur;
+  401/403/404'te özel yönetim kayıtları kaldırılır. Salt okunurluk ile gerçek
+  işlem kilidi ayrıldı; arşivde temiz gezinme kilitlenmez.
+- 17 saf test, TypeScript, odaklı ESLint, UI/a11y kapıları geçti. CLI / Edge
+  koyu masaüstünde oluşturma 503/geçersiz başarı/geçerli hedef; yönetim
+  kapatma/filtre/sayfa/üye iptal-onayı; diğer karar notunun korunması,
+  geçici okuma tekrarı; keşif/sahiplik yazma hatası ve global/geçmiş iptali;
+  arşivde gezinme ve 403 temizliği doğrulandı. 8 sentetik mutation,
+  0 gerçek yazma ve 0 pageerror; görüntü incelendi.
+- Tasarım/CSS, DB/seed ve eski PNG'ler aynı. Gerçek oturumlu uçtan uca yazma,
+  yetki değişiminden taslak kurtarma ve tam build/matris tamamlanmış değildir.
+  Sıradaki kabul gerçek veriye dokunmayan izole oturum ortamını gerektirir.
+
 ## 28 Ekim 2026 — profil kaydet-ve-devam ile geçmiş kabulü
 
 - Profil kaydı yalnız aynı hesabın tam ve geçerli profil yanıtıyla başarılı

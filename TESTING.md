@@ -1,5 +1,17 @@
 # ListeKutusu Doğrulama Politikası
 
+28 Ekim topluluk oluşturma/yönetim taslak dilimi:
+`node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test tests/form-draft.test.mjs tests/draft-history.test.mjs tests/draft-navigation.test.mjs tests/community-navigation.test.mjs`
+ile 17 test geçti. TypeScript, ilgili ESLint, UI/a11y statik kapıları ve diff
+kontrolü geçti. CLI / Edge 1280 koyu masaüstünde sentetik üyelik/API:
+oluşturmada 503/geçersiz başarı/geçerli hedef; panel kapatma, filtre/sayfa,
+üye iptal/onay; başka kararı kaydederken notun korunması; geçici okuma/tekrar;
+keşif/sahiplik hatasında metin, global ve geçmiş iptali; arşivde temiz çıkış
+ve 403 sonrası özel formların kaldırılması geçti. 8 mutation istemcide
+karşılandı; 0 gerçek yazma, 0 pageerror. Görüntü incelendi; geçici CLI dosyaları
+Git dışındadır. DB/seed/baseline/CSS aynı. Yetki kaybından taslak kurtarma,
+gerçek oturumla uçtan uca yazma ve tam build/matris yapılmadı.
+
 28 Ekim profil kaydet-ve-devam/geçmiş dilimi:
 `node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test tests/profile-save.test.mjs tests/draft-history.test.mjs tests/draft-navigation.test.mjs tests/community-navigation.test.mjs`
 ile 19 test geçti. TypeScript, ilgili ESLint ve UI/a11y statik kapıları geçti.

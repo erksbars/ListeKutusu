@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { useDraftNavigationGuard } from "@/app/components/DraftNavigationProvider";
 import { Button } from "@/app/components/ui/Button";
 import { TextField } from "@/app/components/ui/Field";
 import { ConfirmDialog } from "@/app/components/ConfirmDialog";
@@ -13,6 +14,8 @@ export function CommunityOwnershipPanel({ slug, revision, disabled, onChanged }:
   const [target, setTarget] = useState(""), [message, setMessage] = useState("");
   const [confirm, setConfirm] = useState<{ title: string; description: string; payload: Record<string, unknown> } | null>(null);
   const busyRef = useRef(false);
+  useDraftNavigationGuard({ dirty: Boolean(target), busy: busy || disabled, preserveOnLocalNavigation: true,
+    discard: () => { setTarget(""); setConfirm(null); } });
   useEffect(() => {
     const controller = new AbortController(); setLoading(true); setError("");
     communityFetch<State>(api, undefined, controller.signal).then(result => { if (!controller.signal.aborted) setData(result); })

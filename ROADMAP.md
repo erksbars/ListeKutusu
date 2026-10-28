@@ -16,8 +16,10 @@ mount kalan oluşturma taslakları bölüm/filtre/detayda korunur.
 Navigation API destekli aynı belge geri/ileri koruması, hızlı tekrar ve
 çoklu atlama kabulü eklendi. Profil kaydet-ve-devam/geçmiş birleşimi de
 sentetik hesapla doğrulandı; yanıt doğrulaması ve temiz baseline düzeltildi.
-Sıradaki: kalan oluşturma/yönetim form ailelerinin çıkışları;
-gerçek oturumla yazma kabulü ayrıca açık.
+Topluluk oluşturma/keşif/sahiplik ve yönetim notlarının çıkışları tamamlandı;
+geçici yenileme diğer notları silmez, yetki kaybı özel kayıtları temizler.
+Sıradaki: gerçek veriye dokunmayan izole ortamda oturumlu uçtan uca kabul.
+Tam yayın/build/matris ve diğer U-02 işlerinin kapıları ayrıca açık.
 Aşağıdaki tasarım yüzdeleri geçmiş
 aşamanın tahminidir; güncel tüm ürün/yayın yüzdesi değildir.
 

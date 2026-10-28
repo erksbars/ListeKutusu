@@ -214,8 +214,8 @@ sistemi değildir.
   reload/başka sayfadan dönüş veya yetki/okuma hatası sonrası taslak kurtarma
   garantisi değildir. Spoiler açma tercihi URL'ye/kalıcı depoya yazılmaz.
 - Yerel topluluk komutları ortak taslak kaydından çıkış onayı ister.
-  `preserveOnLocalNavigation` yalnız mount kalacağı bilinen oluşturma
-  formları içindir; bu formlar yerel onayda kaydet/sil kapsamına girmez,
+  `preserveOnLocalNavigation` mount kalacağı bilinen oluşturma formları,
+  keşif bilgileri ve sahiplik hedefi içindir; yerel onayda kaydet/sil kapsamına girmez,
   global çıkışta girer. Busy kayıtlar kapsamdan bağımsız geçişi kilitler.
   Yorum sayfası değişimi aynı editörü korur; mutation sonrası replace ve
   zaten onaylanmış liste çıkışı ikinci onay açmaz. Native popstate hâlâ
@@ -225,6 +225,12 @@ sistemi değildir.
   metotlarını patch etmez; hash/yorum sayfası güvenli geçiştir. Hızlı tekrar
   dönüşü geçersiz kılarsa delta yeniden hesaplanır. API yoksa kurulum atlanır;
   gerçek belge çıkışında mevcut beforeunload uyarısı kullanılır.
+- Yönetim karar notları geçici yükleme/okuma hatasında mount kalır; görünüm
+  gizlenir ve mevcut istek tamamlanınca aynı kayıt anahtarlarıyla devam eder.
+  Başka kararın kaydı ilgisiz notları silmez. Panel kapatma/filtre/sayfa ve
+  üye iptali ortak çıkış kaydını kullanır. 401/403/404 özel data'yı kaldırır;
+  yetki kaybından taslak kurtarma vaadi yoktur. Disabled/readOnly ile gerçek
+  busy ayrıdır; salt okunur panel gezinmeyi kalıcı kilitlemez.
 - useCommunityRead paylaşım detayı ve etkinlik liste/detayında sonucu URL+
   yenileme nesliyle damgalar. Render yalnız mevcut anahtarın data/error'ını
   kullanır; filtre/sayfa/hedef değişimindeki ilk render bile eski başlık,
