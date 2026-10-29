@@ -16,6 +16,7 @@ test("mixed cards share hierarchy while keeping spoilers and event participation
     const path = new URL(route.request().url()).pathname;
     if (path === "/api/accounts/me") return route.fulfill({ status: 401, json: {} });
     if (path === "/api/feed/mixed") return route.fulfill({ json: { posts: [], communityItems, nextCursor: null } });
+    if (path.endsWith("/events/event-design")) return route.fulfill({ json: { event: { ...communityItems[2], description: shared.excerpt, attendingCount: 0, interestedCount: 0, viewerStatus: null }, canRespond: false, canWithdraw: false, canManage: false, participants: [] } });
     return route.fulfill({ json: { users: [], tracks: [], totals: {}, goals: [], achievements: [], highlights: [] } });
   });
   await page.goto("/");
@@ -25,7 +26,7 @@ test("mixed cards share hierarchy while keeping spoilers and event participation
   await expect(feed.locator('[data-feed-kind="review"]')).toContainText("8/10");
   await expect(feed.locator('[data-feed-kind="event"]')).toContainText("Etkinlik iptal edildi.");
   await expect(feed.locator('[data-feed-kind="event"]')).toContainText("Katılımcı sınırı yok");
-  await expect(feed.getByRole("button", { name: /Katıl/ })).toHaveCount(0);
+  await expect(feed.getByRole("button", { name: /^(Katılacağım|İlgileniyorum|Vazgeçtim)$/ })).toHaveCount(0);
   for (const kind of ["review", "discussion", "event"]) {
     const card = feed.locator(`[data-feed-kind="${kind}"]`);
     await expect(card.locator(".feed-post-header")).toBeVisible();
@@ -35,6 +36,7 @@ test("mixed cards share hierarchy while keeping spoilers and event participation
   expect((await new AxeBuilder({ page }).include("#feed-posts").withTags(["wcag2a", "wcag2aa"]).analyze()).violations).toEqual([]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: testInfo.outputPath("mixed-card-hierarchy.png"), fullPage: true });
+  await expect(feed.getByRole("link", { name: /Etkinlik detayını aç|İncelemeyi aç|Sohbeti aç/ })).toHaveCount(0);
   expect(writes).toBe(0); expect(errors).toEqual([]);
 });
 

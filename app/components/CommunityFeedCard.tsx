@@ -4,11 +4,10 @@ import { useEffect, useState, type MouseEvent } from "react";
 import { communityFeedAnchor, communityFeedPath, feedReturnPath } from "@/lib/feedNavigation";
 import type { GeneralCommunityItem } from "@/lib/communityGeneralFeed";
 import { REVIEW_KINDS } from "@/lib/communityTypes";
-import { TVmazeAttribution } from "./TVmazeAttribution";
 import styles from "./CommunityGeneralFeed.module.css";
-import { CommunityCardActions } from "./CommunityCardActions";
-import { CommunityInlineComments } from "./CommunityInlineComments";
-import { CalendarDays, MessageCircle, Star, MapPin, Users } from "lucide-react";
+import { CommunityPostContent } from "./CommunityPostContent";
+import { CommunityInlineEvent } from "./CommunityInlineEvent";
+import { CalendarDays, MessageCircle, Star } from "lucide-react";
 
 const postedAt = new Intl.DateTimeFormat("tr-TR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Istanbul" });
 
@@ -37,13 +36,8 @@ export function CommunityFeedCard({ item, viewerId = null, surface = "feed", onU
       </div>
       <span className="feed-content-kind">{kindLabel}</span>
     </header>
-    <div className="feed-track-block"><span className="feed-track-icon" aria-hidden="true"><Icon size={18} /></span><div className="min-w-0"><h2><Link href={href} onClick={rememberSource}>{item.title}</Link></h2>{item.kind === "post" && item.type === "review" && <p>{item.subjectTitle} · <strong>{item.rating}/10</strong></p>}</div></div>
-    {item.kind === "post" && item.referenceProvider === "tvmaze" && <p><TVmazeAttribution /></p>}
-    <p className={item.kind === "post" && item.spoiler ? styles.spoiler : styles.body}>{item.kind === "post" && item.spoiler ? "Spoiler nedeniyle önizleme gizlendi. İncelemeyi açarak görüntüleyebilirsin." : item.excerpt}</p>
-    {item.kind === "event" && <div className={styles.eventDetails}><p><CalendarDays size={16} aria-hidden="true" /><time dateTime={item.startsAt}>{new Intl.DateTimeFormat("tr-TR", { dateStyle: "long", timeStyle: "short", timeZone: item.timeZone }).format(new Date(item.startsAt))} · Türkiye saati</time></p><p><MapPin size={16} aria-hidden="true" />{item.city} · {item.venue}</p><p><Users size={16} aria-hidden="true" />{item.capacity == null ? "Katılımcı sınırı yok" : `${item.capacity} kişilik kapasite`}</p><p>{item.status === "cancelled" ? "Etkinlik iptal edildi." : "Katılım için aktif topluluk üyeliği gerekir."}</p></div>}
-    <footer className={styles.footer}><Link className={styles.detail} href={href} onClick={rememberSource}>{item.kind === "event" ? "Etkinlik detayını aç" : item.type === "review" ? "İncelemeyi aç" : "Sohbeti aç"} ↗</Link>
-    {item.kind === "post" && <CommunityCardActions key={viewerId ?? "anonymous"} initial={item} slug={item.community.slug} postId={item.id} viewerId={viewerId} surface={surface} loginReturnTo={returnTo ? feedReturnPath(returnTo).split("#")[0] + anchor : undefined} onUnsave={onUnsave} onUnavailable={() => setUnavailable(true)} />}
-    </footer>
-    {item.kind === "post" && surface === "feed" && <CommunityInlineComments key={`${item.id}:${viewerId}`} slug={item.community.slug} postId={item.id} viewerId={viewerId} spoiler={item.spoiler} returnTo={returnTo ? feedReturnPath(returnTo).split("#")[0] + anchor : href} />}
+    <div className="feed-track-block"><span className="feed-track-icon" aria-hidden="true"><Icon size={18} /></span><div className="min-w-0"><h2>{item.title}</h2>{item.kind === "post" && item.type === "review" && <p>{item.subjectTitle} · <strong>{item.rating}/10</strong></p>}</div></div>
+    {item.kind === "event" ? <CommunityInlineEvent key={`${item.id}:${viewerId}`} item={item} viewerId={viewerId} returnTo={returnTo ? feedReturnPath(returnTo).split("#")[0] + anchor : href} /> : <CommunityPostContent key={`${item.id}:${viewerId}`} item={item} viewerId={viewerId} surface={surface} returnTo={returnTo ? feedReturnPath(returnTo).split("#")[0] + anchor : href} onUnsave={onUnsave} onUnavailable={() => setUnavailable(true)} />}
+
   </article>;
 }

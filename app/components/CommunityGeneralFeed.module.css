@@ -5,6 +5,13 @@
 .item h3 { font-size: var(--ui-text-lg); color: var(--ui-text-strong); }
 .item a, .body { overflow-wrap: anywhere; }
 .body { white-space: pre-wrap; }
+.clamped { display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden; }
+.eventControls { display: grid; justify-items: start; gap: var(--ui-space-3); border-top: 1px solid var(--ui-border); padding-top: var(--ui-space-3); }
+.eventHint { font-size: var(--ui-text-xs); }
+.attendance { font-weight: 700; }
+.musicComments { width: 100%; min-width: 0; }
+.musicComments :global(.post-comments) { max-width: none; width: 100%; border: 0; border-top: 1px solid var(--ui-border); border-radius: 0; box-shadow: none; }
+.musicComments :global(.post-comments-heading), .musicComments :global(.post-comment-composer) { padding: var(--ui-space-4) 0; background: transparent; }
 .reactions { display: flex; align-items: center; flex-wrap: wrap; gap: var(--ui-space-3); }
 .item [role="alert"] { color: var(--ui-danger); }
 .source { display: inline-block; margin-top: var(--ui-space-1); font-size: var(--ui-text-sm); }

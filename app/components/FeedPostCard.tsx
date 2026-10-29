@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { PostComments } from "@/app/(social)/p/[id]/PostComments";
+import styles from "./CommunityGeneralFeed.module.css";
 import { useEffect, useId, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent } from "react";
 import { Bookmark, EyeOff, ExternalLink, Flag, Heart, ListPlus, MessageCircle, MoreHorizontal, Music2, Pencil, Trash2, UserPlus } from "lucide-react";
 import { feedPostPath, feedReturnPath } from "@/lib/feedNavigation";
@@ -33,6 +35,7 @@ export type FeedCardPost = {
 type FeedPostCardProps = {
   post: FeedCardPost;
   returnTo?: string;
+  viewer?: { id: string; role: string } | null;
   tone?: "primary" | "accent" | "secondary";
   liking: boolean;
   adding: boolean;
@@ -60,6 +63,7 @@ const dateFormatter = new Intl.DateTimeFormat("tr-TR", {
 export function FeedPostCard({
   post,
   returnTo,
+  viewer = null,
   tone = "primary",
   liking,
   adding,
@@ -78,7 +82,10 @@ export function FeedPostCard({
 }: FeedPostCardProps) {
   const menuRef = useRef<HTMLDivElement>(null);
   const detailHref = returnTo ? feedPostPath(post.id, returnTo) : `/p/${post.id}`;
-  const commentsHref = returnTo ? feedPostPath(post.id, returnTo, true) : `/p/${post.id}#comments`;
+  const [commentsOpen, setCommentsOpen] = useState(false), [commentsVisited, setCommentsVisited] = useState(false);
+  const [commentNotice, setCommentNotice] = useState(""), [commentCount, setCommentCount] = useState(post.commentCount);
+  useEffect(() => setCommentCount(post.commentCount), [post.commentCount]);
+  const commentsId = `music-comments-${post.id}`;
   function rememberSource(event: ReactMouseEvent<HTMLAnchorElement>) {
     if (!returnTo || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || window.location.pathname !== "/") return;
     const from = new URL(detailHref, window.location.origin).searchParams.get("from");
@@ -251,7 +258,7 @@ export function FeedPostCard({
       <div className="feed-track-block">
         <span className="feed-track-icon" aria-hidden="true"><Music2 size={18} /></span>
         <div className="min-w-0">
-          <h2><Link href={detailHref} onClick={rememberSource}>{post.trackName}</Link></h2>
+          <h2>{post.trackName}</h2>
           <p>
             {post.artistName}{post.albumName ? ` · ${post.albumName}` : ""}
           </p>
@@ -303,16 +310,19 @@ export function FeedPostCard({
           <Bookmark size={17} fill={post.savedByMe ? "currentColor" : "none"} />
           <span>{saving ? "Kaydediliyor" : post.savedByMe ? "Kaydedildi" : "Kaydet"}</span>
         </button>
-        <Link
-          href={commentsHref}
-          onClick={rememberSource}
+        <button
+          type="button"
+          onClick={() => { setCommentsVisited(true); setCommentsOpen(value => !value); }}
           className="feed-action"
-          aria-label={`${post.commentCount} yorumu görüntüle`}
+          aria-label={`${commentCount} yorumu görüntüle`}
+          aria-expanded={commentsOpen}
+          aria-controls={commentsVisited ? commentsId : undefined}
         >
           <MessageCircle size={17} />
-          <span>Yorumlar</span><strong>{post.commentCount}</strong>
-        </Link>
+          <span>Yorumlar</span><strong>{commentCount}</strong>
+        </button>
       </div>
+      {commentsVisited && <div className={styles.musicComments} hidden={!commentsOpen}>{commentNotice && <p role="status">{commentNotice}</p>}<PostComments key={`${post.id}:${viewer?.id ?? "anonymous"}`} postId={post.id} viewer={viewer} sectionId={commentsId} loginReturnTo={`${returnTo ?? "/"}#post-${post.id}`} onMessage={setCommentNotice} onCountChange={setCommentCount} /></div>}
     </article>
   );
 }

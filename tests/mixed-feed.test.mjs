@@ -30,10 +30,26 @@ test("karma akış tür, görünürlük, takip, etkileşim ve üç kaynaklı cur
       const page = await mixedFeed(db, null, null, "all", "all", now);
       assert.deepEqual(timeline(page).map(item => item.kind), ["event", "post", "music"]);
       assert.equal(page.nextCursor, null); assert.equal(page.communityItems.find(item => item.id === post.id).excerpt, "");
+      assert.equal(page.communityItems.find(item => item.id === post.id).content, "");
       assert.ok(!JSON.stringify(page).includes("Spoiler olan gizli"));
       assert.deepEqual(page.posts[0].tags, ["rock"]); assert.equal(page.posts[0].isMine, false);
       assert.ok(!JSON.stringify(page).includes("email"));
       for (const [filter, count] of [["music", 1], ["discussion", 0], ["review", 1], ["event", 1]]) assert.equal(timeline(await mixedFeed(db, null, null, filter, "all", now)).length, count);
+    });
+    await t.test("açık metin tam döner, kısa önizleme ve spoiler sınırı korunur", async () => {
+      const long = "Uzun topluluk metni. ".repeat(80);
+      try {
+        await db.communityPost.update({ where: { id: post.id }, data: { body: long, spoiler: false } });
+        await db.communityEvent.update({ where: { id: event.id }, data: { description: long } });
+        const page = await mixedFeed(db, null, null, "all", "all", now);
+        for (const id of [post.id, event.id]) {
+          const item = page.communityItems.find(item => item.id === id);
+          assert.equal(item.content, long); assert.equal(item.excerpt.length, 240);
+        }
+      } finally {
+        await db.communityPost.update({ where: { id: post.id }, data: { body: post.body, spoiler: true } });
+        await db.communityEvent.update({ where: { id: event.id }, data: { description: event.description } });
+      }
     });
     await t.test("müzik beğeni, kaydetme, liste ve takip bayrakları korunur", async () => {
       await db.feedLike.create({ data: { postId: music.id, userId: "reader" } });

@@ -3,6 +3,10 @@
 Bu dosya yalnız açık işleri tutar. Tamamlanan işlerin özeti `PROJECT_STATUS.md`
 dosyasındadır.
 
+29 Ekim ana akış önceliği tamamlandı: müzik/sohbet/inceleme/etkinlik
+okuma ve temel etkileşimleri aynı kartta; etkinlik doluluk/katılımı ve
+müzik yorumları da yerindedir. Ayrı detay rotası zorunlu okuma yolu değildir.
+
 29 Ekim kullanıcı yönü: ayrı topluluk keşif/filtre ekranı kaldırıldı;
 topluluklar ortak aramadan doğrudan açılır. Ana akıştan oluşturma ve
 kart içi topluluk yorumları tamamlandı. Bu yön eski dizin UI planlarını

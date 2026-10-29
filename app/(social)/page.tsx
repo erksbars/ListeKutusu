@@ -328,6 +328,7 @@ export default function HomePage() {
                       const post = item.post;
                       return <div className="contents" key={`music:${post.id}`}>
                       <FeedPostCard
+                        viewer={account ? { id: account.id, role: account.role ?? "member" } : null}
                         post={post}
                         returnTo={feedLocation.path}
                         tone={index % 3 === 1 ? "accent" : index % 3 === 2 ? "secondary" : "primary"}

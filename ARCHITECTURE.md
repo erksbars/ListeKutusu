@@ -1,5 +1,13 @@
 # ListeKutusu Mimari Özeti
 
+Ana akış kartı sözleşmesi: karma ve özel kayıt kaynakları `content` ile
+spoiler olmayan tam metni verir; spoiler içerikte content/excerpt boştur.
+CommunityPostContent açık onayla aynı kartta post GET yapar. InlineEvent
+mevcut etkinlik GET/RSVP/join uçlarını kullanır; kapasite sunucuda atomik
+kontrol edilir. Kartta kişi listesi açılmaz. Müzik PostComments'i tekrar
+kullanır; birden çok örnekte bölüm/başlık ID'leri benzersizdir ve giriş
+taslağı yalnız eşleşen hesap+post tarafından tüketilir.
+
 ## Topluluk girişleri ve kart içi yorum
 
 Ayrı topluluk dizini UI'si kaldırıldı. Ortak arama önerileri doğrudan

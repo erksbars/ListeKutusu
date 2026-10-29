@@ -27,8 +27,8 @@ export async function communityGeneralFeed(db: PrismaClient, viewerId: string | 
   ]);
   const metrics = await communityBatchReactionMetrics(db, posts, viewerId);
   const items = [
-    ...posts.map(({ body, createdAt, community, author, ...post }, index) => ({ ...post, ...metrics[index], community: { slug: community.slug, name: community.name }, author: { slug: author.slug, ownerName: author.ownerName }, kind: "post" as const, createdAt: createdAt.toISOString(), excerpt: post.spoiler ? "" : body.slice(0, 240) })),
-    ...events.map(({ description, createdAt, startsAt, organizer, ...event }) => ({ ...event, kind: "event" as const, author: organizer, createdAt: createdAt.toISOString(), startsAt: startsAt.toISOString(), excerpt: description.slice(0, 240) })),
+    ...posts.map(({ body, createdAt, community, author, ...post }, index) => ({ ...post, ...metrics[index], community: { slug: community.slug, name: community.name }, author: { slug: author.slug, ownerName: author.ownerName }, kind: "post" as const, createdAt: createdAt.toISOString(), content: post.spoiler ? "" : body, excerpt: post.spoiler ? "" : body.slice(0, 240) })),
+    ...events.map(({ description, createdAt, startsAt, organizer, ...event }) => ({ ...event, kind: "event" as const, author: organizer, createdAt: createdAt.toISOString(), startsAt: startsAt.toISOString(), content: description, excerpt: description.slice(0, 240) })),
   ].sort(compareTimelineItems);
   const page = items.slice(0, 10), last = page.at(-1);
   return { items: page, nextCursor: items.length > 10 && last ? timelineCursor(last) : null };

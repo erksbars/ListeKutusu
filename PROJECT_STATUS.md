@@ -1,5 +1,33 @@
 # ListeKutusu Güncel Durum
 
+## 29 Ekim 2026 — ana akışta tüm kart türlerini yerinde kullanma
+
+- Sohbet/inceleme/etkinlik kartlarındaki Detayı aç çıkışları kaldırıldı;
+  müzik ve topluluk paylaşımı başlıkları düz içeriktir. Profil/topluluk ve
+  isteğe bağlı zaman damgası kalıcı bağlantıları durur. Kanonik detay ve
+  yönetim rotaları kaldırılmadı; ana akış okumak/katılmak için zorunlu değildir.
+- Karma/özel kayıt DTO'su spoiler olmayan tam metni de döndürür. Uzun
+  metin kart içinde genişler, kısa metin doğrudan görünür. Spoiler tam metni
+  akış DTO'suna çıkmaz; açık onayla aynı kartta yüklenir. Yorum ve metin
+  spoiler onayı paylaşılır. Hatalı kimlik/eksik yanıt güvenle reddedilir.
+- Etkinlik kartı güncel kapasite/doluluk/kalan yer/kendi tercihini ve
+  Katılacağım/İlgileniyorum/Vazgeçtim işlemlerini gösterir. Aktif üyelik,
+  koltuk yarışı, iptal/geçmiş ve yetki kuralları mevcut API'dedir; katılımcı
+  kimlik listesi herkese açılmadı. Başarı/hata sonrası sunucu durumu yenilenir;
+  eksik yanıt ve servis hatası kart içinde tekrar denenir. Bekleyen yazma
+  ortak taslak/gezinme kilidine kayıtlıdır.
+- Müzik yorum düğmesi artık PostComments'i aynı kartta açar: mevcut yazma,
+  yanıt/bildirim/kaldırma kuralları kullanılır. Paneli gizlemek metni silmez;
+  başlık/alan ID'leri karta özeldir. Çoklu kart yanlış gönderinin giriş
+  taslağını tüketmez; yorum sayısı okuma/yazma sonrası kartta güncellenir.
+- 31 odaklı test (26 karma/kayıt/RSVP + 5 yorum), TypeScript, ilgili ESLint,
+  UI/a11y kapıları geçti. CLI/Edge koyu masaüstünde gerçek doluluk/yorum
+  okuma; istemci taklidiyle katıl/ilgilen/vazgeç, 409 son koltuk, 503, 403,
+  sınırsız kapasite, iptal, bozuk DTO/tekrar, uzun metin ve spoiler, müzik
+  taslağını gizle/aç geçti; 0 pageerror ve tüm akış işlemlerinde URL sabit.
+  Test yazmaları yalnız tarayıcıda karşılandı, normal DB değiştirilmedi.
+  Geniş opt-in tarayıcı matrisi, production build, mobil/açık tema çalışmadı.
+
 ## 29 Ekim 2026 — topluluklara ortak aramadan erişim ve akış içi yorum
 
 - Son kullanıcı yönlendirmesiyle ayrı topluluk keşif/filtre ekranı kaldırıldı.

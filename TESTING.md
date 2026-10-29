@@ -1,5 +1,19 @@
 # ListeKutusu Doğrulama Politikası
 
+29 Ekim tüm ana akış kartlarında yerinde okuma/katılım:
+`node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test tests/mixed-feed.test.mjs tests/community-attendance.test.mjs tests/community-saved-posts.test.mjs`
+ile 26 test; `tests/comment-draft.test.mjs tests/feed-comments.test.mjs` ile
+5 test geçti. Yeni kontrol: tam açık metin/240 karakterlik önizleme ve boş
+spoiler content sözleşmesi. TypeScript, ilgili ESLint ve UI/a11y geçti.
+CLI/Edge 1280 koyu masaüstünde gerçek etkinlik doluluğu ve müzik yorum
+okuma; istemci taklidiyle tek RSVP, ilgilenmenin koltuk tüketmemesi,
+vazgeçme, 409 son koltukta dolu yenileme, 503/403, yeniden üyelik,
+sınırsız kapasite, iptal, eksik DTO/tekrar, uzun metin/spoiler ve müzik
+panelini gizle/aç ile taslak koruması geçti. 0 pageerror; ana akış URL'si
+sabit kaldı. Gerçek DB yazması yok. Görüntü incelendi, çıktılar Git dışında.
+Eski kart/deep-link opt-in kaynakları yeni düğme/kalıcı bağlantı girişine
+uyarlandı; geniş runner matrisi ve production build çalıştırılmadı.
+
 29 Ekim ortak arama/oluşturma ve akış yorum kabulü:
 `node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test tests/community-demo.test.mjs tests/community-navigation.test.mjs tests/draft-navigation.test.mjs`
 ile 13, `tests/communities.test.mjs` ile 11 odaklı test geçti.

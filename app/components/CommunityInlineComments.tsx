@@ -13,7 +13,7 @@ import { TextAreaField } from "./ui/Field";
 import { ConfirmDialog } from "./ConfirmDialog";
 import styles from "./CommunityInlineComments.module.css";
 
-export function CommunityInlineComments({ slug, postId, viewerId, spoiler, returnTo }: { slug: string; postId: string; viewerId: string | null; spoiler: boolean; returnTo: string }) {
+export function CommunityInlineComments({ slug, postId, viewerId, spoiler, returnTo, spoilerApproved = false, onReveal }: { slug: string; postId: string; viewerId: string | null; spoiler: boolean; returnTo: string; spoilerApproved?: boolean; onReveal?: () => void }) {
   const [open, setOpen] = useState(false), [revealed, setRevealed] = useState(false);
   const [page, setPage] = useState(1), [revision, setRevision] = useState(0);
   const [body, setBody] = useState(""), [busy, setBusy] = useState(false), [error, setError] = useState("");
@@ -22,7 +22,7 @@ export function CommunityInlineComments({ slug, postId, viewerId, spoiler, retur
   const pending = useRef(false), mounted = useRef(true), panelId = useId();
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   const api = `/api/communities/${encodeURIComponent(slug)}`;
-  const readable = open && (!spoiler || revealed);
+  const readable = open && (!spoiler || revealed || spoilerApproved);
   const read = useCommunityRead<CommunityPostDetail>(`${api}/posts/${encodeURIComponent(postId)}?page=${page}`, `${revision}:${viewerId}`, readable);
   const canWrite = Boolean(viewerId && read.data?.post.canSave && !denied);
   useDraftNavigationGuard({ dirty: Boolean(body), busy, discard: () => setBody("") });
@@ -44,12 +44,12 @@ export function CommunityInlineComments({ slug, postId, viewerId, spoiler, retur
       if ([403, 404].includes(communityRequestStatus(cause) ?? 0)) { setBody(""); setDenied(true); setRevision(value => value + 1); }
     } finally { pending.current = false; if (mounted.current) setBusy(false); }
   }
-  const showComments = readable && read.data && (!read.data.post.spoiler || revealed);
+  const showComments = readable && read.data && (!read.data.post.spoiler || revealed || spoilerApproved);
   return <div className={styles.root}>
     <Button type="button" disabled={busy} aria-expanded={open} aria-controls={open ? panelId : undefined} onClick={() => { if (open && body) setConfirmClose(true); else { setOpen(!open); setRevealed(false); } }}><MessageCircle size={16} aria-hidden="true" />{open ? "Yorumları kapat" : "Yorumlar"}</Button>
     <ConfirmDialog open={confirmClose} title="Yorum taslağını kapat?" body="Yazdığın yorum henüz gönderilmedi. Bu taslağı silerek yorumları kapatabilirsin." confirmLabel="Yorumu sil ve kapat" onCancel={() => setConfirmClose(false)} onConfirm={() => { setBody(""); setOpen(false); setRevealed(false); setConfirmClose(false); }} />
     {open && <section id={panelId} className={styles.panel} aria-label="Paylaşım yorumları">
-      {(spoiler || read.data?.post.spoiler) && !revealed ? <div className={styles.warning}><p>Bu incelemenin yorumları spoiler içerebilir.</p><Button type="button" onClick={() => setRevealed(true)}>Yorumları göster</Button></div> : <>
+      {(spoiler || read.data?.post.spoiler) && !revealed && !spoilerApproved ? <div className={styles.warning}><p>Bu incelemenin yorumları spoiler içerebilir.</p><Button type="button" onClick={() => { setRevealed(true); onReveal?.(); }}>Yorumları göster</Button></div> : <>
         <div className={styles.heading}><h3>Yorumlar</h3><Button type="button" variant="ghost" disabled={busy || read.loading} onClick={() => setRevision(value => value + 1)}>Yenile</Button></div>
         {read.loading && <p role="status">Yorumlar yükleniyor…</p>}
         {read.error && <div role="alert"><p>{read.error}</p><Button type="button" disabled={busy} onClick={() => setRevision(value => value + 1)}>Yeniden dene</Button></div>}

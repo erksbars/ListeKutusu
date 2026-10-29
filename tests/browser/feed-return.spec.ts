@@ -43,7 +43,7 @@ test("music detail back link and browser back restore source filters and visible
   await mockFeed(page, id);
   await page.goto("/?kind=music&topic=rock");
   const card = page.locator(`[data-feed-id="music:${id}"]`);
-  const detail = card.getByRole("heading").getByRole("link");
+  const detail = card.locator(".feed-post-permalink");
   await detail.click();
   await expect(page).toHaveURL(/\/p\//);
   const back = page.getByRole("link", { name: "Akışa dön", exact: true });

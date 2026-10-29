@@ -31,16 +31,21 @@ export function PostComments({
   viewer,
   onMessage,
   loginReturnTo,
+  sectionId = "comments",
+  onCountChange,
 }: {
   postId: string;
   viewer: Viewer;
   onMessage: (message: string) => void;
   loginReturnTo?: string;
+  sectionId?: string;
+  onCountChange?: (total: number) => void;
 }) {
   const router = useRouter();
   const [comments, setComments] = useState<CommentItem[]>([]);
   const loginHref = accountLoginPath(loginReturnTo ?? `/p/${postId}#comments`);
   const [total, setTotal] = useState<number | null>(null);
+  useEffect(() => { if (total !== null) onCountChange?.(total); }, [total, onCountChange]);
   const [readStatus, setReadStatus] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -66,9 +71,9 @@ export function PostComments({
     if (!viewer) return;
     try {
       const raw = sessionStorage.getItem(COMMENT_HANDOFF_KEY);
-      sessionStorage.removeItem(COMMENT_HANDOFF_KEY);
       const draft = parseCommentHandoff(raw, viewer.id, postId);
       if (!draft) return;
+      sessionStorage.removeItem(COMMENT_HANDOFF_KEY);
       setBody(draft.body);
       setReplyingTo(draft.reply ? { id: draft.reply.id, author: { ownerName: draft.reply.ownerName } } : null);
       onMessage("Yorum taslağın geri getirildi. Kontrol edip kendin gönderebilirsin.");
@@ -239,13 +244,13 @@ export function PostComments({
   }
 
   return (
-    <section id="comments" className="post-comments scroll-mt-24" aria-labelledby="post-comments-title">
+    <section id={sectionId} className="post-comments scroll-mt-24" aria-labelledby={`${sectionId}-title`}>
       <ConfirmDialog open={targetChange !== null} title="Yanıt hedefini değiştir?" body="Yeni hedefe geçersen yazdığın yorum veya yanıt temizlenecek. İptal edersen mevcut hedef ve metin korunur." confirmLabel="Taslağı bırak ve geç" onCancel={() => setTargetChange(null)} onConfirm={() => targetChange && applyReply(targetChange.item)} />
       <ConfirmDialog open={Boolean(removeTarget)} title="Yorum kaldırılsın mı?" body={`Bu yorum${removeTarget?.replies.length ? ` ve ${removeTarget.replies.length} yanıtı` : ""} görünümden kaldırılacak.${removeError ? ` ${removeError}` : ""}`} confirmLabel="Yorumu kaldır" tone="danger" busy={Boolean(deletingId)} onCancel={() => setRemoveTarget(null)} onConfirm={() => removeTarget && void removeComment(removeTarget.id)} />
       <div className="post-comments-heading">
         <div>
           <p className="section-kicker">Topluluk</p>
-          <h2 id="post-comments-title"><MessageCircle size={20} /> Yorumlar <span>{total ?? "—"}</span></h2>
+          <h2 id={`${sectionId}-title`}><MessageCircle size={20} /> Yorumlar <span>{total ?? "—"}</span></h2>
         </div>
       </div>
 
