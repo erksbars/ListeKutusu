@@ -13,16 +13,16 @@ for (const width of [1280, 1440, 1728]) {
     await expect(nav.getByRole("link", { name: "Kitaplığım", exact: true })).toHaveAttribute("aria-current", "page");
     await expect(page.getByRole("heading", { name: "Kitaplığım", level: 1, exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Kitaplar", exact: true }).scrollIntoViewIfNeeded();
-    await nav.getByRole("link", { name: "Topluluklar", exact: true }).click();
-    await expect(page).toHaveURL(/\/communities$/);
-    await expect(nav.getByRole("link", { name: "Topluluklar", exact: true })).toHaveAttribute("aria-current", "page");
+    await nav.getByRole("link", { name: "Ana akış", exact: true }).click();
+    await expect(page).toHaveURL(/\/$/);
+    await expect(nav.getByRole("link", { name: "Ana akış", exact: true })).toHaveAttribute("aria-current", "page");
     const heading = page.locator("main h1");
     await expect(heading).toHaveCount(1);
     await expect(heading).toBeVisible();
     expect((await heading.boundingBox())!.y).toBeGreaterThanOrEqual(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     expect(errors).toEqual([]);
-    if (width === 1440) await page.screenshot({ path: testInfo.outputPath("desktop-shell-communities.png"), fullPage: true });
+    if (width === 1440) await page.screenshot({ path: testInfo.outputPath("desktop-shell-feed.png"), fullPage: true });
   });
 }
 

@@ -3,6 +3,11 @@
 Bu dosya yalnız açık işleri tutar. Tamamlanan işlerin özeti `PROJECT_STATUS.md`
 dosyasındadır.
 
+29 Ekim kullanıcı yönü: ayrı topluluk keşif/filtre ekranı kaldırıldı;
+topluluklar ortak aramadan doğrudan açılır. Ana akıştan oluşturma ve
+kart içi topluluk yorumları tamamlandı. Bu yön eski dizin UI planlarını
+geçersiz kılar; dizin API'si korunur. Son doğrulama PROJECT_STATUS.md'dedir.
+
 28 Ekim arama/akış yönlendirmesi tamamlandı: tek üst arama ve birleşik
 sonuç sayfası, tür sekmeleri, ortak öneriler ve görünür akış içerik türleri.
 Genel tasarım askısı yalnız bu açık kullanıcı talebi kapsamında açıldı.

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LogIn, MessageSquarePlus } from "lucide-react";
+import { LogIn, MessageSquarePlus, Users } from "lucide-react";
 import { AccountMenu } from "./AccountMenu";
 
 type HomeTopbarAccount = {
@@ -35,6 +35,7 @@ export function HomeTopbar({ account, onLogout, loginHref = "/account?mode=login
         </div>
       </div>
       <div className="flex min-w-0 items-center justify-end gap-2">
+        <Link href="/communities/create" className="secondary-action inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-bold"><Users size={17} aria-hidden="true" />Topluluk oluştur</Link>
         {account ? (
           <>
             <button

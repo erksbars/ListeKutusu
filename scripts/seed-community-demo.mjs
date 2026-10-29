@@ -25,7 +25,7 @@ export async function seedCommunityDemo(db, now = new Date()) {
     for (const [index, community] of demoCommunities.entries()) {
       const clashes = await tx.community.findMany({ where: { OR: [{ id: community.id }, { slug: community.slug }] }, select: { id: true, slug: true, ownerId: true } });
       if (clashes.some(row => row.id !== community.id || row.slug !== community.slug || row.ownerId !== community.ownerId)) throw new Error("Demo topluluk kimliği mevcut bir kayıtla çakışıyor; hiçbir veri değiştirilmedi.");
-      await tx.community.upsert({ where: { id: community.id }, create: { ...community, createdAt: ago(200 + index) }, update: {} });
+      await tx.community.upsert({ where: { id: community.id }, create: { ...community, ...communityInput(community), createdAt: ago(200 + index) }, update: {} });
     }
     for (const member of demoMembers) await tx.communityMember.upsert({ where: { communityId_userId: { communityId: member.communityId, userId: member.userId } }, create: { ...member, joinedAt: ago(190) }, update: {} });
     for (const { hoursAgo, ...post } of demoPosts) {

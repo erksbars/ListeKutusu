@@ -8,7 +8,6 @@ import {
   Gamepad2,
   Home,
   ListMusic,
-  Users,
   MessageSquarePlus,
   PanelLeftClose,
   PanelLeftOpen,
@@ -108,10 +107,6 @@ export function HomeSidebar({
             <span className="home-nav-label">Kaydedilenler</span>
           </Link>
         )}
-        <Link href="/communities" aria-label="Topluluklar" title="Topluluklar" className={itemClass}>
-          <Users size={18} strokeWidth={2.2} aria-hidden="true" />
-          <span className="home-nav-label">Topluluklar</span>
-        </Link>
         {authenticated && <Link href="/community-saved" aria-label="Topluluk kayıtlarım" title="Topluluk kayıtlarım" className={itemClass}>
           <Bookmark size={18} strokeWidth={2.2} aria-hidden="true" />
           <span className="home-nav-label">Topluluk kayıtlarım</span>

@@ -7,12 +7,8 @@ test("seeded communities display demo profiles, reviews and comments", async ({ 
   const failures: string[] = [];
   page.on("pageerror", error => failures.push(error.message));
   await page.addInitScript(() => localStorage.setItem("listekutusu-theme", "dark"));
-  await page.goto("/communities");
-  const cards = page.getByRole("region", { name: "Topluluk keşfi" }).getByRole("article");
-  await expect(cards).toHaveCount(8, { timeout: 30_000 });
-  await expect(page.getByRole("link", { name: "Albüm Kulübü (Demo)", exact: true })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Örnek Kampüs Kulübü (Demo)", exact: true })).toBeVisible();
-  await page.screenshot({ path: "test-results/browser/community-demo-directory-desktop.png", fullPage: true, animations: "disabled" });
+  await page.goto("/search?q=Demo&type=communities");
+  await expect(page.getByRole("region", { name: "Topluluklar", exact: true }).getByRole("article")).toHaveCount(8, { timeout: 30_000 });
   await page.getByRole("link", { name: "Film Günlüğü (Demo)", exact: true }).click();
   await expect(page.getByText("5 üye", { exact: true })).toBeVisible({ timeout: 30_000 });
   await expect(page.getByRole("region", { name: "Topluluk sohbetleri" }).getByRole("article")).toHaveCount(4);

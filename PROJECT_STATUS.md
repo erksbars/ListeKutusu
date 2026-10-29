@@ -1,5 +1,34 @@
 # ListeKutusu Güncel Durum
 
+## 29 Ekim 2026 — topluluklara ortak aramadan erişim ve akış içi yorum
+
+- Son kullanıcı yönlendirmesiyle ayrı topluluk keşif/filtre ekranı kaldırıldı.
+  Ana bölüm menüsünde dizin bağlantısı yok. Ortak arama önerisi doğrudan
+  `/communities/[slug]` açar; `/communities` eski adresi ana akışa, sorgulu
+  eski adres ortak arama sonucuna yönlenir. Topluluk detayları ve API'ler durur.
+- Ana akışa Topluluk oluştur bağlantısı eklendi. `/communities/create`
+  mevcut doğrulama/kurucu atama API'sini ve taslak korumasını kullanır;
+  anonim giriş hedefi, geçici hata ve başarısız oluşturma metni korunur.
+  Sahiplik teklifleri ve başvuru bağlantısı oluşturma alanında erişilebilir.
+- Topluluk sohbet/inceleme kartlarında Yorumlar paneli: mevcut yorumlar,
+  sınırlı sayfalama, açık gönderim, katılma ve giriş yönlendirmesi. Mevcut
+  aktif üyelik/engelleme/arşiv kuralları backend'de korunur; yorum için yeni
+  bir yazma API'si veya izin genişletmesi yok. Spoiler yorumları onaysız
+  okunmaz/gösterilmez. Hata taslağı korur; 403/404 özel taslağı temizler.
+- Yorum paneli kapatma kendi taslağını, filtre/akış yenileme ve sayfa çıkışı
+  ortak kayıtlı taslakları korur. Başarılı gönderimde okuma yenilenir;
+  birden fazla gönderim busy kilidiyle engellenir.
+- Demo topluluklarına konu/şehir/örnek üniversite etiketleri tamamlandı;
+  yalnız boş etiketli 8 ayrılmış demo kayıt güncellendi. Hesaplar, müzik
+  listeleri ve kitaplık önce-sonra hash ile aynı doğrulandı.
+- 24 odaklı test (13 demo/gezinme/taslak + 11 üyelik/yorum/erişim),
+  TypeScript, ilgili ESLint ve UI/a11y kapıları geçti. CLI/Edge koyu
+  masaüstünde gerçek arama/yorum okuma; istemci taklidiyle yorum hata/tekrar,
+  tek gönderim, üyelik, yetki kaybı, spoiler, filtre/yenileme/kapatma taslağı
+  ve oluşturma çıkışı/başarılı hedef geçti; 0 pageerror. Testte gerçek yorum
+  veya topluluk yazılmadı. Eski opt-in tarayıcı girişleri yeni adreslere
+  uyarlandı; bu geniş matris ve production build çalıştırılmadı.
+
 ## 28 Ekim 2026 — karma akış için yerel demo içerik
 
 - Kullanıcının isteğiyle yerel demo veri eklendi: 8 girişe kapalı kurgusal

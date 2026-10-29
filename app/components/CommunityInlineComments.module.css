@@ -1,0 +1,13 @@
+.root { display: grid; gap: var(--ui-space-3); }
+.root > button { justify-self: start; }
+.panel { display: grid; gap: var(--ui-space-4); border-top: 1px solid var(--ui-border); padding-top: var(--ui-space-4); }
+.heading, .pager { display: flex; align-items: center; flex-wrap: wrap; justify-content: space-between; gap: var(--ui-space-2); }
+.comments { display: grid; gap: var(--ui-space-4); max-height: 420px; overflow-y: auto; }
+.comment { border-left: 2px solid var(--ui-border); padding-left: var(--ui-space-3); }
+.comment a { color: var(--ui-text-strong); font-weight: 700; font-size: var(--ui-text-sm); }
+.comment time { margin-left: var(--ui-space-2); font-size: var(--ui-text-xs); }
+.comment p { white-space: pre-wrap; overflow-wrap: anywhere; margin-top: var(--ui-space-2); line-height: var(--ui-leading-relaxed); }
+.form { display: grid; gap: var(--ui-space-3); }
+.form > button { justify-self: end; }
+.warning { padding: var(--ui-space-4); border: 1px solid var(--ui-border); border-radius: var(--ui-radius-md); display: grid; gap: var(--ui-space-3); }
+.panel [role="alert"] { color: var(--ui-danger); }

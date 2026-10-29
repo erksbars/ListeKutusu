@@ -2,13 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Compass, Gamepad2, Home, Library, Users } from "lucide-react";
+import { Compass, Gamepad2, Home, Library } from "lucide-react";
 import { isPrimaryPathActive } from "@/lib/primaryNavigation";
 
 const primaryItems = [
   { href: "/", label: "Ana akış", icon: Home },
   { href: "/discover", label: "Keşfet", icon: Compass },
-  { href: "/communities", label: "Topluluklar", icon: Users },
   { href: "/games", label: "Oyunlar", icon: Gamepad2 },
   { href: "/library", label: "Kitaplığım", icon: Library },
 ] as const;

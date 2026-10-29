@@ -7,6 +7,7 @@ import { REVIEW_KINDS } from "@/lib/communityTypes";
 import { TVmazeAttribution } from "./TVmazeAttribution";
 import styles from "./CommunityGeneralFeed.module.css";
 import { CommunityCardActions } from "./CommunityCardActions";
+import { CommunityInlineComments } from "./CommunityInlineComments";
 import { CalendarDays, MessageCircle, Star, MapPin, Users } from "lucide-react";
 
 const postedAt = new Intl.DateTimeFormat("tr-TR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Istanbul" });
@@ -43,5 +44,6 @@ export function CommunityFeedCard({ item, viewerId = null, surface = "feed", onU
     <footer className={styles.footer}><Link className={styles.detail} href={href} onClick={rememberSource}>{item.kind === "event" ? "Etkinlik detayını aç" : item.type === "review" ? "İncelemeyi aç" : "Sohbeti aç"} ↗</Link>
     {item.kind === "post" && <CommunityCardActions key={viewerId ?? "anonymous"} initial={item} slug={item.community.slug} postId={item.id} viewerId={viewerId} surface={surface} loginReturnTo={returnTo ? feedReturnPath(returnTo).split("#")[0] + anchor : undefined} onUnsave={onUnsave} onUnavailable={() => setUnavailable(true)} />}
     </footer>
+    {item.kind === "post" && surface === "feed" && <CommunityInlineComments key={`${item.id}:${viewerId}`} slug={item.community.slug} postId={item.id} viewerId={viewerId} spoiler={item.spoiler} returnTo={returnTo ? feedReturnPath(returnTo).split("#")[0] + anchor : href} />}
   </article>;
 }

@@ -29,7 +29,7 @@ test("private event agenda filters, history, withdrawal failures and last-page r
     expect((await request.get("/api/communities/agenda")).status()).toBe(401); expect((await context.request.get("/api/communities/agenda?role=bad")).status()).toBe(400);
     const foreign = await owner.request.get(`/api/communities/agenda?role=responded&userId=${ids[0]}`); expect((await foreign.json()).items).toHaveLength(0); expect(foreign.headers()["cache-control"]).toBe("private, no-store");
     const ownRead = await context.request.get("/api/communities/agenda"); const serialized = JSON.stringify(await ownRead.json()); for (const field of ["responses", "participants", "organizerId", "description"]) expect(serialized).not.toContain(`"${field}"`);
-    await page.addInitScript(() => localStorage.setItem("listekutusu-theme", "dark")); await page.goto("/communities"); await page.getByRole("link", { name: "Etkinliklerim ↗", exact: true }).click();
+    await page.addInitScript(() => localStorage.setItem("listekutusu-theme", "dark")); await page.goto("/community-events");
     await expect(page.getByRole("heading", { name: "Etkinliklerim", exact: true })).toBeVisible(); await expect(page.getByRole("article")).toHaveCount(20);
     const role = page.getByRole("combobox", { name: "Etkinlikle ilişkim", exact: true }), view = page.getByRole("combobox", { name: "Etkinlik zamanı", exact: true });
     await role.selectOption("organizing"); await expect(page).toHaveURL(/role=organizing/); await expect(page.getByRole("article")).toHaveCount(1); await expect(page.getByRole("article")).toContainText(own.title); await expect(page.getByRole("article")).toContainText("Henüz belirtilmedi");

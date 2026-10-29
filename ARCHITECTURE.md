@@ -1,5 +1,17 @@
 # ListeKutusu Mimari Özeti
 
+## Topluluk girişleri ve kart içi yorum
+
+Ayrı topluluk dizini UI'si kaldırıldı. Ortak arama önerileri doğrudan
+`/communities/[slug]` hedefidir. `/communities/create` oluşturma formudur;
+legacy `/communities` ana akışa, q parametresi ortak aramaya yönlenir.
+Dizin/keşif API sözleşmeleri başka istemciler ve etiket sorguları için durur.
+`CommunityInlineComments`, var olan post GET ve topluluk POST comment/join
+sözleşmesini kullanır. Yazılabilirlik, mevcut aktif üyelik ve açık topluluk
+izniyle sınırlıdır; backend nihai kararı verir. Okuma URL/revision/viewer ile
+ayrılır, kapalı/spoiler onaysız panel sorgu yapmaz. Panel kapatma kendi
+onayıyla, filtre ve yenileme ortak taslak kaydıyla korunur.
+
 ## Ortak sosyal arama
 
 `GlobalSearch` AppShell içinde tek arama alanıdır; Spotify `/api/search`

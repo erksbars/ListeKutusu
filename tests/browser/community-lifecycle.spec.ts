@@ -47,7 +47,7 @@ test("two-party ownership, read-only archive and explicit account closure", asyn
     await expect(ownerPanel.getByRole("button", { name: "Teklifi geri çek", exact: true })).toBeVisible();
     await page.unroute(`**${api}/ownership`);
     expect((await db.community.findUniqueOrThrow({ where: { slug } })).ownerId).toBe(ids[0]);
-    await recipientPage.goto("/communities");
+    await recipientPage.goto("/communities/create");
     await recipientPage.getByRole("region", { name: "Gelen sahiplik teklifleri", exact: true }).getByRole("link").click();
     const newPanel = recipientPage.getByRole("region", { name: "Sahiplik ve arşiv", exact: true });
     await newPanel.getByRole("button", { name: "Sahipliği kabul et", exact: true }).click();

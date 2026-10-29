@@ -54,6 +54,9 @@ const topics = [
 export const demoCommunities = topics.map(([key, name, category, description], index) => ({
   id: `${DEMO_PREFIX}-community-${key}`, slug: `demo-${key}-toplulugu`, name: `${name} (Demo)`,
   description: `${description} Kurgusal demo verisidir.`, category, ownerId: demoUsers[index].id,
+  interest: ["music", "movie", "tv", "book", "game", "boardgame", "other", "other"][index],
+  universityName: index === 6 ? "Örnek Üniversite (Demo)" : null,
+  city: index === 6 ? "Eskişehir" : index === 7 ? "İstanbul" : null,
   rules: "Demo topluluğudur. Saygılı konuş, kişisel bilgi paylaşma; spoiler içeren incelemeleri işaretle ve başlığa spoiler yazma.",
 }));
 export const demoMembers = demoCommunities.flatMap((community, index) => Array.from({ length: 5 }, (_, offset) => ({

@@ -13,6 +13,7 @@ import { LeaderboardSidebar } from "@/app/components/LeaderboardSidebar";
 import { FeedPostCard } from "@/app/components/FeedPostCard";
 import { FeedCommunityPulse } from "@/app/components/FeedCommunityPulse";
 import { CommunityFeedCard } from "@/app/components/CommunityFeedCard";
+import { useDraftNavigationRequest } from "@/app/components/DraftNavigationProvider";
 import { FeedContentTabs } from "@/app/components/FeedContentTabs";
 import { Button } from "@/app/components/ui/Button";
 import { ContentState } from "@/app/components/ui/ContentState";
@@ -93,6 +94,7 @@ type Leaderboard = {
 };
 
 export default function HomePage() {
+  const requestFeedExit = useDraftNavigationRequest(true);
   const router = useRouter();
   const [account, setAccount] = useState<Account | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -131,7 +133,7 @@ export default function HomePage() {
     setFeedPosts,
     setMessage,
     onAuthRequired: () => router.push(accountLoginPath(`${feedLocation.path}#feed-composer`)),
-    onCreated: () => void loadFeed(feedScope),
+    onCreated: () => requestFeedExit(() => void loadFeed(feedScope)),
   });
 
   const feedLoadMoreRef = useInfiniteScroll({
@@ -287,7 +289,7 @@ export default function HomePage() {
                   activeTopic={activeFeedTopic}
                   onChange={selectFeedScope}
                   onTopicChange={setActiveFeedTopic}
-                  onRefresh={() => loadFeed(feedScope)}
+                  onRefresh={() => requestFeedExit(() => void loadFeed(feedScope))}
                 />
 
                 {account?.onboarding && <GettingStarted initial={account.onboarding} />}

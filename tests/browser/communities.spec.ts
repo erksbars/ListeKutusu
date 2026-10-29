@@ -25,15 +25,15 @@ test("real community creation, membership, conversation and moderation", async (
     }
     await page.addInitScript(() => localStorage.setItem("listekutusu-theme", "dark"));
     await memberPage.addInitScript(() => localStorage.setItem("listekutusu-theme", "dark"));
-    await page.goto("/communities");
+    await page.goto("/communities/create");
     await page.getByRole("textbox", { name: "Topluluk adı", exact: true }).fill("Kutu Oyunu Denemesi");
     await page.getByRole("textbox", { name: "Açıklama", exact: true }).fill("Birlikte kutu oyunlarını konuşuyoruz.");
     await page.getByRole("textbox", { name: "Topluluk kuralları", exact: true }).fill("Saygılı ol ve kişisel bilgileri paylaşma.");
     await page.getByRole("button", { name: "Topluluk oluştur", exact: true }).click();
-    await expect(page).toHaveURL(/\/communities\/.+/, { timeout: 30_000 });
+    await expect(page).toHaveURL(/\/communities\/kutu-oyunu-denemesi-/, { timeout: 30_000 });
     slug = new URL(page.url()).pathname.split("/").at(-1)!;
     const api = `/api/communities/${slug}`;
-    await expect(page.getByText("Kurucusun", { exact: true })).toBeVisible();
+    await expect(page.getByText("Topluluğun sahibisin", { exact: true })).toBeVisible();
     expect((await visitor.request.post(api, { headers: { Origin: baseURL }, data: { action: "join" } })).status()).toBe(401);
     expect((await context.request.post(api, { headers: { Origin: "https://evil.test" }, data: { action: "join" } })).status()).toBe(403);
     expect((await context.request.post(api, { headers: { Origin: baseURL, "Content-Type": "application/json" }, data: "{" })).status()).toBe(400);

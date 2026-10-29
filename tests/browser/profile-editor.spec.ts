@@ -134,9 +134,9 @@ test("profile draft discard, failed save recovery and pending edit lock", async 
   await page.reload();
   await expect(status).toHaveValue("Korunacak taslak");
   await status.fill("Ayrılırken bırakılacak taslak");
-  await page.getByRole("navigation", { name: "Ana bölümler", exact: true }).getByRole("link", { name: "Topluluklar", exact: true }).click();
+  await page.getByRole("navigation", { name: "Ana bölümler", exact: true }).getByRole("link", { name: "Keşfet", exact: true }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Kaydetmeden çık", exact: true }).click();
-  await expect(page).toHaveURL(/\/communities$/);
+  await expect(page).toHaveURL(/\/discover$/);
   await expect(page.locator(".desktop-shell")).not.toHaveAttribute("inert", "");
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: testInfo.outputPath("profile-editor-desktop.png"), fullPage: true });

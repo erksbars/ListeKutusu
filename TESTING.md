@@ -1,5 +1,22 @@
 # ListeKutusu Doğrulama Politikası
 
+29 Ekim ortak arama/oluşturma ve akış yorum kabulü:
+`node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test tests/community-demo.test.mjs tests/community-navigation.test.mjs tests/draft-navigation.test.mjs`
+ile 13, `tests/communities.test.mjs` ile 11 odaklı test geçti.
+TypeScript, ilgili ESLint ve UI/a11y statik kapıları geçti. CLI/Edge 1280
+koyu masaüstünde gerçek ortak öneri→topluluk, eski dizin→ana akış,
+oluşturma düğmesi/anonim giriş ve gerçek demo yorum okuma doğrulandı.
+İstemci API taklidiyle yorum gönderme 503→metin korunması→tek başarı,
+filtre/yenileme/kapama iptal taslağı, spoiler öncesi 0 okuma, üyeliğe katılıp
+yorum yazabilme, 403 sonrası taslak/form temizliği ve oluşturma taslağı/
+başarılı hedef doğrulandı; 0 pageerror. Tüm test POST'ları tarayıcıda
+karşılandı; normal DB'ye yorum/üyelik/topluluk yazılmadı. Demo etiket
+bakımı ayrıdır; gerçek hesap/listeler/kitaplık hash'i korunur.
+Eski opt-in tarayıcı kaynaklarında dizin yerine ortak arama, oluşturma ve
+kişisel etkinlik girişleri uyarlandı; bunlar yalnız TypeScript/ESLint ile
+kontrol edildi. Geniş tarayıcı matrisi/build/mobil/açık tema çalıştırılmadı.
+Görüntüler output/playwright altında, Git dışındadır.
+
 28 Ekim karma demo veri kabulü:
 `node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test tests/community-demo.test.mjs`
 ile 5 test geçti: yerel ortam kapısı, geçici SQLite migration, kimlik

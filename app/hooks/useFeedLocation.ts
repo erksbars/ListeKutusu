@@ -3,8 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { feedLocationPath, parseFeedLocation, type FeedLocation } from "@/lib/feedNavigation";
 import { readFeedAnchor } from "@/lib/feedRestoration";
+import { useDraftNavigationRequest } from "@/app/components/DraftNavigationProvider";
 
 export function useFeedLocation() {
+  const requestExit = useDraftNavigationRequest(true);
   const [value, setValue] = useState<FeedLocation>({ scope: "all", kind: "all", topic: null });
   const [ready, setReady] = useState(false);
   const [anchor, setAnchor] = useState<string | null>(null);
@@ -14,6 +16,9 @@ export function useFeedLocation() {
     return () => { window.removeEventListener("popstate", apply); window.removeEventListener("hashchange", apply); };
   }, []);
   function update(next: FeedLocation) {
+    requestExit(() => applyUpdate(next));
+  }
+  function applyUpdate(next: FeedLocation) {
     const path = feedLocationPath(next);
     const normalized = parseFeedLocation(new URL(path, window.location.origin).searchParams);
     setValue(normalized);
