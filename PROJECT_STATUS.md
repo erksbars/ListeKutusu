@@ -1,5 +1,25 @@
 # ListeKutusu Güncel Durum
 
+## 30 Ekim 2026 — sosyal akış tasarım incelemesi ve faz planı
+
+- Kullanıcının isteğiyle ana/topluluk akışı, etkinlik kartları ve eski
+  ekranların yeni sosyal kapsamla uyumu salt okunur incelendi. Sonuç ve
+  kabul ölçütleri: [Sosyal akış tasarım raporu ve yol haritası](docs/SOSYAL_AKIS_TASARIM_RAPORU_VE_YOL_HARITASI_2026-10-30.md).
+- Ana ayrışma: ortak üst alana rağmen topluluk listesi eski özet/detay,
+  select filtre ve ayrı etkinlik düzenini kullanıyor. Aynı sohbet kartı
+  1440 px masaüstünde ana akışta 1071, toplulukta 867 px ölçüldü. Etkinlik
+  kimlik önizlemesi bugün normal üyeye açık değil; görünürlük tercihi ve
+  sunucu DTO'su ayrı öneri olarak planlandı. Ajandadaki eski etkinlik keşif
+  hedefinin filtreyi kaybetmesi de erken düzeltme listesine alındı.
+- Fazlar: ortak akış/kart ve topluluk DTO geçişi; ortak etkinlik görünümü
+  ve katılımcılar; oluşturma/yorum; arama/profil/kayıtlar; eski paneller ve
+  dar kabul. Bu fazlar uygulanmadı. Ek özellik adayları tamamlandı sayılmaz.
+- Edge 1440×960 koyu masaüstünde 12 adres/durum salt okunur açıldı;
+  üye/yönetici ekranları kaynak üzerinden incelendi. Yeni test/build veya
+  DB yazması yok. Uygulama kodu ve tasarım değişmedi; yalnız rapor ve durum
+  belgeleri güncellendi. Mobil/açık tema/forum askısı, renkler ve son
+  sidebar'sız ortak üst alan yönü korundu. Görüntüler Git dışındadır.
+
 ## 30 Ekim 2026 — sol menüden ortak üst alan ve profil menüsüne geçiş
 
 - Kullanıcı isteğiyle AppShell sol menüsü kaldırıldı; içerik soldaki sabit

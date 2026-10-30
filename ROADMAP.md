@@ -3,6 +3,29 @@
 Bu dosya yalnız açık işleri tutar. Tamamlanan işlerin özeti `PROJECT_STATUS.md`
 dosyasındadır.
 
+## 30 Ekim — sosyal akış tasarım planı, uygulama açık
+
+Kullanıcının yeni talebiyle ana/topluluk akışı ve eski ekranlar için
+inceleme tamamlandı: [Sosyal akış tasarım raporu ve yol haritası](docs/SOSYAL_AKIS_TASARIM_RAPORU_VE_YOL_HARITASI_2026-10-30.md).
+Bu aşama rapor işidir; uygulama kodu değişmedi. Aşağıdaki eski tasarım
+askısı notları tarihsel kapsamı anlatır; yeni belge son istenen incelemeyi
+ve önerilen uygulama sırasını tanımlar.
+
+- F1: ortak ölçü/filtre/kartlar, topluluk tam metin DTO'su ve karma liste;
+  yerinde okuma/yorum, eski etkinlik keşif hedefinin düzeltilmesi.
+- F2: ana/topluluk/ajandada ortak etkinlik kartı; ayrı veri dilimiyle
+  görünürlük tercihli katılımcı önizlemesi ve sayfalı panel.
+- F3: ortak kompakt oluşturucu, yorum kabuğu, işlem menüsü ve okur/yönetim ayrımı.
+- F4: arama, sosyal profil, kayıtlar/bildirim; kitaplık/hesap/öneri ve eski
+  oyun/yönetim/kenar ekranların uyumu. Forumda yalnız uyumluluk.
+- F5: koyu masaüstü görsel/etkileşim ve dar veri kabulü; istek maliyeti.
+
+F1–F5 henüz uygulanmadı; ek fikirler ayrı adaylardır. Mobil/açık tema ve
+bağımsız forum geliştirmesi askıda; son üst alan ve renk yönü korunur.
+Mevcut pilot/staging/operasyon/yayın kapıları bu raporla kapanmış sayılmaz.
+
+## Önceki kilometre taşları ve açık teknik kapsam
+
 30 Ekim kullanıcı yönü uygulandı: sidebar kaldırıldı, tüm gezinme profil
 menüsüne taşındı. Arama ile Topluluk oluştur tek ortak üst satırdadır.
 Eski sol menü tasarım notları güncel kabuk yönü değildir.
