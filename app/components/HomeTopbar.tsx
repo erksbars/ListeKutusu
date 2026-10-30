@@ -1,8 +1,5 @@
 "use client";
-
-import Link from "next/link";
-import { LogIn, MessageSquarePlus, Users } from "lucide-react";
-import { AccountMenu } from "./AccountMenu";
+import { MessageSquarePlus } from "lucide-react";
 
 type HomeTopbarAccount = {
   ownerName: string;
@@ -25,7 +22,7 @@ function openComposer() {
   window.setTimeout(() => document.getElementById("feed-track-search")?.focus(), 350);
 }
 
-export function HomeTopbar({ account, onLogout, loginHref = "/account?mode=login" }: HomeTopbarProps) {
+export function HomeTopbar({ account }: HomeTopbarProps) {
   return (
     <header className="app-topbar home-topbar sticky top-0 z-30 flex min-h-16 items-center justify-between gap-3 py-3">
       <div className="flex min-w-0 items-center gap-3">
@@ -35,9 +32,7 @@ export function HomeTopbar({ account, onLogout, loginHref = "/account?mode=login
         </div>
       </div>
       <div className="flex min-w-0 items-center justify-end gap-2">
-        <Link href="/communities/create" className="secondary-action inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-bold"><Users size={17} aria-hidden="true" />Topluluk oluştur</Link>
-        {account ? (
-          <>
+        {account && (
             <button
               type="button"
               onClick={openComposer}
@@ -46,23 +41,6 @@ export function HomeTopbar({ account, onLogout, loginHref = "/account?mode=login
               <MessageSquarePlus size={17} aria-hidden="true" />
               <span>Şarkı paylaş</span>
             </button>
-            <AccountMenu
-              ownerName={account.ownerName}
-              email={account.email}
-              profileSlug={account.slug}
-              role={account.role}
-              onLogout={onLogout}
-            />
-          </>
-        ) : (
-          <Link
-            href={loginHref}
-            aria-label="Giriş yap"
-            className="topbar-primary-button home-login-button"
-          >
-            <LogIn size={17} aria-hidden="true" />
-            <span>Giriş yap</span>
-          </Link>
         )}
       </div>
     </header>

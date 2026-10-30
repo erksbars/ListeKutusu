@@ -1,5 +1,16 @@
 # ListeKutusu Mimari Özeti
 
+## Ortak başlık ve profil menüsü
+
+AppShell artık sabit sidebar yerine AppHeader kullanır. Arama ve topluluk
+oluşturma aynı satırdadır. HeaderNavigationProvider, eski sayfa içi hesap
+ve bildirim örneklerinin mount edilmesini engeller; başlık örnekleri açık
+inHeader işaretiyle render edilir. Eski sayfa form/işlemleri yerinde kalır.
+clientAccountSession önbelleği prime/clear sırasında yerel değişim bildirir;
+AppHeader bunu ve rota/odak okumalarını kullanır. Ana akış çıkışta bu olayı
+hesap temizliği için dinler. Çıkış onaylı taslak isteğinden sonra mevcut API,
+router replace/refresh yolunu kullanır; menü ağ hatasında tekrar denenir.
+
 Ana akış kartı sözleşmesi: karma ve özel kayıt kaynakları `content` ile
 spoiler olmayan tam metni verir; spoiler içerikte content/excerpt boştur.
 CommunityPostContent açık onayla aynı kartta post GET yapar. InlineEvent

@@ -3,6 +3,10 @@
 Bu dosya yalnız açık işleri tutar. Tamamlanan işlerin özeti `PROJECT_STATUS.md`
 dosyasındadır.
 
+30 Ekim kullanıcı yönü uygulandı: sidebar kaldırıldı, tüm gezinme profil
+menüsüne taşındı. Arama ile Topluluk oluştur tek ortak üst satırdadır.
+Eski sol menü tasarım notları güncel kabuk yönü değildir.
+
 29 Ekim ana akış önceliği tamamlandı: müzik/sohbet/inceleme/etkinlik
 okuma ve temel etkileşimleri aynı kartta; etkinlik doluluk/katılımı ve
 müzik yorumları da yerindedir. Ayrı detay rotası zorunlu okuma yolu değildir.

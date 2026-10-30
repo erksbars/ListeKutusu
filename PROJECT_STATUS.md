@@ -1,5 +1,32 @@
 # ListeKutusu Güncel Durum
 
+## 30 Ekim 2026 — sol menüden ortak üst alan ve profil menüsüne geçiş
+
+- Kullanıcı isteğiyle AppShell sol menüsü kaldırıldı; içerik soldaki sabit
+  payı kullanmaz. Tek kalıcı üst satır: ListeKutusu, ortak arama,
+  Topluluk oluştur, bildirim ve profil menüsü. Marka renkleri korundu;
+  önceki kaynak `design/before-header-navigation-2026-10-30` etiketindedir.
+- Ana akış, Keşfet, Oyunlar, Kitaplığım, müzik/topluluk kayıtları,
+  Etkinliklerim, Hesap ve profil, kullanım/gizlilik profil menüsündedir.
+  Profilim/çıkış ve yetkili moderasyon bağlantısı hesap durumuna bağlıdır.
+  Girişsiz kullanıcı da aynı menüden gezinir; özel rotalar giriş ister.
+- Sayfa içindeki eski AccountMenu/NotificationCenter örnekleri ortak
+  header bağlamında mount edilmez; çift düğme/ID ve bildirim okuması yok.
+  Menü yol/sorgu değişiminde kapanır, Arrow/Home/End/Escape ve odak dönüşü
+  korunur. Uzun menü ekran yüksekliğine göre kaydırılabilir.
+- Oturum önbelleği giriş/çıkış değişimini ortak başlığa bildirir; ana akış
+  çıkışta hesap durumunu ve kişisel bayraklarını yeniler. Çıkış başarısızsa
+  oturum görünümü korunur, tekrar denenir. Profil menüsü linkleri ve çıkış
+  ortak taslak korumasından geçer. Yeni API veya veri migration'ı yoktur.
+- 5 gezinme/taslak testi, TypeScript, ilgili ESLint ve UI/a11y kapıları
+  geçti. CLI/Edge 1280/1440 koyu masaüstünde tek arama/menü/bildirim,
+  aynı satır/geometri, taşma olmaması, klavye, ortak arama→topluluk,
+  kitaplık/Keşfet/oyun/oluşturma geçişleri doğrulandı. Oturum ve logout
+  istemcide taklit edildi: taslak iptal/onay, 503 çıkış/tekrar, ana akışın
+  anonim duruma dönmesi, oturum okuma hatası/tekrar geçti; 0 pageerror.
+  Normal hesap/listelere yazılmadı. Eski opt-in kaynakları uyarlandı ama
+  geniş matris/build/mobil/açık tema çalıştırılmadı. Görüntüler Git dışındadır.
+
 ## 29 Ekim 2026 — ana akışta tüm kart türlerini yerinde kullanma
 
 - Sohbet/inceleme/etkinlik kartlarındaki Detayı aç çıkışları kaldırıldı;

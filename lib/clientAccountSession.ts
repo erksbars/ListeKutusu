@@ -24,17 +24,24 @@ const ANONYMOUS_TTL = 10_000;
 
 let cache: CacheEntry | null = null;
 let inFlight: Promise<AccountSessionSummary | null> | null = null;
+export const ACCOUNT_SESSION_CHANGED = "account-session:changed";
+
+function notifySession(account: AccountSessionSummary | null) {
+  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent(ACCOUNT_SESSION_CHANGED, { detail: account }));
+}
 
 export function primeAccountSession(account: AccountSessionSummary | null) {
   cache = {
     account,
     expiresAt: Date.now() + (account ? AUTHENTICATED_TTL : ANONYMOUS_TTL),
   };
+  notifySession(account);
 }
 
 export function clearAccountSessionCache() {
   cache = null;
   inFlight = null;
+  notifySession(null);
 }
 
 export async function loadAccountSession(options: { force?: boolean } = {}) {

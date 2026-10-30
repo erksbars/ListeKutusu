@@ -34,7 +34,7 @@ import { useFeedComposer } from "@/app/hooks/useFeedComposer";
 import { useFeedInteractions } from "@/app/hooks/useFeedInteractions";
 import { useFeedTopics } from "@/app/hooks/useFeedTopics";
 import { useInfiniteScroll } from "@/app/hooks/useInfiniteScroll";
-import { clearAccountSessionCache, loadAccountSession } from "@/lib/clientAccountSession";
+import { ACCOUNT_SESSION_CHANGED, clearAccountSessionCache, loadAccountSession } from "@/lib/clientAccountSession";
 import { useFeedAnchor, useFeedLocation } from "@/app/hooks/useFeedLocation";
 import { communityFeedAnchor, feedLocationPath } from "@/lib/feedNavigation";
 import { accountLoginPath } from "@/lib/navigation";
@@ -97,6 +97,11 @@ export default function HomePage() {
   const requestFeedExit = useDraftNavigationRequest(true);
   const router = useRouter();
   const [account, setAccount] = useState<Account | null>(null);
+  useEffect(() => {
+    const signedOut = (event: Event) => { if (!(event as CustomEvent).detail) setAccount(null); };
+    window.addEventListener(ACCOUNT_SESSION_CHANGED, signedOut);
+    return () => window.removeEventListener(ACCOUNT_SESSION_CHANGED, signedOut);
+  }, []);
   const [message, setMessage] = useState<string | null>(null);
   const [leaderboard, setLeaderboard] = useState<Leaderboard | null>(null);
   const feedLocation = useFeedLocation();

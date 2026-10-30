@@ -1,0 +1,9 @@
+.shell .content { margin-left: 0; min-width: 0; }
+.header { position: sticky; top: 0; z-index: 50; padding: var(--ui-space-3) var(--ui-desktop-gutter); background: var(--ui-surface); border-bottom: 1px solid var(--ui-border); }
+.inner { display: flex; align-items: center; gap: var(--ui-space-3); max-width: var(--ui-page-max-width); margin-inline: auto; }
+.brand { flex-shrink: 0; color: var(--ui-text-strong); font-size: var(--ui-text-xl); font-weight: 900; letter-spacing: -.03em; margin-right: auto; }
+.create { display: inline-flex; align-items: center; justify-content: center; gap: var(--ui-space-2); flex-shrink: 0; min-height: var(--ui-control-md); padding: var(--ui-space-2) var(--ui-space-3); border: 1px solid var(--ui-border); border-radius: var(--ui-radius-md); color: var(--ui-text-strong); background: var(--ui-surface-raised); font-size: var(--ui-text-sm); font-weight: 700; }
+.create:hover, .create:focus-visible { border-color: var(--ui-primary); color: var(--ui-primary); }
+.brand:focus-visible, .create:focus-visible { outline: 2px solid var(--ui-primary); outline-offset: 3px; }
+.header :global(.account-menu-popover) { width: 292px; max-height: calc(100dvh - 100px); overflow-y: auto; }
+.header :global(.account-menu-heading) { padding: var(--ui-space-2) var(--ui-space-3); margin-top: var(--ui-space-2); border-top: 1px solid var(--ui-border); color: var(--ui-text-muted); font-size: var(--ui-text-xs); font-weight: 700; }

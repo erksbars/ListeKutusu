@@ -20,7 +20,8 @@ test("save and continue retains the destination across errors and locks duplicat
   const status = page.getByLabel("Kısa durum", { exact: true });
   await expect(status).toHaveValue("Eski durum");
   await status.fill("Korunacak durum");
-  await page.getByRole("navigation", { name: "Ana bölümler", exact: true }).getByRole("link", { name: "Kitaplığım", exact: true }).click();
+  await page.locator("#account-menu-trigger").click();
+  await page.getByRole("menu").getByRole("menuitem", { name: "Kitaplığım", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "Değişiklikler kaydedilmedi", exact: true });
   const save = dialog.getByRole("button", { name: "Kaydet ve devam et", exact: true });
   await save.click();
@@ -85,7 +86,8 @@ test("profile draft discard, failed save recovery and pending edit lock", async 
   await expect(discard).toBeDisabled();
   await status.fill("Vazgeçilecek taslak");
   await bio.fill("Geçici açıklama");
-  await page.getByRole("navigation", { name: "Ana bölümler", exact: true }).getByRole("link", { name: "Kitaplığım", exact: true }).click();
+  await page.locator("#account-menu-trigger").click();
+  await page.getByRole("menu").getByRole("menuitem", { name: "Kitaplığım", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "Değişiklikler kaydedilmedi", exact: true })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page).toHaveURL(/\/account\?tab=profile/);
@@ -119,7 +121,8 @@ test("profile draft discard, failed save recovery and pending edit lock", async 
   await expect(status).toBeEnabled();
   await page.getByRole("button", { name: "Profili kaydet", exact: true }).click();
   await expect(status).toBeDisabled();
-  await page.getByRole("navigation", { name: "Ana bölümler", exact: true }).getByRole("link", { name: "Kitaplığım", exact: true }).click();
+  await page.locator("#account-menu-trigger").click();
+  await page.getByRole("menu").getByRole("menuitem", { name: "Kitaplığım", exact: true }).click();
   await expect(page).toHaveURL(/\/account/);
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.getByRole("textbox", { name: "Üniversite (isteğe bağlı)", exact: true })).toBeDisabled();
@@ -134,7 +137,8 @@ test("profile draft discard, failed save recovery and pending edit lock", async 
   await page.reload();
   await expect(status).toHaveValue("Korunacak taslak");
   await status.fill("Ayrılırken bırakılacak taslak");
-  await page.getByRole("navigation", { name: "Ana bölümler", exact: true }).getByRole("link", { name: "Keşfet", exact: true }).click();
+  await page.locator("#account-menu-trigger").click();
+  await page.getByRole("menu").getByRole("menuitem", { name: "Keşfet", exact: true }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Kaydetmeden çık", exact: true }).click();
   await expect(page).toHaveURL(/\/discover$/);
   await expect(page.locator(".desktop-shell")).not.toHaveAttribute("inert", "");

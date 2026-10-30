@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useHeaderNavigation } from "./HeaderNavigationContext";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Bell, CheckCheck, Settings2, X } from "lucide-react";
 import {
@@ -24,7 +25,13 @@ const timeFormatter = new Intl.DateTimeFormat("tr-TR", {
   minute: "2-digit",
 });
 
-export function NotificationCenter() {
+export function NotificationCenter({ inHeader = false }: { inHeader?: boolean } = {}) {
+  const commonHeader = useHeaderNavigation();
+  if (commonHeader && !inHeader) return null;
+  return <NotificationCenterContent />;
+}
+
+function NotificationCenterContent() {
   const [open, setOpen] = useState(false);
   const { items, unreadCount, loading, error: loadError, status, actionError, markingRead, savingPreferences, nextCursor, loadingMore, historyError, preferences, load: loadNotifications, updatePreference, markRead } = useNotifications();
   const ready = !loading && !loadError && status === 200;

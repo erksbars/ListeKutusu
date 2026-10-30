@@ -4,6 +4,15 @@ Bu belge ListeKutusu'nun açık ve koyu temada aynı ürün gibi görünmesini s
 
 ## 1. Ürün ilkeleri
 
+### 30 Ekim üst alan güncellemesi
+
+Son kullanıcı yönlendirmesiyle sol sidebar kaldırıldı. Gezinme ve kişisel
+alan bağlantıları profil menüsüne taşınır. Tek kalıcı başlık logo, arama,
+Topluluk oluştur ve profil/bildirim alanını yan yana tutar. Sayfa başlıkları
+kendi içeriklerinde kalır. Aşağıdaki eski sol menü notları tarihsel yönü
+anlatır; güncel gezinme düzeni bu paragraftır. Koyu mavi/cyan/yeşil kimlik
+ve masaüstü kapsamı değişmez.
+
 ### 23 Ekim görsel yön güncellemesi
 
 İlk Taste `true-black-flat` denemesi (seed 1848207868) kullanıcının renk

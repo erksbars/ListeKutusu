@@ -1,5 +1,19 @@
 # ListeKutusu Doğrulama Politikası
 
+30 Ekim profil menüsü/ortak başlık kabulü:
+`node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test tests/draft-navigation.test.mjs tests/primary-navigation.test.mjs`
+ile 5 test geçti. TypeScript, ilgili ESLint ve UI/a11y kapıları geçti.
+CLI/Edge 1280/1440 koyu masaüstünde sidebar DOM'da yok, tek arama/hesap/
+bildirim var, arama ve oluşturma aynı satırda ve yatay taşma yok.
+Profil menüsündeki tüm eski bağlantılar, Arrow/End/Escape odak dönüşü,
+kitaplık→arama→topluluk ve Keşfet/oyun/oluşturma geçişleri doğrulandı.
+Sahte hesap oturumu ve tarayıcıda karşılanan logout ile admin görünümü,
+taslak iptal/onay, hata→yeniden çıkış, ana akışın anonim duruma geçmesi
+ve oturum okuma 503/tekrar geçti; 0 pageerror. Normal hesap/listelere yazma
+yok. Görüntüler incelendi. Desktop/social-shell/profil/bildirim opt-in
+kaynakları menü girişine uyarlandı; yalnız TypeScript/ESLint kontrol edildi.
+Production build, geniş runner, mobil/açık tema çalıştırılmadı.
+
 29 Ekim tüm ana akış kartlarında yerinde okuma/katılım:
 `node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test tests/mixed-feed.test.mjs tests/community-attendance.test.mjs tests/community-saved-posts.test.mjs`
 ile 26 test; `tests/comment-draft.test.mjs tests/feed-comments.test.mjs` ile

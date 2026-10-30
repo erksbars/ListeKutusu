@@ -1,25 +1,12 @@
-import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
-import { GlobalSearch } from "./GlobalSearch";
-import styles from "./SocialSearch.module.css";
-import { Bookmark, CalendarDays, CircleHelp, Settings2 } from "lucide-react";
-import { PrimaryNavigation } from "./PrimaryNavigation";
+import { AppHeader } from "./AppHeader";
+import { HeaderNavigationProvider } from "./HeaderNavigationContext";
 import { DraftNavigationProvider } from "./DraftNavigationProvider";
+import styles from "./AppHeader.module.css";
+import searchStyles from "./SocialSearch.module.css";
 
 export function AppShell({ children }: { children: ReactNode }) {
-  return <DraftNavigationProvider><div className="desktop-shell">
-    <aside className="desktop-shell-sidebar" aria-label="Uygulama menüsü" data-testid="app-shell-navigation">
-      <Link href="/" className="desktop-shell-brand">ListeKutusu</Link>
-      <PrimaryNavigation />
-      <nav className="desktop-shell-personal" aria-label="Kişisel alan">
-        <p>Kişisel alan</p>
-        <Link href="/?scope=saved"><Bookmark size={18} aria-hidden="true" />Müzik kayıtlarım</Link>
-        <Link href="/community-saved"><Bookmark size={18} aria-hidden="true" />Topluluk kayıtlarım</Link>
-        <Link href="/community-events"><CalendarDays size={18} aria-hidden="true" />Etkinliklerim</Link>
-        <Link href="/account"><Settings2 size={18} aria-hidden="true" />Hesap ve profil</Link>
-      </nav>
-      <Link href="/legal" className="desktop-shell-help"><CircleHelp size={18} aria-hidden="true" />Kullanım ve gizlilik</Link>
-    </aside>
-    <div className={`desktop-shell-content ${styles.content}`}><Suspense fallback={<div aria-label="Arama yükleniyor" style={{ minHeight: 72 }} />}><GlobalSearch /></Suspense>{children}</div>
-  </div></DraftNavigationProvider>;
+  return <DraftNavigationProvider><HeaderNavigationProvider><div className={`desktop-shell ${styles.shell}`}>
+    <div className={`desktop-shell-content ${styles.content} ${searchStyles.content}`}><Suspense fallback={<div style={{ minHeight: 72 }} aria-label="Üst alan yükleniyor" />}><AppHeader /></Suspense>{children}</div>
+  </div></HeaderNavigationProvider></DraftNavigationProvider>;
 }

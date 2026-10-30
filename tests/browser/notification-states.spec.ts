@@ -124,7 +124,8 @@ test("notification read request can finish after client navigation unmounts the 
   await page.getByTestId("notification-trigger").click();
   await page.getByTestId("notification-panel").getByRole("button", { name: "Tümünü okundu yap", exact: true }).click();
   await expect.poll(() => patches).toBe(1);
-  await page.getByRole("navigation", { name: "Ana bölümler", exact: true }).getByRole("link", { name: "Kitaplığım", exact: true }).click();
+  await page.locator("#account-menu-trigger").click();
+  await page.getByRole("menu").getByRole("menuitem", { name: "Kitaplığım", exact: true }).click();
   try {
     await expect(page).toHaveURL(/\/library$/);
     await expect(page.getByTestId("notification-panel")).toHaveCount(0);

@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, ListMusic, LogOut, Settings2, ShieldCheck, UserRound } from "lucide-react";
+import { ChevronDown, LogOut, ShieldCheck, UserRound, Home, Compass, Gamepad2, Library, Bookmark, CalendarDays, CircleHelp, Settings2, LogIn } from "lucide-react";
+import { useHeaderNavigation } from "./HeaderNavigationContext";
 import { NotificationCenter } from "./NotificationCenter";
 
 type AccountMenuProps = {
@@ -11,17 +13,29 @@ type AccountMenuProps = {
   profileSlug?: string | null;
   role?: string | null;
   onLogout: () => void;
+  inHeader?: boolean;
+  authenticated?: boolean;
+  loginHref?: string;
+  logoutBusy?: boolean;
 };
 
-export function AccountMenu({ ownerName, email, profileSlug, role, onLogout }: AccountMenuProps) {
+export function AccountMenu(props: AccountMenuProps) {
+  const commonHeader = useHeaderNavigation();
+  if (commonHeader && !props.inHeader) return null;
+  return <AccountMenuContent {...props} />;
+}
+
+function AccountMenuContent({ ownerName, email, profileSlug, role, onLogout, inHeader = false, authenticated = true, loginHref = "/account?mode=login", logoutBusy = false }: AccountMenuProps) {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname(), query = useSearchParams().toString();
+  useEffect(() => setOpen(false), [pathname, query]);
   const detailsRef = useRef<HTMLDetailsElement>(null);
   const summaryRef = useRef<HTMLElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   function menuItems() {
     return Array.from(
-      menuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? []
+      menuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]:not(:disabled)') ?? []
     );
   }
 
@@ -58,7 +72,7 @@ export function AccountMenu({ ownerName, email, profileSlug, role, onLogout }: A
 
   return (
     <>
-      <NotificationCenter />
+      {authenticated && <NotificationCenter inHeader={inHeader} />}
       <details
         ref={detailsRef}
         open={open}
@@ -72,7 +86,7 @@ export function AccountMenu({ ownerName, email, profileSlug, role, onLogout }: A
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls="account-menu-popover"
-        aria-label={`${ownerName} hesap menüsü`}
+        aria-label={authenticated ? `${ownerName} hesap menüsü` : "Profil ve gezinme menüsü"}
         onKeyDown={(event) => {
           if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
           event.preventDefault();
@@ -116,32 +130,39 @@ export function AccountMenu({ ownerName, email, profileSlug, role, onLogout }: A
           <strong>{ownerName}</strong>
           {email && <small>{email}</small>}
         </div>
-        {profileSlug && (
-          <Link href={`/u/${profileSlug}`} role="menuitem" onClick={() => setOpen(false)}>
-            <UserRound size={16} /> Profilim
-          </Link>
-        )}
-        <Link href="/account" role="menuitem" onClick={() => setOpen(false)}>
-          <ListMusic size={16} /> Hesabım
-        </Link>
-        <Link href="/library?type=music" role="menuitem" onClick={() => setOpen(false)}>
-          <Settings2 size={16} /> Kitaplığım
-        </Link>
-        {(role === "moderator" || role === "admin") && (
+        {profileSlug && authenticated && <Link href={`/u/${profileSlug}`} role="menuitem" onClick={() => setOpen(false)}><UserRound size={16} aria-hidden="true" />Profilim</Link>}
+        <p className="account-menu-heading" role="presentation">Keşfet ve gezin</p>
+        {[
+          { href: "/", label: "Ana akış", Icon: Home },
+          { href: "/discover", label: "Keşfet", Icon: Compass },
+          { href: "/games", label: "Oyunlar", Icon: Gamepad2 },
+          { href: "/library", label: "Kitaplığım", Icon: Library },
+        ].map(({ href, label, Icon }) => <Link key={href} href={href} role="menuitem" onClick={() => setOpen(false)}><Icon size={16} aria-hidden="true" />{label}</Link>)}
+        <p className="account-menu-heading" role="presentation">Kişisel alan</p>
+        {[
+          { href: "/?scope=saved", label: "Müzik kayıtlarım", Icon: Bookmark },
+          { href: "/community-saved", label: "Topluluk kayıtlarım", Icon: Bookmark },
+          { href: "/community-events", label: "Etkinliklerim", Icon: CalendarDays },
+          { href: "/account", label: "Hesap ve profil", Icon: Settings2 },
+          { href: "/legal", label: "Kullanım ve gizlilik", Icon: CircleHelp },
+        ].map(({ href, label, Icon }) => <Link key={href} href={href} role="menuitem" onClick={() => setOpen(false)}><Icon size={16} aria-hidden="true" />{label}</Link>)}
+        {!authenticated && <Link href={loginHref} role="menuitem" onClick={() => setOpen(false)}><LogIn size={16} aria-hidden="true" />Giriş yap</Link>}
+        {authenticated && (role === "moderator" || role === "admin") && (
           <Link href="/admin/forum" role="menuitem" onClick={() => setOpen(false)}>
             <ShieldCheck size={16} /> Forum moderasyonu
           </Link>
         )}
-        <button
+        {authenticated && <button
           type="button"
+          disabled={logoutBusy}
           role="menuitem"
           onClick={() => {
             setOpen(false);
             onLogout();
           }}
         >
-          <LogOut size={16} /> Çıkış yap
-        </button>
+          <LogOut size={16} /> {logoutBusy ? "Çıkış yapılıyor…" : "Çıkış yap"}
+        </button>}
       </div>
       </details>
     </>
