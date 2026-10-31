@@ -11,9 +11,10 @@ test("seeded communities display demo profiles, reviews and comments", async ({ 
   await expect(page.getByRole("region", { name: "Topluluklar", exact: true }).getByRole("article")).toHaveCount(8, { timeout: 30_000 });
   await page.getByRole("link", { name: "Film Günlüğü (Demo)", exact: true }).click();
   await expect(page.getByText("5 üye", { exact: true })).toBeVisible({ timeout: 30_000 });
-  await expect(page.getByRole("region", { name: "Topluluk sohbetleri" }).getByRole("article")).toHaveCount(4);
-  await page.getByRole("button", { name: "Final üzerine bir yorum", exact: true }).click();
-  await page.getByRole("button", { name: "İncelemeyi ve yorumları göster", exact: true }).click();
+  await expect(page.getByRole("region", { name: "Topluluk paylaşımları" }).locator('[data-feed-kind="discussion"], [data-feed-kind="review"]')).toHaveCount(4);
+  const review = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Final üzerine bir yorum", exact: true }) });
+  await review.getByRole("button", { name: "Spoiler içeren metni göster", exact: true }).click();
+  await review.getByRole("button", { name: /^Yorumlar/ }).click();
   await expect(page.getByText(/Finalde kesin bir cevap aramaktan/)).toBeVisible();
   await expect(page.getByRole("heading", { name: "Yorumlar", exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: /^Demo ·/ }).first()).toBeVisible();

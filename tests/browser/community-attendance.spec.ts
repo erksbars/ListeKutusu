@@ -31,8 +31,7 @@ test("real RSVP choices, full capacity, release and cancellation", async ({ page
     async function open(target: typeof page, cancelled = false) {
       await target.goto(`/communities/${slug}`);
       await target.getByRole("button", { name: "Etkinlikler", exact: true }).click();
-      if (cancelled) await target.getByRole("combobox", { name: "Etkinlik filtresi", exact: true }).selectOption("cancelled");
-      await target.getByRole("button", { name: "Etkinlik detayını aç", exact: true }).click();
+      if (cancelled) await target.getByRole("combobox", { name: "Etkinlik zamanı", exact: true }).selectOption("cancelled");
       await expect(target.getByRole("heading", { name: "Kurgusal katılım denemesi", exact: true })).toBeVisible();
     }
     await open(page);
@@ -52,6 +51,7 @@ test("real RSVP choices, full capacity, release and cancellation", async ({ page
     expect(publicData.event.attendingCount).toBe(2); expect(publicData.event.interestedCount).toBe(1); expect(publicData.event.viewerStatus).toBeNull(); expect(publicData.participants).toEqual([]);
     expect((await visitor.request.post(api, { headers: { Origin: baseURL }, data: { action: "rsvp", status: "attending" } })).status()).toBe(401);
     await open(page);
+    await page.locator(`[data-feed-id="event:${event.id}"] .feed-post-permalink`).click();
     const roster = page.getByRole("region", { name: "Etkinlik katılımcıları", exact: true });
     await expect(roster.getByRole("link", { name: "RSVP İlk Üye", exact: true })).toBeVisible();
     await page.evaluate(() => { (document.activeElement as HTMLElement | null)?.blur(); window.scrollTo({ top: 0, behavior: "instant" }); });

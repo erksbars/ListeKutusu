@@ -1,5 +1,42 @@
 # ListeKutusu Güncel Durum
 
+## 31 Ekim 2026 — sosyal akış Faz 1 tamamlandı
+
+- Ana/topluluk listesi aynı kart, tür düğmeleri ve masaüstü ölçülerine
+  taşındı: 760 px okuma + 300 px sağ alan + 20 px aralık. Aynı kartın
+  1280/1440 koyu masaüstünde genişlik, padding, zemin ve başlık ölçüleri
+  eşit; taşma yok. İkincil ana başlık sadeleşti, topluluk tanıtımı kısaldı;
+  eski sidebar yükleme iskeleti ve ajandadaki yanlış keşif hedefi düzeltildi.
+- Yeni topluluk kapsamlı timeline GET'i; sohbet/inceleme/etkinlikleri tek
+  10'luk deterministik cursor listesinde birleştirir. Topluluk dağıtımı,
+  arşiv okuması, engel/pasif yazar ve spoiler sınırları korunur. Metin,
+  spoiler ve yorumlar kart içinde; etkinliğin mevcut RSVP'si de yerindedir.
+  Yorum sayıları iki akışta aynı görünür kaynaklardan gelir. Community
+  reaction surface mevcut üyelik kuralıyla topluluğa özel içeriğe de işler;
+  genel akışın distribution=general sınırı değişmedi.
+- Bağımsız kind/cursor, eski post/event ve sayfa bağlantılarıyla uyumludur.
+  Kanonik detaydan kaynak karma listeye dönüş korunur. Aynı hedefte 503
+  kartları/taslakları düşürmez; bozuk kart yanıtı güvenle reddedilir;
+  401/403/404 snapshot'ı temizler. Başarılı yenileme açık yorum/katılım
+  izinlerini tazeler. Kayıt kaldırma, kartı silmeden önce taslak onayı ister.
+- Oluşturucular native açılır alanlarda mount kalır; yerel tür/filtre/detay
+  geçişleri bu taslakları korur. Uzun ortak çok tür oluşturucusu, yorumların
+  yönetim menüleri ve yeni etkinlik görsel hiyerarşisi bu faza eklenmedi.
+  Yetkili düzenle/dağıtım/rapor/iptal araçları isteğe bağlı kalıcı detayda durur.
+- Odaklı timeline, payload, gezinme ve mevcut karma/dağıtım/kayıt/tepki/taslak
+  testleri geçti. TypeScript, ilgili ESLint ve UI/a11y statik kapıları geçti.
+  CLI/Edge 1280/1440 koyu masaüstünde gerçek salt okunur kart/yorum/filtre/
+  dönüş ve API sınırları; istemci taklidiyle cursor-yenileme, oluşturma
+  taslakları, yorum 503/tekrar, başka işlemde snapshot korunması, bozuk DTO,
+  unsave iptal/onay, üyelik kaybı ve 403 temizliği geçti. 0 pageerror;
+  taklitli 5 mutation tarayıcıda karşılandı, normal DB'ye yazılmadı.
+- Eski opt-in tarayıcı kaynakları yeni kart, sekme, summary ve 10'luk cursor
+  davranışına uyarlandı; bu geniş matris çalıştırılmadı. Production build,
+  mobil/açık tema ve forum geliştirmesi yok. DB/seed/.env ve eski PNG'ler
+  korunur. Önceki kaynak `design/before-social-feed-phase1-2026-10-30`
+  etiketindedir; yeni görüntüler Git dışındadır. Sırada Faz 2: etkinlik
+  hiyerarşisi, katılımcı önizlemesi ve görünürlük tercihi/API'si.
+
 ## 30 Ekim 2026 — sosyal akış tasarım incelemesi ve faz planı
 
 - Kullanıcının isteğiyle ana/topluluk akışı, etkinlik kartları ve eski

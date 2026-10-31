@@ -39,13 +39,13 @@ function LoadingRows({ count = 4, height = "h-24" }: { count?: number; height?: 
 
 function SocialLoading() {
   return (
-    <div className="mt-6 grid gap-5 lg:grid-cols-[220px_minmax(0,1fr)_300px]">
-      <aside className="hidden space-y-3 lg:block"><LoadingRows count={7} height="h-10" /></aside>
-      <section className="space-y-4">
-        <Pulse className="h-32 rounded-xl" />
+    <div className="social-feed-layout mt-5 grid gap-5">
+      <section className="social-feed-stream space-y-4">
+        <Pulse className="h-10 rounded-xl" />
+        <Pulse className="h-16 rounded-xl" />
         <LoadingRows count={3} height="h-44" />
       </section>
-      <aside className="hidden space-y-4 lg:block">
+      <aside className="social-feed-aside hidden space-y-4 lg:block">
         <Pulse className="h-52 rounded-xl" />
         <Pulse className="h-40 rounded-xl" />
       </aside>
@@ -160,7 +160,7 @@ export function RouteLoading({ label, variant }: RouteLoadingProps) {
       aria-busy="true"
       aria-label={label}
     >
-      <div className="loading-shell ui-page-frame mx-auto animate-pulse">
+      <div className={`loading-shell ui-page-frame mx-auto animate-pulse ${variant === "social" ? "social-feed-page" : ""}`}>
         <LoadingTopbar />
         <Content />
       </div>

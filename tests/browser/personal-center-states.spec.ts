@@ -217,14 +217,17 @@ test("two community drafts share one exit prompt and remain intact after cancel"
   await page.route("**/api/communities/guard-demo**", route => {
     if (route.request().method() !== "GET") { writes++; return route.fulfill({ status: 500, json: { error: "No writes in this test" } }); }
     const path = new URL(route.request().url()).pathname;
+    if (path.endsWith("/timeline")) return route.fulfill({ json: { items: [], nextCursor: null } });
     if (path.endsWith("/events")) return route.fulfill({ json: { events: [], page: 1, hasMore: false } });
     if (path !== "/api/communities/guard-demo") return route.fulfill({ status: 401, json: { error: "Sentetik sınır" } });
     return route.fulfill({ json: { community: { id: "guard-demo", slug: "guard-demo", name: "Taslak Denemesi", description: "Yalnız tarayıcı mock verisi", rules: "Sentetik", category: "interest", status: "active", memberCount: 2, university: null, city: null, interests: [] }, viewerId: "synthetic-viewer", membership: { status: "active", role: "member" }, canModerate: false, posts: [], page: 1, hasMore: false, members: [], reports: [] } });
   });
   await page.goto("/communities/guard-demo");
+  await page.locator("summary").filter({ hasText: /^Sohbet veya inceleme paylaş$/ }).click();
   const post = page.getByRole("textbox", { name: "Paylaşım başlığı", exact: true });
   await post.fill("Korunacak sohbet taslağı");
   await page.getByRole("button", { name: "Etkinlikler", exact: true }).click();
+  await page.locator("summary").filter({ hasText: /^Etkinlik oluştur$/ }).click();
   const event = page.getByRole("textbox", { name: "Etkinlik başlığı", exact: true });
   await expect(event).toBeEnabled(); await event.fill("Korunacak etkinlik taslağı");
   await page.locator(".page-topbar-leading a").click();
@@ -234,10 +237,10 @@ test("two community drafts share one exit prompt and remain intact after cancel"
   await page.locator(".page-topbar-leading a").click();
   await expect(page.getByRole("dialog")).toHaveCount(1);
   await page.keyboard.press("Escape");
-  await page.getByRole("button", { name: "Sohbet ve incelemeler", exact: true }).click();
+  await page.getByRole("button", { name: "Sohbetler", exact: true }).click();
   await expect(post).toHaveValue("Korunacak sohbet taslağı"); await post.fill("");
   await page.locator(".page-topbar-leading a").click();
-  await expect(page).toHaveURL(/\/communities$/);
+  await expect(page).toHaveURL(/\/$/);
   await expect(page.getByRole("dialog")).toHaveCount(0);
   expect(writes).toBe(0); expect(errors).toEqual([]);
 });

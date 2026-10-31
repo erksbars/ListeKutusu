@@ -21,9 +21,10 @@ test("real community event creation, persistence, cancellation and removal", asy
     await page.addInitScript(() => localStorage.setItem("listekutusu-theme", "dark"));
     await page.goto(`/communities/${slug}`);
     await page.getByRole("button", { name: "Etkinlikler", exact: true }).click();
+    await page.locator("summary").filter({ hasText: /^Etkinlik oluştur$/ }).click();
     const title = page.getByRole("textbox", { name: "Etkinlik başlığı", exact: true });
     await expect(title).toBeEnabled({ timeout: 30_000 });
-    await expect(page.locator('section[aria-label="Topluluk sohbetleri"]')).toBeHidden();
+    await expect(page.locator("summary").filter({ hasText: /^Sohbet veya inceleme paylaş$/ })).toBeHidden();
     await title.fill("Demo kutu oyunu buluşması");
     await page.getByRole("textbox", { name: "Etkinlik açıklaması", exact: true }).fill("Yalnız otomatik test için kurgusal etkinliktir; gerçek buluşma değildir.");
     const future = new Date(Date.now() + 7 * 86_400_000 + 3 * 3_600_000).toISOString().slice(0, 16);
@@ -36,14 +37,15 @@ test("real community event creation, persistence, cancellation and removal", asy
     await expect(page.getByRole("heading", { name: "Demo kutu oyunu buluşması", exact: true })).toBeVisible();
     await page.reload();
     await page.getByRole("button", { name: "Etkinlikler", exact: true }).click();
-    await page.getByRole("button", { name: "Etkinlik detayını aç", exact: true }).click();
-    await expect(page.getByText("Kapasite: 6 kişi", { exact: true })).toBeVisible();
+    await expect(page.getByText("6 kişilik kapasite", { exact: true })).toBeVisible();
     await expect(page.getByText(/Türkiye saati/).first()).toBeVisible();
     const listing = await (await visitor.request.get(api)).json();
     expect(listing.events).toHaveLength(1);
     const eventId = listing.events[0].id;
     expect(listing.events[0].organizer.email).toBeUndefined();
     expect((await visitor.request.get(`${api}/${eventId}`)).status()).toBe(200);
+    await page.locator(`[data-feed-id="event:${eventId}"] .feed-post-permalink`).click();
+    await expect(page.getByText("Kapasite: 6 kişi", { exact: true })).toBeVisible();
     await page.evaluate(() => { (document.activeElement as HTMLElement | null)?.blur(); window.scrollTo({ top: 0, behavior: "instant" }); });
     await page.screenshot({ path: "test-results/browser/community-event-desktop-dark.png", fullPage: true, animations: "disabled" });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -54,7 +56,7 @@ test("real community event creation, persistence, cancellation and removal", asy
     expect((await (await visitor.request.get(`${api}?filter=cancelled`)).json()).events).toHaveLength(1);
     await page.getByRole("button", { name: "Etkinliği kaldır", exact: true }).click();
     await page.getByRole("dialog").getByRole("button", { name: "Onayla", exact: true }).click();
-    await expect(page.getByText("Bu görünümde etkinlik yok.", { exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Bu görünümde paylaşım yok", exact: true })).toBeVisible();
     expect((await visitor.request.get(`${api}/${eventId}`)).status()).toBe(404);
   } finally {
     await visitor.close();

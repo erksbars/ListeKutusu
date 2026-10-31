@@ -22,6 +22,7 @@ test("real session chooses own library reference, publishes and retains snapshot
     expect((await visitor.request.get("/api/communities/references?kind=book")).status()).toBe(401);
     await page.addInitScript(() => localStorage.setItem("listekutusu-theme", "dark"));
     await page.goto(`/communities/${slug}`);
+    await page.locator("summary").filter({ hasText: /^Sohbet veya inceleme paylaş$/ }).click();
     const type = page.getByRole("combobox", { name: "Paylaşım türü", exact: true });
     await expect(type).toBeEnabled({ timeout: 30_000 });
     await type.selectOption("review");
@@ -37,9 +38,9 @@ test("real session chooses own library reference, publishes and retains snapshot
     await page.evaluate(() => { (document.activeElement as HTMLElement | null)?.blur(); window.scrollTo({ top: 0, behavior: "instant" }); });
     await page.screenshot({ path: "test-results/browser/review-library-picker-desktop.png", fullPage: true, animations: "disabled" });
     await page.getByRole("button", { name: "İncelemeyi yayınla", exact: true }).click();
-    const postButton = page.getByRole("button", { name: "Kitaplığımdan bir inceleme", exact: true });
-    await expect(postButton).toBeVisible();
-    await postButton.click();
+    const postCard = page.locator("[data-feed-id]").filter({ has: page.getByRole("heading", { name: "Kitaplığımdan bir inceleme", exact: true }) });
+    await expect(postCard).toBeVisible();
+    await postCard.locator(".feed-post-permalink").click(); await expect(page).toHaveURL(/post=/);
     await expect(page.getByText(text, { exact: true })).toBeVisible();
     await expect(page.getByText("Kitaplıktan seçildi · openlibrary", { exact: false })).toBeVisible();
     const publicData = await (await visitor.request.get(`/api/communities/${slug}`)).json();
@@ -48,8 +49,9 @@ test("real session chooses own library reference, publishes and retains snapshot
     expect(publicData.posts[0].libraryEntryId).toBeUndefined(); expect(publicData.posts[0].readingStatus).toBeUndefined();
     expect((await db.mediaLibraryEntry.findUniqueOrThrow({ where: { id: book.id } })).status).toBe("reading");
     await db.mediaLibraryEntry.delete({ where: { id: book.id } });
+    const canonical = page.url();
     await page.reload();
-    await postButton.click();
+    await expect(page).toHaveURL(canonical);
     await expect(page.getByText(text, { exact: true })).toBeVisible();
     await expect(page.getByRole("link", { name: /Eser bağlantısı/ })).toHaveAttribute("href", "https://openlibrary.org/works/OL166894W");
   } finally {

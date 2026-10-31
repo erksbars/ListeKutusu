@@ -21,20 +21,22 @@ test("community reads hide stale targets, ignore late filters, retry safely and 
     const reviews = await Promise.all([0, 1].map(i => db.communityPost.create({ data: { communityId: source.id, authorId: userId!, title: `Okuma incelemesi ${i}`, body: `Yalnız test için yazılmış yeterince uzun inceleme metni ${i}.`, type: "review", reviewKind: "book", subjectTitle: `Kitap ${i}`, rating: 8 } })));
     const events = await Promise.all(["scheduled", "cancelled", "scheduled"].map((status, i) => db.communityEvent.create({ data: { communityId: source.id, organizerId: userId!, title: `Okuma etkinliği ${i}`, description: `Yalnız test amaçlı uzun etkinlik açıklaması ${i}.`, startsAt: new Date(now + (i === 2 ? -7 : 7) * 86400_000), city: "İstanbul", venue: "Kurgusal kamusal alan", status } })));
     await page.addInitScript(() => localStorage.setItem("listekutusu-theme", "dark")); await page.goto(`/communities/${slug}?section=events`);
-    const panel = page.getByRole("region", { name: "Topluluk etkinlikleri", exact: true }), filter = panel.getByRole("combobox", { name: "Etkinlik filtresi", exact: true });
+    const panel = page.getByRole("region", { name: "Topluluk paylaşımları", exact: true }), filter = panel.getByRole("combobox", { name: "Etkinlik zamanı", exact: true });
     await expect(panel.getByRole("heading", { name: events[0].title, exact: true })).toBeVisible();
+    await panel.locator("summary").filter({ hasText: /^Etkinlik oluştur$/ }).click();
     const draft = panel.getByRole("textbox", { name: "Etkinlik başlığı", exact: true }); await draft.fill("Aynı sayfada korunacak etkinlik taslağı");
     const lateList = defer(); let listStarted = false;
-    await page.route(`**${api}/events?*`, async route => {
-      if (new URL(route.request().url()).searchParams.get("filter") !== "past") return route.continue();
+    await page.route(`**${api}/timeline?*`, async route => {
+      if (new URL(route.request().url()).searchParams.get("eventFilter") !== "past") return route.continue();
       const received = await route.fetch(); listStarted = true; await lateList.promise; await route.fulfill({ response: received }).catch(() => {});
     });
     await filter.selectOption("past"); await expect.poll(() => listStarted).toBe(true);
-    await expect(panel.getByRole("article")).toHaveCount(0); await expect(panel.getByText("Etkinlikler yükleniyor…", { exact: true })).toBeVisible();
+    await expect(panel.getByRole("article")).toHaveCount(0); await expect(panel.getByText("Akış yükleniyor…", { exact: true })).toBeVisible();
     await filter.selectOption("cancelled"); await expect(panel.getByRole("heading", { name: events[1].title, exact: true })).toBeVisible(); lateList.release();
     await expect(panel.getByRole("heading", { name: events[2].title, exact: true })).toHaveCount(0); await expect(draft).toHaveValue("Aynı sayfada korunacak etkinlik taslağı");
-    await page.unroute(`**${api}/events?*`);
-    await filter.selectOption("upcoming"); await panel.getByRole("button", { name: "Etkinlik detayını aç", exact: true }).click();
+    await draft.fill("");
+    await page.unroute(`**${api}/timeline?*`);
+    await filter.selectOption("upcoming"); await panel.locator(`[data-feed-id="event:${events[0].id}"] .feed-post-permalink`).click();
     await expect(panel.getByRole("heading", { name: events[0].title, exact: true })).toBeVisible();
     await panel.getByRole("button", { name: "Etkinliği iptal et", exact: true }).click(); await expect(page.getByRole("dialog", { name: "Etkinliği iptal et?", exact: true })).toBeVisible();
     const lateDetail = defer(); let detailStarted = false;
@@ -57,16 +59,17 @@ test("community reads hide stale targets, ignore late filters, retry safely and 
     await page.getByRole("button", { name: "İncelemeyi düzenle", exact: true }).click();
     const editor = page.getByRole("form", { name: "İnceleme düzenleme", exact: true }), text = editor.getByRole("textbox", { name: "İnceleme metni", exact: true });
     await text.fill("Yanlışlıkla silinmemesi gereken uzun düzenleme taslağı."); await page.getByRole("button", { name: "Akışa dön", exact: true }).click();
-    const dialog = page.getByRole("dialog", { name: "İnceleme taslağından vazgeç?", exact: true }); await expect(dialog).toBeVisible();
-    await dialog.getByRole("button", { name: "Düzenlemeye devam et", exact: true }).click(); await expect(text).toHaveValue("Yanlışlıkla silinmemesi gereken uzun düzenleme taslağı.");
+    const exitDialog = page.getByRole("dialog", { name: "Değişiklikler kaydedilmedi", exact: true }); await expect(exitDialog).toBeVisible();
+    await exitDialog.getByRole("button", { name: "Vazgeç", exact: true }).click(); await expect(text).toHaveValue("Yanlışlıkla silinmemesi gereken uzun düzenleme taslağı.");
+    const dialog = page.getByRole("dialog", { name: "İnceleme taslağından vazgeç?", exact: true });
     await editor.getByRole("button", { name: "Düzenlemeden vazgeç", exact: true }).click(); await expect(dialog).toBeVisible(); await page.keyboard.press("Escape"); await expect(text).toHaveValue("Yanlışlıkla silinmemesi gereken uzun düzenleme taslağı.");
     await editor.getByRole("button", { name: "Düzenlemeden vazgeç", exact: true }).click(); await dialog.getByRole("button", { name: "Değişiklikleri sil ve çık", exact: true }).click(); await expect(editor).toHaveCount(0);
     expect((await db.communityPost.findUniqueOrThrow({ where: { id: reviews[0].id } })).body).toBe(reviews[0].body);
     await page.getByRole("button", { name: "İncelemeyi düzenle", exact: true }).click(); await page.getByRole("button", { name: "Akışa dön", exact: true }).click(); await expect(page.getByRole("dialog")).toHaveCount(0); await expect(page).not.toHaveURL(/post=/);
     await localNavigate({ post: reviews[0].id }); await page.getByRole("button", { name: "İncelemeyi düzenle", exact: true }).click(); await text.fill("Açık onayla bırakılacak ikinci düzenleme taslağı.");
-    await page.getByRole("button", { name: "Akışa dön", exact: true }).click(); await expect(dialog).toBeVisible();
+    await page.getByRole("button", { name: "Akışa dön", exact: true }).click(); await expect(exitDialog).toBeVisible();
     await page.screenshot({ path: "test-results/browser/community-read-safety-desktop.png", fullPage: false, animations: "disabled" });
-    await dialog.getByRole("button", { name: "Değişiklikleri sil ve çık", exact: true }).click(); await expect(page).not.toHaveURL(/post=/);
+    await exitDialog.getByRole("button", { name: "Kaydetmeden çık", exact: true }).click(); await expect(page).not.toHaveURL(/post=/);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); expect(errors).toEqual([]);
   } finally {
     gates.forEach(release => release()); const users = await db.userList.findMany({ where: { email }, select: { id: true } }), ids = [...new Set([...users.map(user => user.id), ...(userId ? [userId] : [])])];

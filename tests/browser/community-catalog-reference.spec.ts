@@ -34,6 +34,7 @@ test("review catalog choice preserves draft on expiry/failure, avoids library wr
       await route.fulfill({ json: { results: [{ ...item, selectionToken: signCatalogSelection(item, ids[0], expired ? Date.now() - 31 * 60_000 : Date.now()) }], provider: item.provider } }).catch(() => {});
     });
     await page.addInitScript(() => localStorage.setItem("listekutusu-theme", "dark")); await page.goto(`/communities/${slug}`);
+    await page.locator("summary").filter({ hasText: /^Sohbet veya inceleme paylaş$/ }).click();
     await page.getByRole("combobox", { name: "Paylaşım türü", exact: true }).selectOption("review");
     const kind = page.getByRole("combobox", { name: "İnceleme türü", exact: true }), mode = page.getByRole("combobox", { name: "Eser seçimi", exact: true });
     await kind.selectOption("book"); await mode.selectOption("catalog");
@@ -52,12 +53,12 @@ test("review catalog choice preserves draft on expiry/failure, avoids library wr
     await query.fill("Boş"); await search.click(); await expect(page.getByText("Bu aramada eser bulunamadı. Başka bir adla ara veya elle girişe dön.", { exact: true })).toBeVisible(); await expect(publish).toBeDisabled();
     await query.fill("Kitap"); await query.press("Enter"); await expect(picker).toBeEnabled(); await picker.selectOption(book.id);
     await expect(body).toHaveValue(draft); await expect(title).toHaveValue("Katalogdan kitap hakkındaki düşüncelerim");
-    await publish.click(); const cardTitle = page.getByRole("button", { name: "Katalogdan kitap hakkındaki düşüncelerim", exact: true }); await expect(cardTitle).toBeVisible();
+    await publish.click(); const cardTitle = page.getByRole("heading", { name: "Katalogdan kitap hakkındaki düşüncelerim", exact: true }); await expect(cardTitle).toBeVisible();
     const post = await db.communityPost.findFirstOrThrow({ where: { authorId: ids[0] } });
     expect(post.subjectTitle).toBe(book.title); expect(post.sourceUrl).toBe(book.sourceUrl); expect(post.referenceProvider).toBe("openlibrary"); expect(post.spoiler).toBe(true);
     expect(await db.mediaLibraryEntry.count({ where: { userId: ids[0] } })).toBe(0); expect(await db.suggestion.count({ where: { listId: ids[0] } })).toBe(0);
     const publicList = await (await request.get(api)).json(); expect(publicList.posts[0].excerpt).toBe(""); expect(JSON.stringify(publicList)).not.toContain("selectionToken"); expect(JSON.stringify(publicList)).not.toContain(draft);
-    await cardTitle.click(); await expect(page.getByText(`Kaynaklı eser seçimi · ${book.provider}`, { exact: false })).toBeVisible(); await expect(page.getByText(draft, { exact: true })).toHaveCount(0);
+    await page.locator(`[data-feed-id="post:${post.id}"] .feed-post-permalink`).click(); await expect(page.getByText(`Kaynaklı eser seçimi · ${book.provider}`, { exact: false })).toBeVisible(); await expect(page.getByText(draft, { exact: true })).toHaveCount(0);
     await expect(page.getByRole("link", { name: /Eser bağlantısı/ })).toHaveAttribute("href", book.sourceUrl);
     await page.getByRole("button", { name: "Akışa dön", exact: true }).click();
     await body.fill("Tür değişimlerinde korunması gereken ikinci taslak metni."); await title.fill("İkinci inceleme taslağı");
@@ -75,7 +76,7 @@ test("review catalog choice preserves draft on expiry/failure, avoids library wr
     await kind.selectOption("book"); await mode.selectOption("library");
     const libraryPicker = page.getByRole("combobox", { name: "Kitaplığından eser seç", exact: true });
     await expect(libraryPicker.locator(`option[value="${libraryBook.id}"]`)).toHaveCount(1); await libraryPicker.selectOption(libraryBook.id);
-    await publish.click(); await expect(page.getByRole("button", { name: "İkinci inceleme taslağı", exact: true })).toBeVisible();
+    await publish.click(); await expect(page.getByRole("heading", { name: "İkinci inceleme taslağı", exact: true })).toBeVisible();
     const libraryPost = await db.communityPost.findFirstOrThrow({ where: { authorId: ids[0], title: "İkinci inceleme taslağı" } }); expect(libraryPost.subjectTitle).toBe(libraryBook.title);
     expect(await db.mediaLibraryEntry.count({ where: { userId: ids[0] } })).toBe(1); expect((await db.mediaLibraryEntry.findUniqueOrThrow({ where: { id: libraryBook.id } })).status).toBe("reading");
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); expect(errors).toEqual([]);

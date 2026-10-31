@@ -3,16 +3,16 @@
 Bu dosya yalnız açık işleri tutar. Tamamlanan işlerin özeti `PROJECT_STATUS.md`
 dosyasındadır.
 
-## 30 Ekim — sosyal akış tasarım planı, uygulama açık
+## 31 Ekim — sosyal akış Faz 1 tamamlandı; sırada Faz 2
 
 Kullanıcının yeni talebiyle ana/topluluk akışı ve eski ekranlar için
 inceleme tamamlandı: [Sosyal akış tasarım raporu ve yol haritası](docs/SOSYAL_AKIS_TASARIM_RAPORU_VE_YOL_HARITASI_2026-10-30.md).
-Bu aşama rapor işidir; uygulama kodu değişmedi. Aşağıdaki eski tasarım
-askısı notları tarihsel kapsamı anlatır; yeni belge son istenen incelemeyi
-ve önerilen uygulama sırasını tanımlar.
+Rapordaki F1A/F1B uygulandı: ana/topluluk ortak 760 px kartlar ve tür
+filtreleri; topluluk kapsamlı karma cursor API/liste; yerinde metin,
+spoiler, yorum ve mevcut etkinlik katılımı; sidebar'sız yükleme iskeleti ve
+doğru etkinlik keşif hedefi. Kabul kanıtı PROJECT_STATUS.md'dedir.
+Aşağıdaki eski tasarım askısı notları tarihsel kapsamı anlatır.
 
-- F1: ortak ölçü/filtre/kartlar, topluluk tam metin DTO'su ve karma liste;
-  yerinde okuma/yorum, eski etkinlik keşif hedefinin düzeltilmesi.
 - F2: ana/topluluk/ajandada ortak etkinlik kartı; ayrı veri dilimiyle
   görünürlük tercihli katılımcı önizlemesi ve sayfalı panel.
 - F3: ortak kompakt oluşturucu, yorum kabuğu, işlem menüsü ve okur/yönetim ayrımı.
@@ -20,7 +20,7 @@ ve önerilen uygulama sırasını tanımlar.
   oyun/yönetim/kenar ekranların uyumu. Forumda yalnız uyumluluk.
 - F5: koyu masaüstü görsel/etkileşim ve dar veri kabulü; istek maliyeti.
 
-F1–F5 henüz uygulanmadı; ek fikirler ayrı adaylardır. Mobil/açık tema ve
+F2–F5 henüz uygulanmadı; ek fikirler ayrı adaylardır. Mobil/açık tema ve
 bağımsız forum geliştirmesi askıda; son üst alan ve renk yönü korunur.
 Mevcut pilot/staging/operasyon/yayın kapıları bu raporla kapanmış sayılmaz.
 

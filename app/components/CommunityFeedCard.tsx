@@ -8,17 +8,21 @@ import styles from "./CommunityGeneralFeed.module.css";
 import { CommunityPostContent } from "./CommunityPostContent";
 import { CommunityInlineEvent } from "./CommunityInlineEvent";
 import { CalendarDays, MessageCircle, Star } from "lucide-react";
+import { communityNavigationParams } from "@/lib/communityNavigation";
 
 const postedAt = new Intl.DateTimeFormat("tr-TR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Istanbul" });
 
-export function CommunityFeedCard({ item, viewerId = null, surface = "feed", onUnsave, returnTo }: { item: GeneralCommunityItem; viewerId?: string | null; surface?: "feed" | "saved"; onUnsave?: () => void; returnTo?: string }) {
+export function CommunityFeedCard({ item, viewerId = null, surface = "feed", onUnsave, returnTo, refreshKey = 0 }: { item: GeneralCommunityItem; viewerId?: string | null; surface?: "feed" | "saved" | "community"; onUnsave?: () => void; returnTo?: string; refreshKey?: number }) {
   const [unavailable, setUnavailable] = useState(false);
   useEffect(() => setUnavailable(false), [item, viewerId]);
   const anchor = communityFeedAnchor(item.kind, item.id);
   const cardId = returnTo && anchor ? anchor.slice(1) : undefined;
   if (unavailable) return <article id={cardId} className={`ui-card ${styles.item}`}><p role="status">Bu paylaşım artık bu görünümde bulunmuyor. Listeyi yenileyebilirsin.</p></article>;
   const base = `/communities/${encodeURIComponent(item.community.slug)}`;
-  const href = returnTo ? communityFeedPath(item.community.slug, item.kind, item.id, returnTo) : item.kind === "event" ? `${base}?section=events&event=${encodeURIComponent(item.id)}` : `${base}?post=${encodeURIComponent(item.id)}`;
+  const sourceParams = surface === "community" && returnTo ? new URL(returnTo, "http://localhost").searchParams : null;
+  const detailParams = sourceParams ? communityNavigationParams(sourceParams, item.kind === "event" ? { section: "events", eventId: item.id } : { section: "posts", postId: item.id, commentPage: 1 }) : null;
+  const href = detailParams ? `${base}?${detailParams}` : returnTo ? communityFeedPath(item.community.slug, item.kind, item.id, returnTo) : item.kind === "event" ? `${base}?section=events&event=${encodeURIComponent(item.id)}` : `${base}?post=${encodeURIComponent(item.id)}`;
+  const interactionReturnTo = surface === "community" && returnTo ? returnTo + anchor : returnTo ? feedReturnPath(returnTo).split("#")[0] + anchor : href;
   function rememberSource(event: MouseEvent<HTMLAnchorElement>) {
     if (!returnTo || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || window.location.pathname !== "/") return;
     const from = new URL(href, window.location.origin).searchParams.get("from");
@@ -37,7 +41,7 @@ export function CommunityFeedCard({ item, viewerId = null, surface = "feed", onU
       <span className="feed-content-kind">{kindLabel}</span>
     </header>
     <div className="feed-track-block"><span className="feed-track-icon" aria-hidden="true"><Icon size={18} /></span><div className="min-w-0"><h2>{item.title}</h2>{item.kind === "post" && item.type === "review" && <p>{item.subjectTitle} · <strong>{item.rating}/10</strong></p>}</div></div>
-    {item.kind === "event" ? <CommunityInlineEvent key={`${item.id}:${viewerId}`} item={item} viewerId={viewerId} returnTo={returnTo ? feedReturnPath(returnTo).split("#")[0] + anchor : href} /> : <CommunityPostContent key={`${item.id}:${viewerId}`} item={item} viewerId={viewerId} surface={surface} returnTo={returnTo ? feedReturnPath(returnTo).split("#")[0] + anchor : href} onUnsave={onUnsave} onUnavailable={() => setUnavailable(true)} />}
+    {item.kind === "event" ? <CommunityInlineEvent key={`${item.id}:${viewerId}`} item={item} viewerId={viewerId} returnTo={interactionReturnTo} refreshKey={refreshKey} /> : <CommunityPostContent key={`${item.id}:${viewerId}`} item={item} viewerId={viewerId} surface={surface} returnTo={interactionReturnTo} refreshKey={refreshKey} onUnsave={onUnsave} onUnavailable={() => setUnavailable(true)} />}
 
   </article>;
 }

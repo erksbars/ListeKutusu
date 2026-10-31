@@ -18,13 +18,13 @@ const when = (event: CommunityEventSummary) => new Intl.DateTimeFormat("tr-TR", 
 function EventFacts({ event }: { event: CommunityEventSummary }) {
   return <div className="community-stack"><p><time dateTime={event.startsAt}>{when(event)}</time> · Türkiye saati</p><p>{event.city} · {event.venue}</p><p>Kapasite: {event.capacity === null ? "Sınır belirtilmedi" : `${event.capacity} kişi`}</p><p>{event.attendingCount} katılacak · {event.interestedCount} ilgileniyor{event.capacity !== null ? ` · ${Math.max(0, event.capacity - event.attendingCount)} yer kaldı` : ""}</p><Link href={`/u/${event.organizer.slug}`}>Düzenleyen: {event.organizer.ownerName}</Link>{event.status === "cancelled" && <p className="community-error">Etkinlik iptal edildi.</p>}</div>;
 }
-export function CommunityEventsPanel({ slug, canCreate, active, navigation, navigate, onModerationChange, refreshKey = 0 }: { slug: string; canCreate: boolean; active: boolean; navigation: CommunityNavigation; navigate: (patch: Partial<CommunityNavigation>, replace?: boolean) => void; onModerationChange?: () => void; refreshKey?: number }) {
+export function CommunityEventsPanel({ slug, canCreate, active, navigation, navigate, onModerationChange, refreshKey = 0, embeddedTimeline = false }: { slug: string; canCreate: boolean; active: boolean; navigation: CommunityNavigation; navigate: (patch: Partial<CommunityNavigation>, replace?: boolean) => void; onModerationChange?: () => void; refreshKey?: number; embeddedTimeline?: boolean }) {
   const api = `/api/communities/${encodeURIComponent(slug)}/events`;
   const { eventFilter: filter, eventPage: page, eventId: selectedId } = navigation;
   const [revision, setRevision] = useState(0);
   const [editing, setEditing] = useState(false);
   const readRevision = JSON.stringify([revision, refreshKey]);
-  const { data, loading, error } = useCommunityRead<EventList>(`${api}?${new URLSearchParams({ filter, page: String(page) })}`, readRevision, active && !selectedId);
+  const { data, loading, error } = useCommunityRead<EventList>(`${api}?${new URLSearchParams({ filter, page: String(page) })}`, readRevision, active && !selectedId && !embeddedTimeline);
   const { data: detail, loading: detailLoading, error: detailError } = useCommunityRead<CommunityEventDetail>(selectedId ? `${api}/${encodeURIComponent(selectedId)}` : null, readRevision, active);
   const [writeError, setWriteError] = useState("");
   const [message, setMessage] = useState("");
@@ -43,13 +43,13 @@ export function CommunityEventsPanel({ slug, canCreate, active, navigation, navi
     try {
       await communityFetch(url, body, undefined, method); after(); setRevision(value => value + 1);
       setMessage(body.action === "rsvp" ? "Katılım tercihin kaydedildi." : body.action === "report" ? "Bildirim topluluk yönetimine gönderildi." : "Etkinlik işlemi tamamlandı.");
-      if (body.action === "report" || body.action === "remove") onModerationChange?.();
+      if (body.action === "report" || body.action === "remove" || url === api) onModerationChange?.();
     }
     catch (error) { setWriteError(communityError(error)); if (body.action === "rsvp") setRevision(value => value + 1); }
     finally { busyRef.current = false; setBusy(false); setConfirm(null); }
   }
   return <section className="community-stack" aria-label="Topluluk etkinlikleri" aria-busy={loading || detailLoading} hidden={!active}>
-    <h2 className="ui-section-title">Etkinlikler</h2><p>Etkinlik duyuruları herkese açık okunur. Aktif topluluk üyeleri katılım tercihini belirtebilir; ilgileniyorum koltuk tüketmez.</p>
+    {(!embeddedTimeline || selectedId) && <><h2 className="ui-section-title">Etkinlikler</h2><p>Etkinlik duyuruları herkese açık okunur. Aktif topluluk üyeleri katılım tercihini belirtebilir; ilgileniyorum koltuk tüketmez.</p></>}
     {message && <p role="status">{message}</p>}{writeError && <p role="alert" className="community-error">{writeError}</p>}
     <ConfirmDialog open={active && Boolean(confirm && detail)} title={confirm === "remove" ? "Etkinliği kaldır?" : "Etkinliği iptal et?"} body={confirm === "remove" ? "Duyuru artık herkese açık görünmeyecek." : "Duyuru iptal edildi olarak görünmeye devam edecek."} confirmLabel="Onayla" tone="danger" busy={busy} onCancel={() => setConfirm(null)} onConfirm={() => detail && confirm && void write(`${api}/${detail.event.id}`, { action: confirm }, () => { if (confirm === "remove") navigate({ eventId: null }, true); })} />
     {selectedId ? <><Button type="button" disabled={busy || editing} onClick={() => { navigate({ eventId: null }); setWriteError(""); }}>Etkinlik listesine dön</Button>
@@ -69,20 +69,20 @@ export function CommunityEventsPanel({ slug, canCreate, active, navigation, navi
         {detail.canManage && !editing && <div className="community-actions">{detail.event.status === "scheduled" && new Date(detail.event.startsAt) > new Date() && <><Button type="button" disabled={busy} onClick={() => requestDraftExit(() => { setEditing(true); setWriteError(""); })}>Etkinliği düzenle</Button><Button type="button" disabled={busy} onClick={() => setConfirm("cancel")}>Etkinliği iptal et</Button></>}<Button type="button" disabled={busy} onClick={() => setConfirm("remove")}>Etkinliği kaldır</Button></div>}
         {editing && detail.canManage && <><CommunityEventEditor key={`${detail.event.id}:${detail.event.contentVersion}`} event={detail.event} busy={busy} onCancel={() => { setEditing(false); setWriteError(""); }} onSave={payload => void write(`${api}/${selectedId}`, payload, () => setEditing(false), "PATCH")} />{writeError && <Button type="button" disabled={busy} onClick={() => requestDraftExit(() => { setEditing(false); setWriteError(""); setRevision(value => value + 1); })}>Formu kapatıp güncel etkinliği yükle</Button>}</>}
       </article>}
-    </> : <>
+    </> : !embeddedTimeline && <>
       <SelectField label="Etkinlik filtresi" value={filter} disabled={busy} onChange={event => navigate({ eventFilter: event.target.value as CommunityNavigation["eventFilter"], eventPage: 1 })}><option value="upcoming">Yaklaşan</option><option value="past">Başlangıcı geçmiş</option><option value="cancelled">İptal edilen</option></SelectField>
       {loading && <p role="status">Etkinlikler yükleniyor…</p>}{error && <div role="alert" className="community-stack"><p>{error}</p><Button type="button" onClick={() => setRevision(value => value + 1)}>Etkinlikleri yeniden yükle</Button></div>}
       {!loading && data && !data.events.length && <p>Bu görünümde etkinlik yok.</p>}
       {data?.events.map(event => <article className="ui-card community-stack" key={event.id}><h3>{event.title}</h3><EventFacts event={event} /><Button type="button" disabled={busy || loading} onClick={() => { navigate({ eventId: event.id }); setMessage(""); }}>Etkinlik detayını aç</Button></article>)}
       {data && <div className="community-actions"><Button type="button" disabled={page === 1 || busy || loading} onClick={() => navigate({ eventPage: page - 1 })}>Önceki etkinlikler</Button><span>Sayfa {data.page}</span><Button type="button" disabled={!data.hasMore || page >= 100 || busy || loading} onClick={() => navigate({ eventPage: page + 1 })}>Sonraki etkinlikler</Button></div>}
     </>}
-    {canCreate && <form ref={createForm} hidden={Boolean(selectedId)} className="ui-panel community-stack" onChange={event => {
+    {canCreate && <details hidden={Boolean(selectedId)} className="ui-panel community-stack"><summary>Etkinlik oluştur</summary><form ref={createForm} className="community-stack" onChange={event => {
       const fields = new FormData(event.currentTarget);
       setCreateDirty([...fields.entries()].some(([name, value]) => name === "distribution" ? value !== "community" : String(value).length > 0));
     }} onSubmit={event => {
       event.preventDefault(); const form = event.currentTarget; const fields = new FormData(form);
       const capacity = String(fields.get("capacity") ?? "");
-      void write(api, { title: fields.get("title"), description: fields.get("description"), localStart: fields.get("localStart"), timeZone: "Europe/Istanbul", city: fields.get("city"), venue: fields.get("venue"), capacity: capacity === "" ? null : Number(capacity), distribution: fields.get("distribution"), publicLocationConfirmed: fields.get("publicLocationConfirmed") === "on" }, () => { form.reset(); setCreateDirty(false); navigate({ eventFilter: "upcoming", eventPage: 1 }, true); });
+      void write(api, { title: fields.get("title"), description: fields.get("description"), localStart: fields.get("localStart"), timeZone: "Europe/Istanbul", city: fields.get("city"), venue: fields.get("venue"), capacity: capacity === "" ? null : Number(capacity), distribution: fields.get("distribution"), publicLocationConfirmed: fields.get("publicLocationConfirmed") === "on" }, () => { form.reset(); setCreateDirty(false); navigate({ eventFilter: "upcoming", eventPage: 1, cursor: null }, true); });
     }}><h3 className="ui-section-title">Etkinlik oluştur</h3><fieldset disabled={busy || loading} className="community-fieldset community-stack">
       <TextField label="Etkinlik başlığı" name="title" minLength={3} maxLength={120} required />
       <TextAreaField label="Etkinlik açıklaması" name="description" minLength={20} maxLength={5000} rows={4} required />
@@ -93,7 +93,7 @@ export function CommunityEventsPanel({ slug, canCreate, active, navigation, navi
       <label className="community-check"><input type="checkbox" name="publicLocationConfirmed" required />Etkinlik ve mekân bilgilerinin herkese açık olduğunu biliyorum.</label>
       <CommunityDistributionField />
       <Button type="submit" variant="primary" loading={busy}>Etkinliği yayınla</Button>
-    </fieldset></form>}
-    {!canCreate && <p>Etkinlik oluşturmak için giriş yapıp topluluğa katılmalısın; uzaklaştırılan üyeler oluşturamaz.</p>}
+    </fieldset></form></details>}
+    {!canCreate && !embeddedTimeline && <p>Etkinlik oluşturmak için giriş yapıp topluluğa katılmalısın; uzaklaştırılan üyeler oluşturamaz.</p>}
   </section>;
 }

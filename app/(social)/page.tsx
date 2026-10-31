@@ -279,14 +279,14 @@ export default function HomePage() {
         onCancel={() => setEditingPost(null)}
         onSave={savePostEdit}
       />
-      <section className="home-app-shell desktop-density-comfortable relative min-h-screen w-full px-4 pb-28 sm:px-6 xl:pb-12">
+      <section className="home-app-shell social-feed-page desktop-density-comfortable relative min-h-screen w-full px-4 pb-28 sm:px-6 xl:pb-12">
         <HomeTopbar account={account} loginHref={accountLoginPath(feedLocation.path)} onLogout={() => void logoutAccount()} />
         <MobileDock authenticated={Boolean(account)} profileSlug={account?.slug} />
         <section
               id="main-feed"
-              className="home-grid home-grid-unified mt-5 grid scroll-mt-24 items-start gap-5"
+              className="home-grid home-grid-unified social-feed-layout mt-5 grid scroll-mt-24 items-start gap-5"
             >
-              <div className="min-w-0">
+              <div className="social-feed-stream min-w-0">
                 <FeedSectionHeader
                   value={feedScope}
                   loading={feedPageLoading}
@@ -401,7 +401,7 @@ export default function HomePage() {
                   )}
                 </div>
               </div>
-              <div className="home-context-rail grid min-w-0 gap-4">
+              <div className="home-context-rail social-feed-aside grid min-w-0 gap-4">
                 <DiscoverySession authenticated={Boolean(account)} onMessage={setMessage} />
                 <HomeCommunitySummary authenticated={Boolean(account)} rank={currentRank?.rank} score={currentRank?.score} onMessage={setMessage} />
                 <LeaderboardSidebar

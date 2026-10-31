@@ -171,6 +171,10 @@
   --ui-layer-navigation: 40;
   --ui-layer-modal: 80;
   --ui-page-max-width: 1480px;
+  --ui-feed-reading-width: 760px;
+  --ui-feed-aside-width: 300px;
+  --ui-feed-column-gap: var(--ui-desktop-gap);
+  --ui-feed-frame-width: calc(var(--ui-feed-reading-width) + var(--ui-feed-aside-width) + var(--ui-feed-column-gap) + var(--ui-desktop-gutter) * 2);
   --ui-desktop-sidebar-collapsed: 72px;
   --ui-desktop-rail: minmax(300px, 360px);
 

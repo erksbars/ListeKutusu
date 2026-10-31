@@ -22,6 +22,7 @@ test("explicit distribution appears at home, opens correct content and can be wi
       await target.route("**/api/discovery/random**", route => route.fulfill({ json: { sourceName: "Yerel test seçkisi", total: 0, tracks: [] } }));
     }
     await page.goto(`/communities/${slug}`);
+    await page.locator("summary").filter({ hasText: /^Sohbet veya inceleme paylaş$/ }).click();
     await page.getByRole("combobox", { name: "Paylaşım türü", exact: true }).selectOption("review");
     await page.getByRole("textbox", { name: "Eser adı", exact: true }).fill("Kurgusal film");
     await page.getByRole("textbox", { name: "Paylaşım başlığı", exact: true }).fill("Genel akış inceleme denemesi");
@@ -29,8 +30,9 @@ test("explicit distribution appears at home, opens correct content and can be wi
     await page.getByRole("checkbox", { name: "Spoiler içeriyor", exact: true }).check();
     await page.getByRole("combobox", { name: "Akışta gösterim", exact: true }).selectOption("general");
     await page.getByRole("button", { name: "İncelemeyi yayınla", exact: true }).click();
-    await expect(page.getByRole("button", { name: "Genel akış inceleme denemesi", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Genel akış inceleme denemesi", exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Etkinlikler", exact: true }).click();
+    await page.locator("summary").filter({ hasText: /^Etkinlik oluştur$/ }).click();
     await page.getByRole("textbox", { name: "Etkinlik başlığı", exact: true }).fill("Genel akış etkinlik denemesi");
     await page.getByRole("textbox", { name: "Etkinlik açıklaması", exact: true }).fill("Kurgusal duyurudur; gerçek buluşma veya rezervasyon değildir.");
     await page.locator('input[name="localStart"]').fill(new Date(Date.now() + 7 * 86_400_000 + 3 * 3_600_000).toISOString().slice(0, 16));
@@ -46,6 +48,7 @@ test("explicit distribution appears at home, opens correct content and can be wi
     expect(items).toHaveLength(2);
     expect(JSON.stringify(items)).not.toContain("gizli spoiler metni");
     const review = items.find((item: { kind: string }) => item.kind === "post");
+    const event = items.find((item: { kind: string }) => item.kind === "event");
     await guest.goto("/");
     const feed = guest.locator("#feed-posts");
     await expect(feed.getByRole("heading", { name: "Genel akış inceleme denemesi", exact: true })).toBeVisible({ timeout: 30_000 });
@@ -55,11 +58,12 @@ test("explicit distribution appears at home, opens correct content and can be wi
     await guest.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
     await guest.screenshot({ path: "test-results/browser/community-distribution-desktop.png", fullPage: true, animations: "disabled" });
     expect(await guest.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-    await feed.getByRole("heading", { name: "Genel akış etkinlik denemesi", exact: true }).getByRole("link").click();
+    await feed.locator(`[data-feed-id="event:${event.id}"] .feed-post-permalink`).click();
+    await expect(guest).toHaveURL(new RegExp(`event=${event.id}`));
     await expect(guest.getByRole("heading", { name: "Genel akış etkinlik denemesi", exact: true })).toBeVisible({ timeout: 30_000 });
     await expect(guest.getByRole("button", { name: "Katılacağım", exact: true })).toHaveCount(0);
     await guest.goto("/");
-    await feed.getByRole("heading", { name: "Genel akış inceleme denemesi", exact: true }).getByRole("link").click();
+    await feed.locator(`[data-feed-id="post:${review.id}"] .feed-post-permalink`).click();
     await expect(guest).toHaveURL(new RegExp(`post=${review.id}`));
     await expect(guest.getByText("Bu gizli spoiler metni yalnız açınca görünmeli.", { exact: true })).toHaveCount(0);
     await guest.getByRole("button", { name: "İncelemeyi ve yorumları göster", exact: true }).click();

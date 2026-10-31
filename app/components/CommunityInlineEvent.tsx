@@ -12,11 +12,11 @@ import { Button } from "./ui/Button";
 import { ExpandablePostText } from "./ExpandablePostText";
 import styles from "./CommunityGeneralFeed.module.css";
 
-export function CommunityInlineEvent({ item, viewerId, returnTo }: { item: Extract<GeneralCommunityItem, { kind: "event" }>; viewerId: string | null; returnTo: string }) {
+export function CommunityInlineEvent({ item, viewerId, returnTo, refreshKey = 0 }: { item: Extract<GeneralCommunityItem, { kind: "event" }>; viewerId: string | null; returnTo: string; refreshKey?: number }) {
   const [revision, setRevision] = useState(0), [busy, setBusy] = useState(false), [error, setError] = useState(""), [notice, setNotice] = useState("");
   const pending = useRef(false);
   const communityApi = `/api/communities/${encodeURIComponent(item.community.slug)}`, api = `${communityApi}/events/${encodeURIComponent(item.id)}`;
-  const read = useCommunityRead<CommunityEventDetail>(api, `${viewerId}:${revision}`);
+  const read = useCommunityRead<CommunityEventDetail>(api, `${viewerId}:${revision}:${refreshKey}`);
   useDraftNavigationGuard({ dirty: false, busy });
   const valid = read.data?.event?.id === item.id && typeof read.data.event.description === "string" && Number.isInteger(read.data.event.attendingCount) && read.data.event.attendingCount >= 0 && Number.isInteger(read.data.event.interestedCount) && read.data.event.interestedCount >= 0 && typeof read.data.canRespond === "boolean" && typeof read.data.canWithdraw === "boolean";
   const detail = valid ? read.data : null, event = detail?.event ?? item;

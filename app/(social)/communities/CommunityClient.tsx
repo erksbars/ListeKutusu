@@ -27,17 +27,22 @@ import { CommunityContentFilters } from "./CommunityContentFilters";
 import { CommunityPostReactions } from "./CommunityPostReactions";
 import { useCommunityRead } from "./useCommunityRead";
 import { useDraftNavigationGuard } from "@/app/components/DraftNavigationProvider";
+import { CommunityTimeline } from "./CommunityTimeline";
+import { communityRequestStatus } from "@/lib/communityRequest";
+import { ACCOUNT_SESSION_CHANGED } from "@/lib/clientAccountSession";
 
 export function CommunityClient({ slug, initialNavigation, initialFeedReturnTo = null }: { slug: string; initialNavigation: CommunityNavigation; initialFeedReturnTo?: string | null }) {
   const api = `/api/communities/${encodeURIComponent(slug)}`;
-  const [data, setData] = useState<CommunityDetail | null>(null);
+  const [snapshotData, setData] = useState<CommunityDetail | null>(null);
+  const data = snapshotData?.community.slug === slug ? snapshotData : null;
   const { navigation, navigate, feedReturnTo } = useCommunityNavigation(initialNavigation, initialFeedReturnTo);
   const loginParams = communityNavigationParams(new URLSearchParams(), navigation);
   if (feedReturnTo) loginParams.set("from", feedReturnTo);
   const loginHref = accountLoginPath(`/communities/${encodeURIComponent(slug)}${loginParams.size ? `?${loginParams}` : ""}`);
-  const { postId, page, section, commentPage, postType, reviewKind, savedOnly } = navigation;
-  const listApi = `${api}?${new URLSearchParams({ page: String(page), postType, reviewKind, ...(savedOnly ? { saved: "1" } : {}) })}`;
-  const [loadedListApi, setLoadedListApi] = useState("");
+  const { postId, eventId, page, section, commentPage, reviewKind, savedOnly, kind } = navigation;
+  const listApi = api;
+  const returnTo = `/communities/${encodeURIComponent(slug)}${loginParams.size ? `?${loginParams}` : ""}`;
+  const detailOpen = Boolean(postId || eventId);
   const [editingReview, setEditingReview] = useState(false);
   const [reviewDirty, setReviewDirty] = useState(false);
   const [discardReview, setDiscardReview] = useState<"editor" | "list" | null>(null);
@@ -63,16 +68,28 @@ export function CommunityClient({ slug, initialNavigation, initialFeedReturnTo =
   const archived = data?.community.status === "archived";
   const canWrite = Boolean(member && !archived && !loading && !busy);
   const canReadBody = Boolean(post && !editingReview && (!post.post.spoiler || revealedPostId === postId));
-  const listingCurrent = loadedListApi === listApi && !loading;
+  const viewerRef = useRef(data?.viewerId); viewerRef.current = data?.viewerId;
+  useEffect(() => {
+    const update = (event: Event) => {
+      const account = (event as CustomEvent<{ id?: string } | null>).detail;
+      if ((account?.id ?? null) === viewerRef.current) return;
+      setData(null); setRevision(value => value + 1);
+    };
+    window.addEventListener(ACCOUNT_SESSION_CHANGED, update);
+    return () => window.removeEventListener(ACCOUNT_SESSION_CHANGED, update);
+  }, []);
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true); setLoadError("");
     communityFetch<CommunityDetail>(listApi, undefined, controller.signal)
-      .then(result => { if (!controller.signal.aborted) { setData(result); setLoadedListApi(listApi); } })
-      .catch(error => { if (!controller.signal.aborted) { setLoadError(communityError(error)); setData(null); } })
+      .then(result => { if (!controller.signal.aborted) {
+        if (result?.community?.slug !== slug) throw new Error("Topluluk yanıtı doğrulanamadı. Yeniden deneyebilirsin.");
+        setData(result);
+      } })
+      .catch(error => { if (!controller.signal.aborted) { setLoadError(communityError(error)); if ([401, 403, 404].includes(communityRequestStatus(error) ?? 0)) setData(null); } })
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, [listApi, revision]);
+  }, [listApi, revision, slug]);
   useEffect(() => { setRevealedPostId(null); setComment(""); setReportTarget(null); setConfirm(null); setActionError(""); setEditingReview(false); setReviewDirty(false); setDiscardReview(null); }, [postId]);
   function openPost(id: string | null, confirmed = false) { navigate({ section: "posts", postId: id, commentPage: 1 }, false, confirmed); }
   function closeReview(target: "editor" | "list") {
@@ -101,7 +118,7 @@ export function CommunityClient({ slug, initialNavigation, initialFeedReturnTo =
       if (action === "set-save" && !active && savedOnly && !postId && data?.posts.length === 1 && page > 1) navigate({ page: page - 1 }, true);
     });
   }
-  return <main id="main-content" className="stage-shell min-h-screen bg-app"><section className="ui-page-frame community-page relative mx-auto">
+  return <main id="main-content" className="stage-shell min-h-screen bg-app"><section className="ui-page-frame community-page social-feed-page relative mx-auto">
     <PageTopbar title={data?.community.name ?? "Topluluk"} subtitle="Birlikte konuş, keşfet ve bağlantı kur." icon={<Users size={22} />} backHref={feedReturnTo ?? "/"} backLabel={feedReturnTo ? "Ana akışa dön" : "Geri"} actions={data?.viewerId ? <NotificationCenter /> : undefined} />
     <Toast message={message} onClose={() => setMessage(null)} />
     <ConfirmDialog open={Boolean(discardReview && editingReview && post)} title="İnceleme taslağından vazgeç?" body="Kaydetmediğin inceleme değişiklikleri silinecek. Yayındaki inceleme değişmeyecek." confirmLabel="Değişiklikleri sil ve çık" cancelLabel="Düzenlemeye devam et" busy={busy} onCancel={() => setDiscardReview(null)} onConfirm={() => { const target = discardReview; setDiscardReview(null); setEditingReview(false); setReviewDirty(false); if (target === "list") openPost(null); }} />
@@ -109,13 +126,14 @@ export function CommunityClient({ slug, initialNavigation, initialFeedReturnTo =
     {loadError && <div className="community-error" role="alert"><p>{loadError}</p>{savedOnly && <Link href={loginHref}>Kaydettiklerin için giriş yap ↗</Link>}<Button type="button" onClick={() => setRevision(value => value + 1)}>Yeniden dene</Button></div>}
     {loading && <p role="status">Topluluk yükleniyor…</p>}
     {actionError && <p className="community-error" role="alert">{actionError}</p>}
-    {data && <><div className="community-intro"><p className="section-kicker">{COMMUNITY_CATEGORIES[data.community.category as keyof typeof COMMUNITY_CATEGORIES]} · Herkese açık</p><p>{data.community.description}</p><div className="community-actions"><span>{data.community.memberCount} üye</span>
+    {data && <><div className="community-intro community-feed-intro"><p>{data.community.description}</p><div className="community-actions"><span className="section-kicker">{COMMUNITY_CATEGORIES[data.community.category as keyof typeof COMMUNITY_CATEGORIES]} · Herkese açık</span><span>{data.community.memberCount} üye</span>
       {!data.viewerId ? <Link href={loginHref}>Katılmak için giriş yap ↗</Link> : data.membership?.status === "banned" ? <span>Bu topluluğa katılımın kapatılmış.</span> : !member ? !archived && <Button type="button" variant="primary" loading={busy} disabled={loading} onClick={() => void mutate({ action: "join" }, "Topluluğa katıldın.")}>Topluluğa katıl</Button> : data.membership?.role === "owner" ? <span>Topluluğun sahibisin</span> : <Button type="button" disabled={loading || busy} onClick={() => setConfirm({ title: "Topluluktan ayrıl?", body: { action: "leave" } })}>Topluluktan ayrıl</Button>}
     </div><CommunityDiscoveryLabelsView values={data.community} /></div>
     {archived && <p role="status">Bu topluluk arşivde. İçerikler okunabilir; yeni katılım, paylaşım ve etkinlik işlemleri kapalıdır.</p>}
-    <div className="community-actions" role="group" aria-label="Topluluk bölümleri"><Button type="button" variant={section === "posts" ? "primary" : "secondary"} aria-pressed={section === "posts"} disabled={busy} onClick={() => navigate({ section: "posts" })}>Sohbet ve incelemeler</Button><Button type="button" variant={section === "events" ? "primary" : "secondary"} aria-pressed={section === "events"} disabled={busy} onClick={() => navigate({ section: "events" })}>Etkinlikler</Button></div>
-    <div className="community-columns"><section className="community-stack" aria-label="Topluluk sohbetleri" hidden={section !== "posts"}>
-      <div hidden={Boolean(postId)} className="community-stack"><CommunityContentFilters value={navigation} disabled={loading || busy} authenticated={Boolean(data.viewerId)} change={navigate} />{member && !archived && <div hidden={savedOnly}><CommunityComposer disabled={!canWrite} publish={(payload, reset) => void mutate(payload, payload.type === "review" ? "İnceleme yayınlandı." : "Paylaşım yayınlandı.", () => { reset(); const matches = !savedOnly && (postType === "all" || postType === payload.type) && (reviewKind === "all" || reviewKind === payload.reviewKind); navigate(matches ? { page: 1 } : { page: 1, postType: "all", reviewKind: "all", savedOnly: false }, true); })} /></div>}</div>
+    <div className="community-columns social-feed-layout"><section className="community-stack social-feed-stream" aria-label="Topluluk paylaşımları">
+      <div hidden={detailOpen} className="community-stack"><CommunityContentFilters value={navigation} disabled={loading || busy} authenticated={Boolean(data.viewerId)} change={navigate} onRefresh={() => requestDraftExit(() => setRevision(value => value + 1))} /></div>
+      {member && !archived && <div hidden={detailOpen || kind === "event" || savedOnly}><details className="community-stack"><summary className="ui-panel">Sohbet veya inceleme paylaş</summary><CommunityComposer disabled={!canWrite} publish={(payload, reset) => void mutate(payload, payload.type === "review" ? "İnceleme yayınlandı." : "Paylaşım yayınlandı.", () => { reset(); const matches = !savedOnly && (kind === "all" || kind === payload.type) && (reviewKind === "all" || reviewKind === payload.reviewKind); navigate(matches ? { page: 1, cursor: null } : { kind: "all", section: "posts", page: 1, cursor: null, postType: "all", reviewKind: "all", savedOnly: false }, true); })} /></details></div>}
+      {(eventsVisited || section === "events") && <CommunityEventsPanel embeddedTimeline slug={slug} active={Boolean(eventId) || (!postId && kind === "event")} navigation={navigation} navigate={navigate} canCreate={Boolean(member && !archived)} refreshKey={revision} onModerationChange={() => setRevision(value => value + 1)} />}
       {postId ? <><Button type="button" disabled={busy} onClick={() => closeReview("list")}>Akışa dön</Button>{postLoading && <p role="status">Sohbet yükleniyor…</p>}{postError && <div role="alert" className="community-error"><p>{postError}</p><Button type="button" onClick={() => setRevision(value => value + 1)}>Sohbeti yeniden yükle</Button></div>}
         {post && <><article className="ui-card community-stack"><h2 className="ui-section-title">{post.post.title}</h2><ReviewMetadata post={post.post} /><Link href={`/u/${post.post.author.slug}`}>{post.post.author.ownerName}</Link>
           {post.post.spoiler && <div className="community-stack community-spoiler"><p>İnceleme metni ve yorumlar spoiler içerebilir.</p><Button type="button" aria-expanded={canReadBody} onClick={() => setRevealedPostId(canReadBody ? null : postId)}>{canReadBody ? "Spoilerı yeniden gizle" : "İncelemeyi ve yorumları göster"}</Button></div>}
@@ -132,12 +150,10 @@ export function CommunityClient({ slug, initialNavigation, initialFeedReturnTo =
           {member && <form className="ui-panel community-stack" onSubmit={event => { event.preventDefault(); void mutate({ action: "comment", postId, body: comment }, "Yorum eklendi.", () => setComment("")); }}><TextAreaField label="Yorumun" value={comment} onChange={event => setComment(event.target.value)} minLength={2} maxLength={800} rows={3} required disabled={!canWrite || postLoading} /><Button type="submit" variant="primary" disabled={!canWrite || postLoading}>Yorum gönder</Button></form>}</>}
         </>}
       </> : <>
-        {!data.posts.length && listingCurrent && <p>{savedOnly ? "Bu filtrelerde kaydettiğin görünür paylaşım yok." : postType !== "all" ? "Bu filtrelerde görünür paylaşım yok. İçerik türünü veya inceleme alanını değiştirebilirsin." : archived ? "Bu arşivde görünür paylaşım yok." : "Henüz görünür paylaşım yok. Aktif üyeler ilk sohbeti veya incelemeyi başlatabilir."}</p>}
-        {listingCurrent && data.posts.map(item => <article className="ui-card community-stack" key={item.id}><h2><button type="button" className="community-title-button" disabled={busy} onClick={() => openPost(item.id)}>{item.title}</button></h2><ReviewMetadata post={item} /><Link href={`/u/${item.author.slug}`}>{item.author.ownerName}</Link><p className="community-body">{item.spoiler ? "Spoiler nedeniyle inceleme önizlemesi gizlendi." : item.excerpt}</p><CommunityPostReactions state={item} authenticated={Boolean(data.viewerId)} disabled={busy || loading} change={(action, active) => react(item.id, action, active)} /><div className="community-actions"><span>{item.commentCount} yorum</span><Button type="button" disabled={busy} onClick={() => openPost(item.id)}>{item.type === "review" ? "İncelemeyi aç" : "Sohbeti aç"}</Button></div></article>)}
-        <div className="community-actions"><Button type="button" disabled={page === 1 || !listingCurrent || busy} onClick={() => navigate({ page: page - 1 })}>Önceki paylaşımlar</Button><span>Sayfa {page}</span><Button type="button" disabled={!data.hasMore || page >= 100 || !listingCurrent || busy} onClick={() => navigate({ page: page + 1 })}>Sonraki paylaşımlar</Button></div>
+        <div hidden={Boolean(eventId)}><CommunityTimeline slug={slug} viewerId={data.viewerId} navigation={navigation} navigate={navigate} active={!eventId} refreshKey={revision} returnTo={returnTo} /></div>
       </>}
       {reportTarget && <form className="ui-panel community-stack" onSubmit={event => { event.preventDefault(); void mutate({ ...reportTarget, reason }, "Bildirim topluluk yönetimine gönderildi.", () => setReportTarget(null)); }}><TextAreaField label="Bildirim nedeni" value={reason} onChange={event => setReason(event.target.value)} minLength={3} maxLength={300} rows={3} required disabled={!canWrite} /><div className="community-actions"><Button type="submit" disabled={!canWrite}>Bildirim gönder</Button><Button type="button" disabled={busy} onClick={() => setReportTarget(null)}>Vazgeç</Button></div></form>}
-    </section>{(eventsVisited || section === "events") && <CommunityEventsPanel slug={slug} active={section === "events"} navigation={navigation} navigate={navigate} canCreate={Boolean(member && !archived)} refreshKey={revision} onModerationChange={() => setRevision(value => value + 1)} />}<aside className="community-stack"><section className="ui-panel community-stack"><h2 className="ui-section-title">Topluluk kuralları</h2><p className="community-body">{data.community.rules}</p><p>İçerikler herkese açık okunur. Yalnız toplulukta dağıtılabilir veya açık tercihle ana sayfanın Yeni/Takip akışında da gösterilebilir. Etkinlik katılımı aktif üyelik gerektirir.</p></section>
+    </section><aside className="community-stack social-feed-aside"><section className="ui-panel community-stack"><h2 className="ui-section-title">Topluluk kuralları</h2><p className="community-body">{data.community.rules}</p><p>İçerikler herkese açık okunur. Yalnız toplulukta dağıtılabilir veya açık tercihle ana sayfanın Yeni/Takip akışında da gösterilebilir. Etkinlik katılımı aktif üyelik gerektirir.</p></section>
       {data.canModerate && data.viewerId && <CommunityManagementPanel slug={slug} viewerId={data.viewerId} owner={data.membership?.role === "owner"} disabled={loading || busy} readOnly={archived} revision={revision} mutate={mutate} openPost={openPost} />}
       {data.canModerate && <CommunityDiscoveryEditor values={data.community} disabled={!canWrite} busy={busy || loading} save={(payload, done) => void mutate(payload, "Keşif bilgileri güncellendi.", done)} />}
       {data.viewerId && <CommunityOwnershipPanel slug={slug} revision={revision} disabled={loading || busy} onChanged={() => setRevision(value => value + 1)} />}

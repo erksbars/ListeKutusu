@@ -40,7 +40,7 @@ export function CommunityAgendaClient({ page, view, role }: { page: number; view
     finally { pending.current = false; setBusy(false); }
   }
   return <main id="main-content" className="stage-shell min-h-screen bg-app"><section className="ui-page-frame community-page relative mx-auto">
-    <PageTopbar title="Etkinliklerim" subtitle="Katılım tercihlerin ve düzenlediğin etkinlikler · yalnız sana özel" icon={<CalendarDays size={22} aria-hidden="true" />} backHref="/communities" actions={<Link className={buttonClassName()} href="/communities?view=events">Etkinlikleri keşfet ↗</Link>} />
+    <PageTopbar title="Etkinliklerim" subtitle="Katılım tercihlerin ve düzenlediğin etkinlikler · yalnız sana özel" icon={<CalendarDays size={22} aria-hidden="true" />} backHref="/" actions={<Link className={buttonClassName()} href="/?kind=event">Etkinlikleri keşfet ↗</Link>} />
     <div className="community-intro"><p>Yaklaşanlarda aktif katılım tercihlerin ve düzenlediklerin gösterilir. Geçmiş ve iptal edilenlerde geri çekilmiş tercihlerin de bulunabilir; bu, fiziksel katılım kaydı değildir.</p><p>Engellenen, kaldırılan veya pasif düzenleyene ait içerikler görünmez. Başkalarının katılım tercihleri bu ekranda paylaşılmaz.</p></div>
     <section className="community-stack" aria-label="Kişisel etkinlik listesi" aria-busy={loading || busy}>
       <div className="community-actions"><SelectField label="Etkinlik zamanı" value={view} disabled={busy} onChange={event => { setConfirm(null); setWriteError(""); router.push(href({ view: event.target.value, page: 1 })); }}>{Object.entries(AGENDA_VIEWS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</SelectField>

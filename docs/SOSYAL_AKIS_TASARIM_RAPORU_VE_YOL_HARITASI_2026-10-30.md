@@ -6,6 +6,11 @@ Tarih: **30 Ekim 2026**
 
 Durum: **inceleme ve öneri; uygulama değişikliği yapılmadı.**
 
+31 Ekim uygulama notu: Bu raporun 30 Ekim bulguları inceleme anını anlatır.
+F1A/F1B sonradan uygulandı; güncel kabul ve kalan işler PROJECT_STATUS.md
+ve ROADMAP.md'dedir. Aşağıdaki “henüz uygulanmadı” ifadeleri ilk raporun
+tarihsel durumudur; F2 ve sonraki fazlar hâlâ açıktır.
+
 ## 1. Sonuç ve çalışma sınırı
 
 Ana akış ile topluluk akışı ortak üst çubuğu kullanıyor, fakat aynı içeriği farklı kart, filtre ve okuma davranışlarıyla sunuyor. En büyük iyileştirme, bu iki akışı ortak bileşenlere taşımak. Yalnızca renk ve boşluk değiştirerek bu ayrışma giderilemez. Etkinliklerin kapasite ve katılım temeli mevcut; eksik olan, bilgiyi hızlı okunur bir sosyal kartta sunmak ve katılımcı profillerini uygun görünürlük tercihiyle göstermek.

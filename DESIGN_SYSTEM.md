@@ -4,12 +4,25 @@ Bu belge ListeKutusu'nun açık ve koyu temada aynı ürün gibi görünmesini s
 
 ## 1. Ürün ilkeleri
 
+### 31 Ekim ortak sosyal akış
+
+Ana akış ve topluluk listesi aynı `social-feed-page/layout/stream/aside`
+iskeletini kullanır. Koyu masaüstünde okuma kolonu 760 px, bağlamsal sağ
+alan 300 px, aralık 20 px tokenlarıyla ortaktır; daha dar masaüstünde
+taşmadan daralır. Diğer sayfaların 1480 px üst sınırı değişmez. Topluluk
+CSS'i ortak gönderi kartının yazı, renk veya padding'ini yeniden tanımlamaz.
+Tür seçimi aynı FeedContentTabs'tir; toplulukta bağımsız müzik gönderisi
+olmadığından Müzik türü sunulmaz. Yorum, spoiler ve temel etkinlik katılımı
+kart içindedir; zaman bağlantısı isteğe bağlı kanonik detay/yönetim yoludur.
+Oluşturma formları açılır alanlarda mount kalır ve yerel taslaklarını korur.
+Etkinliklerin yeni sosyal hiyerarşisi/katılımcı avatarları ayrı Faz 2'dir.
+
 ### 30 Ekim üst alan güncellemesi
 
 Son kullanıcı yönlendirmesiyle sol sidebar kaldırıldı. Gezinme ve kişisel
 alan bağlantıları profil menüsüne taşınır. Tek kalıcı başlık logo, arama,
 Topluluk oluştur ve profil/bildirim alanını yan yana tutar. Sayfa başlıkları
-kendi içeriklerinde kalır. Aşağıdaki eski sol menü notları tarihsel yönü
+kendi içeriklerinde kalır. Tarihli eski sol menü notları tarihsel yönü
 anlatır; güncel gezinme düzeni bu paragraftır. Koyu mavi/cyan/yeşil kimlik
 ve masaüstü kapsamı değişmez.
 
@@ -34,7 +47,7 @@ mobil ekran doğrulaması ertelenmiştir. Renkli aktif menü korunur; aşağıda
 eski dinlenim kartı gölgesi önerisi koyu masaüstünde uygulanmaz.
 
 1. Arayüz içerik merkezlidir. Dekorasyon; akış, forum, profil ve liste işlerini gölgelememelidir.
-2. Ana deneyim tam ekran sosyal ürün düzenidir: sabit üst alan, solda sol hizalı navigasyon, ortada ana içerik, gerektiğinde sağda bağlamsal bilgi.
+2. Ana deneyim ortak sabit üst alan, profil menüsündeki gezinme, ortada okunur içerik ve gerektiğinde sağda bağlamsal bilgidir. Kalıcı sol navigasyon yoktur.
 3. Açık ve koyu tema aynı hiyerarşiyi korur. Tema değiştiğinde bileşen türü veya önem sırası değişmez.
 4. Birincil işlem her görünümde yalnızca bir kez baskın görünür.
 5. Kartlar sayfa bölümü yerine tekil içerik, araç veya tekrar eden kayıt için kullanılır.
@@ -52,7 +65,9 @@ eski dinlenim kartı gölgesi önerisi koyu masaüstünde uygulanmaz.
 - `app/components/ui`: yeni ekranların kullanacağı `Button`, `Card`, `TextField`, `TextAreaField`, `SelectField`, `Checkbox` ve `HorizontalScroller` bileşenleri.
 - `app/components/ThemeToggle.tsx`: tema seçimi ve kalıcı tercih.
 - `app/components/PageTopbar.tsx`: iç sayfaların ortak üst yapısı.
-- `app/components/AppShell.tsx` + `PrimaryNavigation.tsx`: ortak masaüstü sol navigasyon.
+- `app/components/AppShell.tsx` + `AppHeader.tsx` + `HeaderNavigationProvider.tsx`: ortak üst alan, profil gezinmesi ve eski yerel menü örneklerini tekilleştirme.
+- `app/components/CommunityFeedCard.tsx` + `FeedContentTabs.tsx`: ana/topluluk akışının ortak kart ve tür düğmeleri.
+- `app/(social)/communities/CommunityTimeline.tsx`: topluluk kapsamlı karma liste ve cursor gezinmesi.
 - `app/components/HomeCommunitySummary.tsx`: ana akışın kişisel sağ bağlam özeti; ikinci ana menü değil.
 - `app/components/ModalPortal.tsx`: body modal katmanı, arka alan inert/scroll ve odak otoritesi.
 - `app/components/ui/ContentState.tsx`: yükleme, boş, giriş, hata ve kullanılamıyor durumları.
@@ -133,9 +148,9 @@ Her iç sayfa aşağıdaki yapıyı korur:
 ```
 
 - `ui-page-frame` geniş ekranı kullanır ancak 1480 px üzerinde satırları kontrol eder.
-- Ana sayfa `home-grid` ile sosyal ürün kabuğunu kullanır.
-- Sol navigasyon her zaman sola hizalıdır; ikon ve metin başlangıç çizgisi sayfalar arasında değişmez.
-- 17 Ekim ilk uygulama: root `AppShell` 1024 px ve üstünde tek 224 px sol menüdür; içerik onun sağında akar. Sosyal sayfalarda üstte ikinci ana menü yoktur. Yerel üst çubuk normal belge akışındadır; sayfa başlangıcını örten ikinci sticky katman oluşturulmaz. Maksimum içerik genişliği 1480 px hedefi korunur.
+- Ana/topluluk akışı `social-feed-layout` ile aynı iki kolon ve okuma ölçüsünü kullanır.
+- Tek kalıcı gezinme üst alandadır; sayfa başlığı normal belge akışında kalır. İkinci sticky ana menü oluşturulmaz.
+- 17 Ekim'deki 224 px sol menü düzeni 30 Ekim kullanıcı yönüyle kaldırıldı. Eski kaynak tasarım etiketlerinde korunur; yeni ekranlar bu düzene göre yapılmaz.
 - Profil/onay/rapor modalları `ModalPortal` üzerinden body'ye taşınır; arka alan yalnız görsel olarak karartılmaz, etkileşime de kapatılır. Form kendi Escape/focus/scroll dinleyicisini yeniden kurmaz; ortak katmanı kullanır.
 - Mobilde ana işler `MobileDock` üzerinden erişilir; masaüstü kenar çubuğu mobilde kopyalanmaz.
 

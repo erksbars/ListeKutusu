@@ -5,11 +5,11 @@
 .community-columns { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: var(--ui-space-6); align-items: start; padding-bottom: var(--ui-space-8); }
 .community-stack { display: grid; gap: var(--ui-space-3); min-width: 0; }
 .community-discovery-filter-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ui-space-3); }
-.community-page .ui-card, .community-page .ui-panel { padding: var(--ui-space-5); }
-.community-page h2, .community-page h3 { font-weight: 800; }
+.community-page .ui-card:not(.feed-post-card), .community-page .ui-panel { padding: var(--ui-space-5); }
+.community-page :is(h2, h3):not(:where(.feed-post-card h2, .feed-post-card h3)) { font-weight: 800; }
 .community-page p, .community-page span { overflow-wrap: anywhere; }
-.community-page p { color: var(--ui-text-muted); line-height: var(--ui-leading-relaxed); }
-.community-page a { color: var(--ui-accent); }
+.community-page p:not(:where(.feed-post-card p)) { color: var(--ui-text-muted); line-height: var(--ui-leading-relaxed); }
+.community-page a:not(:where(.feed-post-card a)) { color: var(--ui-accent); }
 .community-actions { display: flex; gap: var(--ui-space-3); align-items: center; flex-wrap: wrap; }
 .community-body { white-space: pre-wrap; overflow-wrap: anywhere; }
 .community-fieldset { border: 0; padding: 0; margin: 0; }

@@ -16,7 +16,8 @@ export async function communityGeneralFeed(db: PrismaClient, viewerId: string | 
   const [posts, events] = await Promise.all([
     filter === "event" ? [] : db.communityPost.findMany({
       where: { community: { status: "active" }, distribution: "general", status: "published", author, ...(filter === "all" ? {} : { type: filter }), ...timelineBefore(cursor, "post") },
-      select: { id: true, title: true, body: true, type: true, reviewKind: true, subjectTitle: true, rating: true, spoiler: true, referenceProvider: true, createdAt: true, community: { select: { ...communitySelect, id: true, status: true } }, author: { select: { ...authorSelect, id: true } } },
+      select: { id: true, title: true, body: true, type: true, reviewKind: true, subjectTitle: true, rating: true, spoiler: true, referenceProvider: true, createdAt: true, community: { select: { ...communitySelect, id: true, status: true } }, author: { select: { ...authorSelect, id: true } },
+        _count: { select: { comments: { where: { status: "published", author: visibleAuthor(viewerId) } } } } },
       orderBy: [{ createdAt: "desc" }, { id: "desc" }], take: 11,
     }),
     filter !== "all" && filter !== "event" ? [] : db.communityEvent.findMany({
@@ -27,7 +28,11 @@ export async function communityGeneralFeed(db: PrismaClient, viewerId: string | 
   ]);
   const metrics = await communityBatchReactionMetrics(db, posts, viewerId);
   const items = [
-    ...posts.map(({ body, createdAt, community, author, ...post }, index) => ({ ...post, ...metrics[index], community: { slug: community.slug, name: community.name }, author: { slug: author.slug, ownerName: author.ownerName }, kind: "post" as const, createdAt: createdAt.toISOString(), content: post.spoiler ? "" : body, excerpt: post.spoiler ? "" : body.slice(0, 240) })),
+    ...posts.map(({ body, createdAt, community, author, _count, ...post }, index) => {
+      // Older saved cards and fixtures can omit the count; live feed rows always supply it.
+      const comments: { commentCount?: number } = { commentCount: _count.comments };
+      return { ...post, ...metrics[index], ...comments, community: { slug: community.slug, name: community.name }, author: { slug: author.slug, ownerName: author.ownerName }, kind: "post" as const, createdAt: createdAt.toISOString(), content: post.spoiler ? "" : body, excerpt: post.spoiler ? "" : body.slice(0, 240) };
+    }),
     ...events.map(({ description, createdAt, startsAt, organizer, ...event }) => ({ ...event, kind: "event" as const, author: organizer, createdAt: createdAt.toISOString(), startsAt: startsAt.toISOString(), content: description, excerpt: description.slice(0, 240) })),
   ].sort(compareTimelineItems);
   const page = items.slice(0, 10), last = page.at(-1);

@@ -1,5 +1,31 @@
 # ListeKutusu Doğrulama Politikası
 
+31 Ekim sosyal akış Faz 1 dar kabulü:
+Yeni `community-timeline.test.mjs` 8, `community-timeline-payload.test.mjs` 4,
+güncel `community-navigation.test.mjs` 7 kontrol geçti. İlgili mevcut
+`community-post-reactions`, `community-request`, `draft-navigation`,
+`feed-navigation` 23; `mixed-feed`, `community-distribution`,
+`community-saved-posts` 25 kontrol geçti. SQLite testleri kendi geçici
+veritabanını kullanır. Tekrar için yalnız değişen dilimin dosyaları seçilir;
+her CSS adımında bu listenin tamamı çalıştırılmaz.
+
+TypeScript, ilgili ESLint, UI/a11y statik denetimleri ve diff kontrolü
+geçti. CLI/Edge 1280/1440 koyu masaüstünde aynı gerçek kartın iki akışta
+760 px ve eşit padding/renk/font ölçüleri, taşma olmaması, karma türler,
+yerinde yorum, filtre/yenileme ve kanonik etkinlikten karma listeye dönüş
+doğrulandı. Gerçek GET'lerde hatalı kind/reviewKind/cursor 400, anonim kayıt
+isteği 401 döndü. İstemci taklidiyle 21 kayıt cursor/yenileme/geri, mount
+kalan iki oluşturucu, filtre iptali, yorum 503/tekrar, başka başarılı işlemde
+timeline 503/taslak korunması, bozuk DTO/tekrar, unsave öncesi iptal/onay,
+üyelik kaybında yorum taslağı ve 403'te kart temizliği geçti. 0 pageerror;
+5 mutation tarayıcıda karşılandı, normal DB'ye yazılmadı. Beklenen 503/403
+ve yapılandırılmamış keşif kaynağı HTTP console kayıtları pageerror değildir.
+
+Eski opt-in kaynakların summary, ortak kart/zaman linki, tür düğmesi ve
+10'luk cursor beklentileri uyarlandı; bu DB yazan matris çalıştırılmadı.
+Production build, mobil/açık tema ve oyun/forum matrisi çalıştırılmadı.
+Yerel CLI helper/görüntüler `output/playwright/` altında Git dışındadır.
+
 30 Ekim profil menüsü/ortak başlık kabulü:
 `node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test tests/draft-navigation.test.mjs tests/primary-navigation.test.mjs`
 ile 5 test geçti. TypeScript, ilgili ESLint ve UI/a11y kapıları geçti.

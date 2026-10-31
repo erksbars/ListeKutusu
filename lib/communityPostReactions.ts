@@ -4,7 +4,7 @@ import { CommunityError } from "./communityError.ts";
 
 export async function setCommunityPostReaction(tx: Prisma.TransactionClient, source: { id: string }, userId: string, body: Record<string, unknown>) {
   if (!["set-like", "set-save"].includes(String(body.action)) || typeof body.active !== "boolean" || typeof body.postId !== "string" || !body.postId || body.postId.length > 100) throw new CommunityError("Geçerli paylaşım ve açık tercih gerekli.");
-  if (body.surface !== undefined && body.surface !== "feed" && body.surface !== "saved") throw new CommunityError("Geçersiz etkileşim görünümü.");
+  if (body.surface !== undefined && body.surface !== "feed" && body.surface !== "saved" && body.surface !== "community") throw new CommunityError("Geçersiz etkileşim görünümü.");
   const like = body.action === "set-like";
   if (!body.active) {
     // A missing, blocked or removed target must not become an existence oracle.

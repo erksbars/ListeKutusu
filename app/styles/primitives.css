@@ -557,13 +557,28 @@ select.ui-field {
   .desktop-shell #main-content { scroll-margin-top: var(--ui-space-4); }
   .desktop-shell .home-app-shell { padding-inline: var(--ui-desktop-gutter); max-width: var(--ui-page-max-width); margin-inline: auto; }
   .desktop-shell .home-topbar { padding-inline: 0; }
-  .desktop-shell .home-grid-unified { grid-template-columns: minmax(0, 1fr); }
+  .desktop-shell .social-feed-page {
+    max-width: var(--ui-feed-frame-width);
+    margin-inline: auto;
+    padding-inline: var(--ui-desktop-gutter);
+  }
+  .desktop-shell .social-feed-layout {
+    display: grid;
+    grid-template-columns: minmax(0, var(--ui-feed-reading-width)) minmax(0, var(--ui-feed-aside-width));
+    align-items: start;
+    gap: var(--ui-feed-column-gap);
+    transition: none;
+  }
+  .desktop-shell :is(.social-feed-stream, .social-feed-aside) { min-width: 0; }
+  .desktop-shell .social-feed-page .home-topbar { min-height: 0; padding-block: var(--ui-space-5); }
+  .desktop-shell .social-feed-page .home-grid-unified { margin-top: 0; }
+  .desktop-shell .social-feed-page .feed-section-heading { padding: 0 0 var(--ui-space-3); }
+  .desktop-shell .social-feed-page .feed-section-copy { display: none; }
+  .desktop-shell .social-feed-page .feed-section-heading > .mt-3 { margin-top: 0; }
+  .desktop-shell .community-feed-intro { padding-block: var(--ui-space-4); gap: var(--ui-space-2); }
+  .desktop-shell .community-feed-intro > .community-stack { display: flex; flex-wrap: wrap; gap: var(--ui-space-3); }
   .home-personal-context { padding: var(--ui-space-5); }
   .desktop-shell .home-context-rail #community-rankings { position: static; }
-}
-
-@media (min-width: 1280px) {
-  .desktop-shell .home-grid-unified { grid-template-columns: minmax(0, 1fr) minmax(260px, 300px); }
 }
 
 .primary-navigation {
@@ -5665,9 +5680,9 @@ textarea {
   }
 }
 
-/* Taste structure with user-approved cyan/green brand accents, not a marketing hero.
-   At 1440px: 224 nav + 2*24 gutters + 20 gap + 300 context + 848 feed = 1440.
-   The feed is an independent scrolling stream, not a matched-height dashboard row. */
+/* User-approved cyan/green brand accents on dark desktop surfaces.
+   Social feed widths come from the shared social-feed layout tokens above;
+   the surrounding page has no persistent left navigation column. */
 @media (min-width: 1024px) {
   [data-theme="dark"] .skip-link { box-shadow: none; }
   [data-theme="dark"] .home-grid-unified { margin-top: var(--ui-space-6); }

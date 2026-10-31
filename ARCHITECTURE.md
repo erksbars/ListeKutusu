@@ -1,5 +1,33 @@
 # ListeKutusu Mimari Özeti
 
+## Topluluk karma akışı — Faz 1
+
+`GET /api/communities/[slug]/timeline` tek toplulukta sohbet/inceleme ve
+etkinlikleri `createdAt/kind/id` sırasıyla 10'luk cursor sayfalarında sunar.
+`kind`, `reviewKind`, `eventFilter`, `saved=0|1`, `cursor` kullanılır. Tümü
+yaklaşan planlı/iptal etkinlikleri içerir; yalnız etkinlikte zaman filtresi
+uygulanır. Kayıt filtresi yalnız postları kapsar ve aktif hesap ister.
+Toplulukta dağıtılan içerik de döner; genel feed'in distribution=general
+sınırı değişmez. Arşiv public okunur, mevcut yazma kuralları korunur.
+
+GeneralCommunityItem ortak kart DTO'sudur. Spoiler content/excerpt boştur;
+diğer metin tam döner. Post commentCount, görünür yayımlanmış yorumculardan
+hesaplanır; eski kayıt DTO'larında isteğe bağlıdır. İstemci zorunlu kart
+kimliği/tarihi/metni/kapasitesi ve tekrar eden sayfa konumunu doğrular.
+Bozuk veya geçici hata yanıtı mevcut aynı-hedef snapshot'ını değiştirmez;
+401/403/404 özel snapshot'ı temizler. Başarılı nesil artışı açık yorum ve
+etkinlik GET'ini tazeler; geçici hata ilgisiz kart taslağını unmount etmez.
+
+CommunityNavigation.kind, kanonik post/event seçiminin eski section
+alanından bağımsızdır. Detay aç/kapat kaynak kind/cursor/sayfayı korur;
+gerçek filtre değişimi cursor'ı temizler. Eski numaralı bağlantılar en fazla
+üç ek cursor sayfasıyla otomatik çözülür; daha derinde manuel devam sunulur.
+Yeni sayfa/filtre geçişleri ortak yerel taslak onayını kullanır. Oluşturma
+formları hidden/mount kalır; kayıt görünümünde kartı kaldıran unsave,
+mutation başlamadan taslak onayından geçer. community reaction surface,
+topluluğa özel dağıtılan postlara mevcut üyelik kurallarıyla yazabilir;
+feed surface genel dağıtım sınırını korur.
+
 ## Ortak başlık ve profil menüsü
 
 AppShell artık sabit sidebar yerine AppHeader kullanır. Arama ve topluluk
